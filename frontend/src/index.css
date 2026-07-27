@@ -1,0 +1,185 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #0c0914;
+  --color-surface-plum: #161122;
+  --color-surface-card: rgba(22, 17, 34, 0.9);
+  
+  --color-berry-main: #d946ef;
+  --color-berry-light: #e879f9;
+  --color-berry-dark: #c026d3;
+  
+  --color-text: #f8fafc;
+  --color-muted: #9c92b3;
+
+  --animate-float-slow: floatSlow 6s ease-in-out infinite;
+  --animate-pulse-subtle: pulseSubtle 3s ease-in-out infinite;
+
+  @keyframes floatSlow {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+  }
+
+  @keyframes pulseSubtle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+}
+
+@layer base {
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+  body {
+    @apply bg-background text-text antialiased transition-colors duration-300;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #0c0914;
+    background-image: 
+      radial-gradient(ellipse at 50% 0%, rgba(217, 70, 239, 0.15), transparent 50%),
+      radial-gradient(ellipse at 100% 50%, rgba(138, 35, 135, 0.1), transparent 50%),
+      radial-gradient(ellipse at 0% 100%, rgba(255, 65, 108, 0.08), transparent 45%);
+    background-attachment: fixed;
+  }
+
+  html.light body {
+    background-color: #f6f3f9 !important;
+    color: #181224 !important;
+    background-image: 
+      radial-gradient(ellipse at 50% 0%, rgba(217, 70, 239, 0.08), transparent 45%),
+      radial-gradient(ellipse at 100% 40%, rgba(245, 208, 254, 0.4), transparent 50%),
+      radial-gradient(ellipse at 0% 100%, rgba(253, 242, 248, 0.6), transparent 50%) !important;
+  }
+
+  h1, h2, h3, .font-serif-luxury {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  
+  .card-antigravity, .card-berry {
+    background: rgba(22, 17, 34, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(217, 70, 239, 0.18);
+    box-shadow: 
+      0 20px 40px -15px rgba(0, 0, 0, 0.7),
+      0 0 20px rgba(217, 70, 239, 0.08);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  html.light .card-antigravity, html.light .card-berry {
+    background: #ffffff !important;
+    border: 1px solid rgba(217, 70, 239, 0.12) !important;
+    box-shadow: 
+      0 20px 40px rgba(217, 70, 239, 0.07),
+      0 4px 12px rgba(0, 0, 0, 0.03) !important;
+  }
+
+  .card-antigravity:hover, .card-berry:hover {
+    border-color: rgba(217, 70, 239, 0.4);
+    transform: translateY(-2px);
+  }
+
+  html.light .card-antigravity:hover, html.light .card-berry:hover {
+    border-color: rgba(217, 70, 239, 0.35) !important;
+    box-shadow: 
+      0 25px 50px rgba(217, 70, 239, 0.12),
+      0 6px 16px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  nav {
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+
+  html.light nav {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: rgba(217, 70, 239, 0.15) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  html.light .text-slate-100 {
+    color: #181224 !important;
+  }
+
+  html.light .text-slate-200 {
+    color: #261f35 !important;
+  }
+
+  html.light .text-slate-300 {
+    color: #483d5c !important;
+  }
+
+  html.light .text-slate-400 {
+    color: #645978 !important;
+  }
+
+  html.light .text-slate-500 {
+    color: #8c829e !important;
+  }
+
+  html.light .bg-slate-900 {
+    background-color: #f4f0f8 !important;
+    border-color: rgba(217, 70, 239, 0.15) !important;
+    color: #181224 !important;
+  }
+
+  html.light body, html.light .min-h-screen, html.light .bg-background {
+    background-color: #f6f3f9 !important;
+    color: #181224 !important;
+    background-image: 
+      radial-gradient(ellipse at 50% 0%, rgba(217, 70, 239, 0.08), transparent 45%),
+      radial-gradient(ellipse at 100% 40%, rgba(245, 208, 254, 0.4), transparent 50%),
+      radial-gradient(ellipse at 0% 100%, rgba(253, 242, 248, 0.6), transparent 50%) !important;
+  }
+
+  html.light .bg-[#060913] {
+    background-color: #f6f3f9 !important;
+  }
+
+  html.light .bg-[#0b132b] {
+    background-color: #f3ecf9 !important;
+  }
+
+  .text-gold-metallic, .text-berry-gradient {
+    background: linear-gradient(135deg, #f5d0fe 0%, #d946ef 50%, #c026d3 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  html.light .text-gold-metallic, html.light .text-berry-gradient {
+    background: linear-gradient(135deg, #d946ef 0%, #c026d3 50%, #a21caf 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .text-aurora-gradient {
+    background: linear-gradient(135deg, #ffffff 0%, #e879f9 70%, #d946ef 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  html.light .text-aurora-gradient {
+    background: linear-gradient(135deg, #181224 0%, #c026d3 70%, #d946ef 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .btn-gold-antigravity, .btn-berry {
+    background: linear-gradient(135deg, #e879f9 0%, #d946ef 50%, #c026d3 100%);
+    color: #ffffff !important;
+    font-weight: 700;
+    box-shadow: 
+      0 10px 25px -5px rgba(217, 70, 239, 0.45),
+      inset 0 1px 1px rgba(255, 255, 255, 0.4);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .btn-gold-antigravity:hover, .btn-berry:hover {
+    background: linear-gradient(135deg, #f5d0fe 0%, #e879f9 50%, #d946ef 100%);
+    box-shadow: 
+      0 15px 35px -5px rgba(217, 70, 239, 0.65),
+      0 0 25px rgba(232, 121, 249, 0.4);
+    transform: translateY(-2px);
+  }
+}
