@@ -48,7 +48,7 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="card-antigravity rounded-3xl p-6 max-w-sm w-full border border-amber-400/30 text-center relative space-y-5 animate-scale-up">
+      <div className="card-vault rounded-3xl p-6 max-w-sm w-full border border-amber-400/30 text-center relative space-y-5 animate-scale-up">
         
         <button 
           onClick={onClose}
@@ -119,7 +119,7 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
           className={`w-full py-4 rounded-2xl text-xs font-bold font-serif-luxury uppercase tracking-wider shadow-2xl transition-all ${
             isSpinning 
               ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
-              : 'btn-gold-antigravity'
+              : 'btn-gold-vault'
           }`}
         >
           {isSpinning ? 'Spinning Wheel...' : 'Spin The Wheel Now'}

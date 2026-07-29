@@ -22,7 +22,7 @@ export const Referral = () => {
         <p className="text-xs text-slate-400 mt-0.5">Invite partners to earn tiered commission payouts</p>
       </header>
 
-      <div className="card-antigravity rounded-3xl p-5 border border-amber-400/30 space-y-4">
+      <div className="card-vault rounded-3xl p-5 border border-amber-400/30 space-y-4">
         <span className="text-xs font-bold text-amber-300 uppercase tracking-widest font-serif-luxury">Your Invitation Link</span>
         
         <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 p-2.5 rounded-2xl">

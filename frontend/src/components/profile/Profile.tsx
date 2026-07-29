@@ -66,7 +66,7 @@ export const Profile = () => {
             <ArrowLeft size={16} /> Back to Profile
           </button>
 
-          <div className="card-antigravity rounded-3xl p-6 space-y-4">
+          <div className="card-vault rounded-3xl p-6 space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-amber-400">
               <KeyRound size={24} />
             </div>
@@ -88,7 +88,7 @@ export const Profile = () => {
 
             <button 
               onClick={() => setActiveSubView(null)}
-              className="w-full btn-gold-antigravity py-3.5 rounded-2xl text-xs font-bold font-serif-luxury"
+              className="w-full btn-gold-vault py-3.5 rounded-2xl text-xs font-bold font-serif-luxury"
             >
               Save Security Configuration
             </button>
@@ -106,7 +106,7 @@ export const Profile = () => {
             <ArrowLeft size={16} /> Back to Profile
           </button>
 
-          <div className="card-antigravity rounded-3xl p-6 space-y-4">
+          <div className="card-vault rounded-3xl p-6 space-y-4">
             <h2 className="text-xl font-bold text-slate-100 font-serif-luxury">Select Display Language</h2>
             <p className="text-xs text-slate-400">Choose your preferred language for the platform interface.</p>
 
@@ -142,7 +142,7 @@ export const Profile = () => {
             <ArrowLeft size={16} /> Back to Profile
           </button>
 
-          <div className="card-antigravity rounded-3xl p-6 space-y-4">
+          <div className="card-vault rounded-3xl p-6 space-y-4">
             <h2 className="text-xl font-bold text-slate-100 font-serif-luxury">Privacy & Data Policy</h2>
             <div className="text-xs text-slate-400 space-y-3 leading-relaxed max-h-96 overflow-y-auto pr-2">
               <p>
@@ -172,7 +172,7 @@ export const Profile = () => {
             <ArrowLeft size={16} /> Back to Profile
           </button>
 
-          <div className="card-antigravity rounded-3xl p-6 space-y-4">
+          <div className="card-vault rounded-3xl p-6 space-y-4">
             <h2 className="text-xl font-bold text-slate-100 font-serif-luxury">Frequently Asked Questions</h2>
             <div className="space-y-3 pt-2">
               {faqs.map((faq, idx) => (
@@ -196,7 +196,7 @@ export const Profile = () => {
             <ArrowLeft size={16} /> Back to Profile
           </button>
 
-          <div className="card-antigravity rounded-3xl p-6 space-y-4">
+          <div className="card-vault rounded-3xl p-6 space-y-4">
             <h2 className="text-xl font-bold text-slate-100 font-serif-luxury">Help & Support Desk</h2>
             <p className="text-xs text-slate-400">Submit a support request directly to our 24/7 technical team.</p>
 
@@ -220,7 +220,7 @@ export const Profile = () => {
                 </div>
                 <button 
                   type="submit"
-                  className="w-full btn-gold-antigravity py-3.5 rounded-2xl text-xs font-bold font-serif-luxury flex items-center justify-center gap-2"
+                  className="w-full btn-gold-vault py-3.5 rounded-2xl text-xs font-bold font-serif-luxury flex items-center justify-center gap-2"
                 >
                   <Send size={14} /> Send Support Ticket
                 </button>
@@ -249,7 +249,7 @@ export const Profile = () => {
             </div>
           </header>
 
-          <div className="card-antigravity rounded-3xl p-5 border border-white/10 space-y-4 shadow-xl">
+          <div className="card-vault rounded-3xl p-5 border border-white/10 space-y-4 shadow-xl">
             <div className="flex items-center justify-between px-1 pb-2 border-b border-slate-800">
               <span className="text-xs text-slate-400 font-medium">Referral Tier:</span>
               <span className="flex items-center gap-1.5 text-xs text-amber-300 font-bold">

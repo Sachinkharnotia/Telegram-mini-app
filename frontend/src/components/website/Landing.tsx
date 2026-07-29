@@ -196,7 +196,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
       {}
       {apiDiagnosticModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="card-antigravity rounded-3xl p-6 sm:p-8 max-w-md w-full border border-amber-400/30 space-y-4 animate-scale-up">
+          <div className="card-vault rounded-3xl p-6 sm:p-8 max-w-md w-full border border-amber-400/30 space-y-4 animate-scale-up">
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
               <h3 className="text-lg font-bold font-serif-luxury text-amber-300 flex items-center gap-2">
                 <Code2 size={18} /> {apiDiagnosticModal.title}
@@ -211,7 +211,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
                 </div>
               ))}
             </div>
-            <button onClick={() => setApiDiagnosticModal(null)} className="w-full btn-gold-antigravity py-3 rounded-xl text-xs font-bold font-serif-luxury">Close Live Telemetry Inspector</button>
+            <button onClick={() => setApiDiagnosticModal(null)} className="w-full btn-gold-vault py-3 rounded-xl text-xs font-bold font-serif-luxury">Close Live Telemetry Inspector</button>
           </div>
         </div>
       )}
@@ -219,7 +219,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
       {}
       {authModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="card-antigravity rounded-3xl p-6 sm:p-8 max-w-md w-full border border-amber-400/30 space-y-5 animate-scale-up">
+          <div className="card-vault rounded-3xl p-6 sm:p-8 max-w-md w-full border border-amber-400/30 space-y-5 animate-scale-up">
             
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
@@ -272,7 +272,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-amber-400"
                   />
                 </div>
-                <button type="submit" className="w-full btn-gold-antigravity py-3.5 rounded-2xl font-bold font-serif-luxury">
+                <button type="submit" className="w-full btn-gold-vault py-3.5 rounded-2xl font-bold font-serif-luxury">
                   Send Reset Link
                 </button>
                 <button type="button" onClick={() => setAuthMode('signin')} className="w-full text-center text-xs text-amber-400 hover:underline">
@@ -360,7 +360,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
 
                 <button 
                   type="submit"
-                  className="w-full btn-gold-antigravity py-3.5 rounded-2xl text-xs font-bold font-serif-luxury uppercase tracking-wider"
+                  className="w-full btn-gold-vault py-3.5 rounded-2xl text-xs font-bold font-serif-luxury uppercase tracking-wider"
                 >
                   {authMode === 'signup' ? 'Create Account & Start' : 'Sign In To Vault'}
                 </button>
@@ -374,7 +374,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
       {}
       {contactSupportModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="card-antigravity rounded-3xl p-6 sm:p-8 max-w-md w-full border border-purple-400/30 space-y-5 animate-scale-up">
+          <div className="card-vault rounded-3xl p-6 sm:p-8 max-w-md w-full border border-purple-400/30 space-y-5 animate-scale-up">
             <div className="flex justify-between items-center">
               <h3 className="text-xl font-bold font-serif-luxury text-slate-100 flex items-center gap-2">
                 <Headphones size={20} className="text-purple-400" /> 24/7 Support Desk
@@ -421,7 +421,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
 
               <button 
                 type="submit"
-                className="w-full btn-gold-antigravity py-3.5 rounded-2xl text-xs font-bold font-serif-luxury uppercase tracking-wider flex items-center justify-center gap-2"
+                className="w-full btn-gold-vault py-3.5 rounded-2xl text-xs font-bold font-serif-luxury uppercase tracking-wider flex items-center justify-center gap-2"
               >
                 <Send size={14} /> Send Support Ticket
               </button>
@@ -493,7 +493,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
                 setAuthMode('signup');
                 setAuthModalOpen(true);
               }}
-              className="btn-gold-antigravity px-4 py-2 sm:px-6 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold font-serif-luxury tracking-wider flex items-center gap-1.5"
+              className="btn-gold-vault px-4 py-2 sm:px-6 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold font-serif-luxury tracking-wider flex items-center gap-1.5"
             >
               <UserPlus size={14} /> + Create Account
             </button>
@@ -673,7 +673,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
                     onLaunchApp();
                   }
                 }}
-                className="w-full sm:w-auto btn-gold-antigravity px-6 py-3.5 sm:px-8 sm:py-4 rounded-2xl text-xs sm:text-sm font-bold font-serif-luxury tracking-wider flex items-center justify-center gap-2 shadow-2xl"
+                className="w-full sm:w-auto btn-gold-vault px-6 py-3.5 sm:px-8 sm:py-4 rounded-2xl text-xs sm:text-sm font-bold font-serif-luxury tracking-wider flex items-center justify-center gap-2 shadow-2xl"
               >
                 <Send size={16} /> Open Telegram Mini App &rarr;
               </button>
@@ -687,25 +687,25 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-7xl mx-auto mt-16 sm:mt-24">
-            <div onClick={() => navigateTo('deposit')} className="card-antigravity rounded-2xl sm:rounded-3xl p-5 border border-white/10 hover:border-amber-400/50 cursor-pointer transition-all group">
+            <div onClick={() => navigateTo('deposit')} className="card-vault rounded-2xl sm:rounded-3xl p-5 border border-white/10 hover:border-amber-400/50 cursor-pointer transition-all group">
               <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-amber-400 mb-3 group-hover:scale-110 transition-transform"><ArrowDownLeft size={18} /></div>
               <h3 className="text-base font-bold font-serif-luxury text-slate-100 mb-1">Deposit Gateway &rarr;</h3>
               <p className="text-xs text-slate-400">TRC20 deposit portal & projected yield calculation.</p>
             </div>
 
-            <div onClick={() => navigateTo('withdrawal')} className="card-antigravity rounded-2xl sm:rounded-3xl p-5 border border-white/10 hover:border-teal-400/50 cursor-pointer transition-all group">
+            <div onClick={() => navigateTo('withdrawal')} className="card-vault rounded-2xl sm:rounded-3xl p-5 border border-white/10 hover:border-teal-400/50 cursor-pointer transition-all group">
               <div className="w-9 h-9 rounded-xl bg-teal-500/10 border border-teal-400/30 flex items-center justify-center text-teal-300 mb-3 group-hover:scale-110 transition-transform"><ArrowUpRight size={18} /></div>
               <h3 className="text-base font-bold font-serif-luxury text-slate-100 mb-1">Withdrawal Portal &rarr;</h3>
               <p className="text-xs text-slate-400">Instant payout portal with fee estimation.</p>
             </div>
 
-            <div onClick={() => navigateTo('tasks')} className="card-antigravity rounded-2xl sm:rounded-3xl p-5 border border-white/10 hover:border-purple-400/50 cursor-pointer transition-all group">
+            <div onClick={() => navigateTo('tasks')} className="card-vault rounded-2xl sm:rounded-3xl p-5 border border-white/10 hover:border-purple-400/50 cursor-pointer transition-all group">
               <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-400/30 flex items-center justify-center text-purple-300 mb-3 group-hover:scale-110 transition-transform"><Gift size={18} /></div>
               <h3 className="text-base font-bold font-serif-luxury text-slate-100 mb-1">Tasks & Wheel &rarr;</h3>
               <p className="text-xs text-slate-400">Daily gift box, spin wheel & social bounties.</p>
             </div>
 
-            <div onClick={() => navigateTo('admin')} className="card-antigravity rounded-2xl sm:rounded-3xl p-5 border border-white/10 hover:border-amber-400/50 cursor-pointer transition-all group">
+            <div onClick={() => navigateTo('admin')} className="card-vault rounded-2xl sm:rounded-3xl p-5 border border-white/10 hover:border-amber-400/50 cursor-pointer transition-all group">
               <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-amber-400 mb-3 group-hover:scale-110 transition-transform"><Sliders size={18} /></div>
               <h3 className="text-base font-bold font-serif-luxury text-slate-100 mb-1">Admin Panel &rarr;</h3>
               <p className="text-xs text-slate-400">Manage mining rates, deposits & announcements.</p>
@@ -718,14 +718,14 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
       {currentPage === 'deposit' && (
         <div className="animate-fade-in pt-28 sm:pt-36 pb-16 sm:pb-20 px-4 sm:px-6 max-w-4xl mx-auto space-y-6">
           <button onClick={() => navigateTo('home')} className="flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300"><ArrowLeft size={16} /> Back to Home</button>
-          <div className="card-antigravity rounded-3xl p-6 sm:p-8 space-y-5 border border-amber-400/30">
+          <div className="card-vault rounded-3xl p-6 sm:p-8 space-y-5 border border-amber-400/30">
             <h1 className="text-2xl font-bold font-serif-luxury text-slate-100">USDT (TRC20) Deposit Portal</h1>
             <p className="text-xs text-slate-400">Minimum Deposit: 3.00 USDT. Deposits are credited after 12 blockchain confirmations.</p>
             <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-2">
               <label className="block text-xs font-bold text-amber-300">TRC20 Deposit Wallet Address</label>
               <div className="flex items-center gap-2">
                 <input type="text" readOnly value="TYu7x92mA18xPzQmLVn94KkLpW289s" className="bg-transparent font-mono text-xs text-white flex-1 outline-none font-bold" />
-                <button onClick={() => showToast('Deposit Address Copied!')} className="btn-gold-antigravity px-4 py-2 rounded-xl text-xs font-bold"><Copy size={14} /></button>
+                <button onClick={() => showToast('Deposit Address Copied!')} className="btn-gold-vault px-4 py-2 rounded-xl text-xs font-bold"><Copy size={14} /></button>
               </div>
             </div>
           </div>
@@ -736,7 +736,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
       {currentPage === 'withdrawal' && (
         <div className="animate-fade-in pt-28 sm:pt-36 pb-16 sm:pb-20 px-4 sm:px-6 max-w-4xl mx-auto space-y-6">
           <button onClick={() => navigateTo('home')} className="flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300"><ArrowLeft size={16} /> Back to Home</button>
-          <div className="card-antigravity rounded-3xl p-6 sm:p-8 space-y-5 border border-purple-400/30">
+          <div className="card-vault rounded-3xl p-6 sm:p-8 space-y-5 border border-purple-400/30">
             <h1 className="text-2xl font-bold font-serif-luxury text-slate-100">Instant Withdrawal Portal</h1>
             <p className="text-xs text-slate-400">Minimum Withdrawal: 3.00 USDT. Network Fee: 1.00 USDT.</p>
             <form onSubmit={(e) => { e.preventDefault(); showToast('Withdrawal Request Submitted!'); }} className="space-y-4">
@@ -748,7 +748,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
                 <label className="block text-xs font-bold text-slate-300 mb-2">Destination TRC20 Wallet Address</label>
                 <input type="text" placeholder="T..." required className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-xs text-white outline-none focus:border-amber-400 font-mono" />
               </div>
-              <button type="submit" className="w-full btn-gold-antigravity py-3.5 rounded-2xl text-xs font-bold font-serif-luxury">Submit Withdrawal Request</button>
+              <button type="submit" className="w-full btn-gold-vault py-3.5 rounded-2xl text-xs font-bold font-serif-luxury">Submit Withdrawal Request</button>
             </form>
           </div>
         </div>
@@ -763,12 +763,12 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
             <p className="text-xs text-slate-400">Complete social tasks, unlock daily gift boxes, and spin the wheel for USDT rewards.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div onClick={() => showToast('Daily Chest Unlocked: +0.50 USDT!')} className="card-antigravity rounded-3xl p-6 border border-amber-400/30 cursor-pointer hover:scale-98 transition-transform space-y-2">
+            <div onClick={() => showToast('Daily Chest Unlocked: +0.50 USDT!')} className="card-vault rounded-3xl p-6 border border-amber-400/30 cursor-pointer hover:scale-98 transition-transform space-y-2">
               <div className="text-3xl">🎁</div>
               <h3 className="text-lg font-bold font-serif-luxury text-slate-100">Daily Gift Box</h3>
               <p className="text-xs text-slate-400">Claim consecutive login bonus payouts.</p>
             </div>
-            <div onClick={() => setSpinWheelOpen(true)} className="card-antigravity rounded-3xl p-6 border border-teal-400/30 cursor-pointer hover:scale-98 transition-transform space-y-2">
+            <div onClick={() => setSpinWheelOpen(true)} className="card-vault rounded-3xl p-6 border border-teal-400/30 cursor-pointer hover:scale-98 transition-transform space-y-2">
               <div className="text-3xl">🎡</div>
               <h3 className="text-lg font-bold font-serif-luxury text-slate-100">Lucky Spin Wheel</h3>
               <p className="text-xs text-slate-400">Spin wheel daily to win up to 10.00 USDT &rarr;</p>
@@ -781,7 +781,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
       {currentPage === 'admin' && (
         <div className="animate-fade-in pt-28 sm:pt-36 pb-16 sm:pb-20 px-4 sm:px-6 max-w-5xl mx-auto space-y-6">
           <button onClick={() => navigateTo('home')} className="flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300"><ArrowLeft size={16} /> Back to Home</button>
-          <div className="card-antigravity rounded-3xl p-6 sm:p-8 space-y-6 border border-amber-400/40">
+          <div className="card-vault rounded-3xl p-6 sm:p-8 space-y-6 border border-amber-400/40">
             <div className="flex justify-between items-center border-b border-slate-800 pb-4">
               <div>
                 <h1 className="text-2xl font-bold font-serif-luxury text-amber-300 flex items-center gap-2"><Sliders size={22} /> Platform Admin Control Suite</h1>
@@ -810,7 +810,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
               <textarea rows={3} value={announcementText} onChange={(e) => setAnnouncementText(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3 text-xs text-slate-200 outline-none" />
             </div>
 
-            <button onClick={() => showToast('Admin System Settings Updated!')} className="w-full btn-gold-antigravity py-3.5 rounded-2xl text-xs font-bold font-serif-luxury">Save Admin System Configurations</button>
+            <button onClick={() => showToast('Admin System Settings Updated!')} className="w-full btn-gold-vault py-3.5 rounded-2xl text-xs font-bold font-serif-luxury">Save Admin System Configurations</button>
           </div>
         </div>
       )}
@@ -824,12 +824,12 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
             <p className="text-slate-400 text-xs">Invite investors and earn automated commissions paid straight to your balance pool.</p>
           </div>
 
-          <div className="card-antigravity rounded-3xl p-6 border border-white/10 space-y-5">
+          <div className="card-vault rounded-3xl p-6 border border-white/10 space-y-5">
             <div className="space-y-2">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">Your Telegram Referral Link</label>
               <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 p-2 rounded-2xl">
                 <input type="text" readOnly value="https://t.me/VaultYieldBot?start=ref_89412" className="bg-transparent text-xs text-amber-300 font-mono flex-1 outline-none px-3 font-bold" />
-                <button onClick={copyReferralLink} className="btn-gold-antigravity px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5">{copiedLink ? <CheckCircle2 size={14} /> : <Copy size={14} />}{copiedLink ? 'Copied' : 'Copy'}</button>
+                <button onClick={copyReferralLink} className="btn-gold-vault px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5">{copiedLink ? <CheckCircle2 size={14} /> : <Copy size={14} />}{copiedLink ? 'Copied' : 'Copy'}</button>
               </div>
             </div>
 
@@ -857,7 +857,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
             <h1 className="text-3xl font-bold font-serif-luxury text-slate-100">System Notification Stream</h1>
             <p className="text-slate-400 text-xs">Real-time alerts for deposit confirmations, mining rewards, and security updates.</p>
           </div>
-          <div className="card-antigravity rounded-3xl p-6 border border-white/10 space-y-3">
+          <div className="card-vault rounded-3xl p-6 border border-white/10 space-y-3">
             {[
               { title: 'Deposit Confirmed', msg: 'Your 250.00 USDT deposit was confirmed on TRC20 blockchain.', time: '10 mins ago' },
               { title: 'Mining Reward Credited', msg: 'Daily yield payout of 1.25 USDT credited to unclaimed pool.', time: '1 hour ago' },
@@ -880,7 +880,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
       {currentPage === 'profile' && (
         <div className="animate-fade-in pt-28 sm:pt-36 pb-16 sm:pb-20 px-4 sm:px-6 max-w-4xl mx-auto space-y-6">
           <button onClick={() => navigateTo('home')} className="flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300"><ArrowLeft size={16} /> Back to Home</button>
-          <div className="card-antigravity rounded-3xl p-6 sm:p-8 space-y-5 border border-amber-400/30">
+          <div className="card-vault rounded-3xl p-6 sm:p-8 space-y-5 border border-amber-400/30">
             <h1 className="text-2xl font-bold font-serif-luxury text-slate-100">Investor Profile & KYC Verification</h1>
             <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-3 text-xs">
               <div className="flex justify-between border-b border-slate-800 pb-2">
@@ -909,7 +909,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
             <p className="text-slate-400 text-xs">Real-time audit log of platform deposits, claims, withdrawals, and commissions.</p>
           </div>
 
-          <div className="card-antigravity rounded-3xl p-6 border border-white/10 space-y-5">
+          <div className="card-vault rounded-3xl p-6 border border-white/10 space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
               <div className="flex items-center gap-2">
                 <Filter size={16} className="text-amber-400" />
@@ -948,7 +948,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
         <div className="animate-fade-in pt-28 sm:pt-36 pb-16 sm:pb-20 px-4 sm:px-6 max-w-7xl mx-auto space-y-8">
           {securityModal && (
             <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="card-antigravity rounded-3xl p-6 sm:p-8 max-w-md w-full border border-amber-400/30 space-y-4 animate-scale-up">
+              <div className="card-vault rounded-3xl p-6 sm:p-8 max-w-md w-full border border-amber-400/30 space-y-4 animate-scale-up">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-bold font-serif-luxury text-amber-300">{securityModal}</h3>
                   <button onClick={() => setSecurityModal(null)} className="p-1 text-slate-400 hover:text-white"><X size={20} /></button>
@@ -959,7 +959,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
                   <p>Gateway Latency: 42ms</p>
                   <p>Cold Storage Multi-Sig: 3/5 Signatures Active</p>
                 </div>
-                <button onClick={() => setSecurityModal(null)} className="w-full btn-gold-antigravity py-3 rounded-xl text-xs font-bold">Close Verification Window</button>
+                <button onClick={() => setSecurityModal(null)} className="w-full btn-gold-vault py-3 rounded-xl text-xs font-bold">Close Verification Window</button>
               </div>
             </div>
           )}
@@ -969,17 +969,17 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
             <p className="text-slate-400 text-xs">Click any security module below to inspect real-time audit protocols and verification data.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto pt-4">
-            <div onClick={() => setSecurityModal('Cold Storage Vault Diagnostics')} className="card-antigravity rounded-3xl p-6 border border-white/10 hover:border-amber-400/50 cursor-pointer transition-all space-y-4 group">
+            <div onClick={() => setSecurityModal('Cold Storage Vault Diagnostics')} className="card-vault rounded-3xl p-6 border border-white/10 hover:border-amber-400/50 cursor-pointer transition-all space-y-4 group">
               <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform"><KeyRound size={22} /></div>
               <h3 className="text-lg font-bold font-serif-luxury text-slate-100 flex items-center justify-between">Cold Storage Vaults <ArrowUpRight size={16} className="text-amber-400" /></h3>
               <p className="text-slate-400 text-xs leading-relaxed">98% of asset reserves are kept offline in isolated multi-signature cold wallets.</p>
             </div>
-            <div onClick={() => setSecurityModal('Encrypted Gateway Diagnostics')} className="card-antigravity rounded-3xl p-6 border border-white/10 hover:border-teal-400/50 cursor-pointer transition-all space-y-4 group">
+            <div onClick={() => setSecurityModal('Encrypted Gateway Diagnostics')} className="card-vault rounded-3xl p-6 border border-white/10 hover:border-teal-400/50 cursor-pointer transition-all space-y-4 group">
               <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-400/30 flex items-center justify-center text-teal-300 group-hover:scale-110 transition-transform"><Lock size={22} /></div>
               <h3 className="text-lg font-bold font-serif-luxury text-slate-100 flex items-center justify-between">Encrypted Gateway <ArrowUpRight size={16} className="text-teal-300" /></h3>
               <p className="text-slate-400 text-xs leading-relaxed">End-to-end encrypted API routing and automated TRC20 multi-confirmation checks.</p>
             </div>
-            <div onClick={() => setSecurityModal('Smart Audit Protocol Diagnostics')} className="card-antigravity rounded-3xl p-6 border border-white/10 hover:border-purple-400/50 cursor-pointer transition-all space-y-4 group">
+            <div onClick={() => setSecurityModal('Smart Audit Protocol Diagnostics')} className="card-vault rounded-3xl p-6 border border-white/10 hover:border-purple-400/50 cursor-pointer transition-all space-y-4 group">
               <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-400/30 flex items-center justify-center text-purple-300 group-hover:scale-110 transition-transform"><FileCheck size={22} /></div>
               <h3 className="text-lg font-bold font-serif-luxury text-slate-100 flex items-center justify-between">Audited Smart Logic <ArrowUpRight size={16} className="text-purple-300" /></h3>
               <p className="text-slate-400 text-xs leading-relaxed">Real-time audit logging and continuous security validation against automated exploit vectors.</p>
@@ -991,7 +991,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
       {currentPage === 'calculator' && (
         <div className="animate-fade-in pt-28 sm:pt-36 pb-16 sm:pb-20 px-4 sm:px-6 max-w-5xl mx-auto space-y-6">
           <button onClick={() => navigateTo('home')} className="flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300"><ArrowLeft size={16} /> Back to Home</button>
-          <div className="card-antigravity rounded-3xl p-6 sm:p-12 border border-amber-400/30 shadow-2xl relative overflow-hidden space-y-5">
+          <div className="card-vault rounded-3xl p-6 sm:p-12 border border-amber-400/30 shadow-2xl relative overflow-hidden space-y-5">
             <h1 className="text-2xl sm:text-3xl font-bold font-serif-luxury text-slate-100 text-center">Interactive Yield Calculator</h1>
             <div className="space-y-4 max-w-xl mx-auto">
               <div>
@@ -1020,10 +1020,10 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
             <p className="text-xs text-slate-400">Real-time metrics from our liquidity allocation protocol.</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto pt-4">
-            <div className="card-antigravity rounded-2xl p-6 text-center border border-white/10"><p className="text-3xl font-bold font-serif-luxury text-slate-100">$48.2M+</p><p className="text-xs text-slate-400 mt-2 uppercase tracking-wider">Total Value Locked</p></div>
-            <div className="card-antigravity rounded-2xl p-6 text-center border border-white/10"><p className="text-3xl font-bold font-serif-luxury text-teal-300">99.98%</p><p className="text-xs text-slate-400 mt-2 uppercase tracking-wider">System Uptime</p></div>
-            <div className="card-antigravity rounded-2xl p-6 text-center border border-white/10"><p className="text-3xl font-bold font-serif-luxury text-amber-400">145,000+</p><p className="text-xs text-slate-400 mt-2 uppercase tracking-wider">Active Investors</p></div>
-            <div className="card-antigravity rounded-2xl p-6 text-center border border-white/10"><p className="text-3xl font-bold font-serif-luxury text-slate-100">0.00s</p><p className="text-xs text-slate-400 mt-2 uppercase tracking-wider">Instant Settlements</p></div>
+            <div className="card-vault rounded-2xl p-6 text-center border border-white/10"><p className="text-3xl font-bold font-serif-luxury text-slate-100">$48.2M+</p><p className="text-xs text-slate-400 mt-2 uppercase tracking-wider">Total Value Locked</p></div>
+            <div className="card-vault rounded-2xl p-6 text-center border border-white/10"><p className="text-3xl font-bold font-serif-luxury text-teal-300">99.98%</p><p className="text-xs text-slate-400 mt-2 uppercase tracking-wider">System Uptime</p></div>
+            <div className="card-vault rounded-2xl p-6 text-center border border-white/10"><p className="text-3xl font-bold font-serif-luxury text-amber-400">145,000+</p><p className="text-xs text-slate-400 mt-2 uppercase tracking-wider">Active Investors</p></div>
+            <div className="card-vault rounded-2xl p-6 text-center border border-white/10"><p className="text-3xl font-bold font-serif-luxury text-slate-100">0.00s</p><p className="text-xs text-slate-400 mt-2 uppercase tracking-wider">Instant Settlements</p></div>
           </div>
         </div>
       )}

@@ -93,7 +93,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
       </header>
 
       {}
-      <div className="card-antigravity rounded-3xl p-6 relative overflow-hidden space-y-4 text-center border border-amber-400/30 shadow-2xl">
+      <div className="card-vault rounded-3xl p-6 relative overflow-hidden space-y-4 text-center border border-amber-400/30 shadow-2xl">
         {coinsAnimation.map(coin => (
           <div 
             key={coin.id}
@@ -121,7 +121,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
           className={`w-full py-4 rounded-2xl text-xs font-bold font-serif-luxury uppercase tracking-wider shadow-xl transition-all ${
             isClaiming || unclaimedYield === 0
               ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-              : 'btn-gold-antigravity'
+              : 'btn-gold-vault'
           }`}
         >
           {isClaiming ? 'Transferring To Balance...' : 'Claim Earnings To Wallet'}
@@ -132,7 +132,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
       <div className="grid grid-cols-2 gap-3.5">
         <button
           onClick={() => onNavigate?.('deposit')}
-          className="card-antigravity rounded-2xl p-4 border border-teal-400/30 hover:border-teal-400/60 transition-all flex items-center justify-between group active:scale-98"
+          className="card-vault rounded-2xl p-4 border border-teal-400/30 hover:border-teal-400/60 transition-all flex items-center justify-between group active:scale-98"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-400/30 flex items-center justify-center text-teal-300">
@@ -148,7 +148,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
 
         <button
           onClick={() => onNavigate?.('withdrawal')}
-          className="card-antigravity rounded-2xl p-4 border border-purple-400/30 hover:border-purple-400/60 transition-all flex items-center justify-between group active:scale-98"
+          className="card-vault rounded-2xl p-4 border border-purple-400/30 hover:border-purple-400/60 transition-all flex items-center justify-between group active:scale-98"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-400/30 flex items-center justify-center text-purple-300">
@@ -165,7 +165,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
 
       {}
       <div className="grid grid-cols-2 gap-3.5">
-        <div className="card-antigravity rounded-2xl p-4 border border-slate-800 space-y-1">
+        <div className="card-vault rounded-2xl p-4 border border-slate-800 space-y-1">
           <div className="flex items-center gap-2">
             <Coins size={16} className="text-amber-400" />
             <span className="text-xs text-slate-400 font-medium">Claimed Profit</span>
@@ -173,7 +173,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
           <p className="text-lg font-bold text-amber-300 font-serif-luxury">{claimedYield.toFixed(4)} USDT</p>
         </div>
 
-        <div className="card-antigravity rounded-2xl p-4 border border-slate-800 space-y-1">
+        <div className="card-vault rounded-2xl p-4 border border-slate-800 space-y-1">
           <div className="flex items-center gap-2">
             <Wallet size={16} className="text-teal-300" />
             <span className="text-xs text-slate-400 font-medium">Wallet Balance</span>
@@ -186,7 +186,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
       <div className="space-y-4 pt-1">
         <div 
           onClick={() => setExpandActivities(!expandActivities)}
-          className="card-antigravity rounded-2xl p-4 flex items-center justify-between cursor-pointer border border-amber-400/20"
+          className="card-vault rounded-2xl p-4 flex items-center justify-between cursor-pointer border border-amber-400/20"
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-400">
@@ -205,7 +205,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
             <div className="grid grid-cols-2 gap-3.5">
               <div 
                 onClick={() => setWheelOpen(true)}
-                className="card-antigravity rounded-2xl p-4 border border-teal-400/30 cursor-pointer hover:border-teal-400/60 transition-all space-y-2 group"
+                className="card-vault rounded-2xl p-4 border border-teal-400/30 cursor-pointer hover:border-teal-400/60 transition-all space-y-2 group"
               >
                 <div className="w-8 h-8 rounded-lg bg-teal-400/10 flex items-center justify-center text-teal-300 group-hover:rotate-45 transition-transform">
                   <Compass size={18} />
@@ -216,7 +216,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
 
               <div 
                 onClick={() => onNavigate?.('tasks')}
-                className="card-antigravity rounded-2xl p-4 border border-amber-400/30 cursor-pointer hover:border-amber-400/60 transition-all space-y-2"
+                className="card-vault rounded-2xl p-4 border border-amber-400/30 cursor-pointer hover:border-amber-400/60 transition-all space-y-2"
               >
                 <div className="w-8 h-8 rounded-lg bg-amber-400/10 flex items-center justify-center text-amber-400">
                   <CalendarCheck size={18} />
@@ -228,7 +228,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
 
             <div 
               onClick={() => onNavigate?.('tasks')}
-              className="card-antigravity rounded-2xl p-4 border border-purple-400/30 flex items-center justify-between cursor-pointer hover:border-purple-400/60 transition-all"
+              className="card-vault rounded-2xl p-4 border border-purple-400/30 flex items-center justify-between cursor-pointer hover:border-purple-400/60 transition-all"
             >
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-300">

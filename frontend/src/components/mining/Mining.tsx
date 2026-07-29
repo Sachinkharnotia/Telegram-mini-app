@@ -63,7 +63,7 @@ export const Mining = () => {
           ))}
         </div>
         
-        <div className="card-antigravity rounded-3xl p-6 text-center relative overflow-hidden">
+        <div className="card-vault rounded-3xl p-6 text-center relative overflow-hidden">
           <div className="relative z-10">
             <p className="text-slate-400 font-bold text-xs tracking-widest uppercase mb-3 font-serif-luxury">PROJECTED YIELD</p>
             <div className="text-teal-300 text-3xl font-bold leading-none tracking-tight flex items-baseline justify-center gap-2">

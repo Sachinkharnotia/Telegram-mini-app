@@ -40,7 +40,7 @@ export const Deposit = ({ onBack }: { onBack?: () => void }) => {
           </div>
         </div>
         
-        <div className="card-antigravity rounded-3xl p-5 relative overflow-hidden shadow-xl">
+        <div className="card-vault rounded-3xl p-5 relative overflow-hidden shadow-xl">
           <h3 className="text-center font-bold text-slate-100 text-base mb-5 font-serif-luxury">
             Estimated Yield Output
           </h3>

@@ -40,7 +40,7 @@ export const Withdrawal = ({ onBack }: { onBack?: () => void }) => {
           />
         </div>
         
-        <div className="card-antigravity rounded-3xl p-5 relative overflow-hidden">
+        <div className="card-vault rounded-3xl p-5 relative overflow-hidden">
           <h3 className="text-center font-bold text-slate-100 text-base mb-4 font-serif-luxury">
             Opportunity Cost Assessment
           </h3>

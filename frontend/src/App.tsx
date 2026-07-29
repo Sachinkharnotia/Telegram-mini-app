@@ -72,7 +72,7 @@ const App: React.FC = () => {
   if (error) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background text-rose-500 p-6 text-center">
-        <div className="card-antigravity max-w-sm border-rose-500/30 p-6 rounded-2xl">
+        <div className="card-vault max-w-sm border-rose-500/30 p-6 rounded-2xl">
           <h2 className="text-xl font-bold mb-2 font-serif-luxury">Authentication Error</h2>
           <p className="text-sm opacity-80">{error}</p>
         </div>
