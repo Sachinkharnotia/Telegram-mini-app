@@ -38,6 +38,7 @@ import {
   Code2
 } from 'lucide-react';
 import { SpinWheelModal } from '../common/SpinWheelModal';
+import { GiftBoxModal } from '../common/GiftBoxModal';
 import { getTelegramDeepLink, openExternalLink, isTelegramEnvironment } from '../../utils/telegram';
 
 class DecimalPrecise {
@@ -90,6 +91,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
   const [txFilter, setTxFilter] = useState('all');
   const [securityModal, setSecurityModal] = useState<string | null>(null);
   const [spinWheelOpen, setSpinWheelOpen] = useState(false);
+  const [giftBoxOpen, setGiftBoxOpen] = useState(false);
   const [websiteToast, setWebsiteToast] = useState<string | null>(null);
 
   const [miningRate, setMiningRate] = useState('0.50');
@@ -183,6 +185,12 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
         isOpen={spinWheelOpen}
         onClose={() => setSpinWheelOpen(false)}
         onRewardWon={(prize) => showToast(`Lucky Wheel Prize Won: +${prize} USDT!`)}
+      />
+
+      <GiftBoxModal
+        isOpen={giftBoxOpen}
+        onClose={() => setGiftBoxOpen(false)}
+        onRewardWon={(prize) => showToast(`Mystery Gift Opened: Won +${prize}!`)}
       />
 
       {}
@@ -755,10 +763,10 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
             <p className="text-xs text-slate-400">Complete social tasks, unlock daily gift boxes, and spin the wheel for USDT rewards.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div onClick={() => showToast('Daily Chest Unlocked: +0.50 USDT!')} className="card-vault rounded-3xl p-6 border border-amber-400/30 cursor-pointer hover:scale-98 transition-transform space-y-2">
+            <div onClick={() => setGiftBoxOpen(true)} className="card-vault rounded-3xl p-6 border border-amber-400/30 cursor-pointer hover:scale-98 transition-transform space-y-2">
               <div className="text-3xl">🎁</div>
               <h3 className="text-lg font-bold font-serif-luxury text-slate-100">Daily Gift Box</h3>
-              <p className="text-xs text-slate-400">Claim consecutive login bonus payouts.</p>
+              <p className="text-xs text-slate-400">Claim consecutive login bonus payouts &rarr;</p>
             </div>
             <div onClick={() => setSpinWheelOpen(true)} className="card-vault rounded-3xl p-6 border border-teal-400/30 cursor-pointer hover:scale-98 transition-transform space-y-2">
               <div className="text-3xl">🎡</div>
