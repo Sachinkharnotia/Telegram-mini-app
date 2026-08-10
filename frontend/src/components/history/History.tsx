@@ -1,9 +1,6 @@
-import React from 'react';
 import { ChevronLeft, TrendingUp } from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
 
 export const History = () => {
-  const { user } = useAuthStore();
   
   const transactions = [
     { id: 1, type: 'Yield Allocation', date: '2026-07-24 14:00', amount: '+0.0341 USDT' },

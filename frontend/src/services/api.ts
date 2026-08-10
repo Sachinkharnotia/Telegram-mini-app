@@ -1,14 +1,9 @@
 import Decimal from 'decimal.js';
-import { 
+import type { 
   ApiResponse, 
   User, 
-  DepositRecord, 
-  MiningRecord, 
-  ClaimRecord, 
-  WithdrawalRecord, 
   ReferralInfo, 
-  TaskItem, 
-  TransactionItem 
+  TaskItem 
 } from '../types';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || '';

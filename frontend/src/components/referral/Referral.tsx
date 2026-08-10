@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
-import { Copy, Check, Users, Gift, ChevronRight } from 'lucide-react';
+import { Copy, Check, Users, Gift } from 'lucide-react';
 
 export const Referral = () => {
   const { user } = useAuthStore();

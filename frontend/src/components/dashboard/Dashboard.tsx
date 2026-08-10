@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { 
   Coins, 
@@ -7,9 +7,6 @@ import {
   Pickaxe, 
   Sparkles, 
   ChevronDown, 
-  Trophy, 
-  Users, 
-  ShieldCheck,
   Wallet,
   ChevronRight,
   Gift,
@@ -26,7 +23,6 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
   const [isClaiming, setIsClaiming] = useState(false);
   const [coinsAnimation, setCoinsAnimation] = useState<Array<{ id: number; left: number }>>([]);
   const [walletBalance, setWalletBalance] = useState(user?.balance ?? 0);
-  const [vaultTokens, setVaultTokens] = useState(user?.token_balance ?? 0);
   const [expandActivities, setExpandActivities] = useState(true);
   const [wheelOpen, setWheelOpen] = useState(false);
 
@@ -40,8 +36,8 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
       setCoinsAnimation(newCoins);
 
       setTimeout(() => {
-        setClaimedYield(prev => prev + unclaimedYield);
-        setWalletBalance(prev => prev + unclaimedYield);
+        setClaimedYield((prev: number) => prev + unclaimedYield);
+        setWalletBalance((prev: number) => prev + unclaimedYield);
         setUnclaimedYield(0);
         setIsClaiming(false);
         setCoinsAnimation([]);
@@ -51,7 +47,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setUnclaimedYield(prev => prev + 0.00000015);
+      setUnclaimedYield((prev: number) => prev + 0.00000015);
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -64,7 +60,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         onClose={() => setWheelOpen(false)}
         onRewardWon={(prize) => {
           const amountNum = parseFloat(prize) || 0;
-          setWalletBalance(prev => prev + amountNum);
+          setWalletBalance((prev: number) => prev + amountNum);
         }}
       />
 
@@ -92,7 +88,6 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         </button>
       </header>
 
-      {}
       <div className="card-vault rounded-3xl p-6 relative overflow-hidden space-y-4 text-center border border-amber-400/30 shadow-2xl">
         {coinsAnimation.map(coin => (
           <div 
@@ -128,7 +123,6 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         </button>
       </div>
 
-      {}
       <div className="grid grid-cols-2 gap-3.5">
         <button
           onClick={() => onNavigate?.('deposit')}
@@ -163,7 +157,6 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         </button>
       </div>
 
-      {}
       <div className="grid grid-cols-2 gap-3.5">
         <div className="card-vault rounded-2xl p-4 border border-slate-800 space-y-1">
           <div className="flex items-center gap-2">
@@ -182,7 +175,6 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         </div>
       </div>
 
-      {}
       <div className="space-y-4 pt-1">
         <div 
           onClick={() => setExpandActivities(!expandActivities)}

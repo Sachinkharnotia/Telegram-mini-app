@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { 
   Shield, 
   Globe, 
-  Moon, 
   Bell, 
   Lock, 
   HelpCircle, 
@@ -14,8 +13,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   Send,
-  KeyRound,
-  Sun
+  KeyRound
 } from 'lucide-react';
 
 export const Profile = () => {

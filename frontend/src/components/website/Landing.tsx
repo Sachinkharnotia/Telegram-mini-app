@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   ShieldCheck, 
   Zap, 
   TrendingUp, 
   Lock, 
-  Users, 
   ArrowUpRight,
   Sparkles,
   BarChart3,
@@ -29,21 +28,14 @@ import {
   Wallet,
   Bot,
   Layers,
-  Cpu,
   UserCheck,
   Building2,
   Workflow,
   UserPlus,
   Headphones,
-  Mail,
   Eye,
   EyeOff,
-  Globe,
-  LogIn,
-  Key,
-  Code2,
-  Radio,
-  Server
+  Code2
 } from 'lucide-react';
 import { SpinWheelModal } from '../common/SpinWheelModal';
 import { getTelegramDeepLink, openExternalLink, isTelegramEnvironment } from '../../utils/telegram';

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
-import { expandTelegramApp, setTelegramHeaderColor } from './services/telegram';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { Deposit } from './components/deposit/Deposit';
 import { Mining } from './components/mining/Mining';
@@ -51,12 +50,14 @@ const App: React.FC = () => {
     
     if (!token && !window.Telegram?.WebApp?.initData) {
       setAuth('session_auth_token', {
-        id: 1001,
-        telegram_id: 98765432,
+        id: '1001',
+        telegramId: '98765432',
+        firstName: 'Investor',
         first_name: 'Investor',
-        is_premium: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        status: 'active',
+        isAdmin: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       });
     }
   }, []);
@@ -88,13 +89,13 @@ const App: React.FC = () => {
         <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5 bg-slate-900 border border-slate-700/60 rounded-full p-1.5 shadow-2xl backdrop-blur-md">
           <button 
             onClick={() => setViewMode('website')}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === 'website' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+            className="px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 bg-amber-500 text-slate-950 shadow-md"
           >
             <Monitor size={14} /> Website
           </button>
           <button 
             onClick={() => setViewMode('app')}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === 'app' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+            className="px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 text-slate-400 hover:text-slate-200"
           >
             <Smartphone size={14} /> Mini App
           </button>
@@ -116,13 +117,13 @@ const App: React.FC = () => {
       <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-full p-1.5 shadow-2xl backdrop-blur-md opacity-75 hover:opacity-100 transition-opacity">
         <button 
           onClick={() => setViewMode('website')}
-          className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 ${viewMode === 'website' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}
+          className="px-3 py-1 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 text-slate-400 hover:text-white"
         >
           <Monitor size={12} /> Website
         </button>
         <button 
           onClick={() => setViewMode('app')}
-          className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 ${viewMode === 'app' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'}`}
+          className="px-3 py-1 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 bg-amber-500 text-slate-950 shadow-md"
         >
           <Smartphone size={12} /> Mini App
         </button>

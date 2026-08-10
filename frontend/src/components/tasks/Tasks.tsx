@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ChevronLeft, Sparkles } from 'lucide-react';
 import { SpinWheelModal } from '../common/SpinWheelModal';
 

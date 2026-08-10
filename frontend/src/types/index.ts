@@ -1,5 +1,3 @@
-import Decimal from 'decimal.js';
-
 export type UserStatus = 'active' | 'suspended' | 'banned';
 export type KYCLevel = 'none' | 'basic' | 'full';
 
@@ -10,18 +8,25 @@ export interface KYCInfo {
 }
 
 export interface User {
-  id: string;
-  telegramId: string;
+  id: string | number;
+  telegramId?: string | number;
+  telegram_id?: string | number;
   username?: string;
   firstName?: string;
+  first_name?: string;
   lastName?: string;
+  last_name?: string;
   photoUrl?: string;
   walletAddress?: string;
-  status: UserStatus;
-  createdAt: string;
-  updatedAt: string;
+  wallet_address?: string;
+  status?: UserStatus;
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
   referredBy?: string;
-  isAdmin: boolean;
+  isAdmin?: boolean;
+  is_premium?: boolean;
   lastLoginAt?: string;
   kyc?: KYCInfo;
   token_balance?: number;

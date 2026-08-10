@@ -1,17 +1,5 @@
 import { create } from 'zustand';
-
-interface User {
-  id: number;
-  telegram_id: number;
-  username?: string;
-  first_name?: string;
-  last_name?: string;
-  language_code?: string;
-  is_premium: boolean;
-  wallet_address?: string;
-  created_at: string;
-  updated_at: string;
-}
+import type { User } from '../types';
 
 interface AuthState {
   token: string | null;
