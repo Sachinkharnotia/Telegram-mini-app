@@ -76,7 +76,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
 
       <header className="flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 font-bold shadow-md">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#C18DB4] via-[#E2CAD8] to-[#87A7D0] flex items-center justify-center text-[#0E1B48] font-bold shadow-lg">
             <Pickaxe size={20} />
           </div>
           <div>

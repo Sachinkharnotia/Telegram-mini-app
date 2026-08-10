@@ -179,7 +179,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-slate-100 font-sans selection:bg-amber-500 selection:text-slate-950 overflow-x-hidden transition-colors duration-300">
+    <div className="min-h-screen bg-transparent text-slate-100 font-sans selection:bg-[#C18DB4] selection:text-slate-950 overflow-x-hidden transition-colors duration-300">
       
       <SpinWheelModal 
         isOpen={spinWheelOpen}
@@ -437,7 +437,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
       )}
 
       {}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#060913]/95 backdrop-blur-2xl border-b border-amber-400/10">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-[#27425D] via-[#0E1B48] to-[#27425D] backdrop-blur-2xl border-b border-[#C18DB4]/40 shadow-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
           
           <div className="flex items-center gap-8">
@@ -445,7 +445,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
               onClick={() => navigateTo('home')}
               className="flex items-center gap-2.5 cursor-pointer group"
             >
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 font-bold text-base sm:text-lg shadow-[0_0_20px_rgba(245,158,11,0.3)]">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#C18DB4] via-[#E2CAD8] to-[#87A7D0] flex items-center justify-center text-[#0E1B48] font-bold text-base sm:text-lg shadow-[0_0_20px_rgba(193,141,180,0.4)]">
                 <TrendingUp size={18} className="sm:w-5 sm:h-5" />
               </div>
               <span className="text-base sm:text-xl font-bold font-serif-luxury text-slate-100 tracking-wide">VAULT YIELD</span>
@@ -651,15 +651,15 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
       {currentPage === 'home' && (
         <div className="animate-fade-in pt-28 sm:pt-36 pb-16 sm:pb-20 px-4 sm:px-6 max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto space-y-4 sm:space-y-6 relative z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-amber-500/10 border border-amber-400/30 text-amber-300 text-[10px] sm:text-xs font-bold font-serif-luxury tracking-wider">
-              <Sparkles size={12} className="sm:w-3.5 sm:h-3.5" /> Next-Gen Quantitative USDT Yield Platform
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0E1B48]/80 border border-[#C18DB4]/40 text-[#E2CAD8] text-[10px] sm:text-xs font-bold font-serif-luxury tracking-wider shadow-lg backdrop-blur-md">
+              <Sparkles size={13} className="text-[#C18DB4]" /> Next-Gen Quantitative USDT Yield Platform
             </div>
 
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold font-serif-luxury text-slate-100 tracking-tight leading-tight">
-              Institutional Yield & <span className="text-gold-metallic">Automated Mining</span>
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold font-serif-luxury text-white tracking-tight leading-tight">
+              Institutional Yield & Automated Mining
             </h1>
 
-            <p className="text-slate-400 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed px-2">
+            <p className="text-[#E2CAD8] font-medium text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed px-2">
               Maximize your USDT holdings with real-time liquidity allocation, multi-tier referral rewards, and instant Telegram Mini App execution.
             </p>
 

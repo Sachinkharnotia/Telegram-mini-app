@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #0E1B48;
+  --color-background: transparent;
   --color-surface-navy: #0E1F2F;
   --color-surface-card: #27425D;
   
@@ -29,24 +29,21 @@
 @layer base {
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-  body {
-    @apply bg-background text-text antialiased transition-colors duration-300;
+  html, body, #root {
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #0E1B48;
-    background-image: 
-      radial-gradient(ellipse at 50% 0%, rgba(193, 141, 180, 0.25), transparent 50%),
-      radial-gradient(ellipse at 100% 50%, rgba(135, 167, 208, 0.20), transparent 50%),
-      radial-gradient(ellipse at 0% 100%, rgba(14, 31, 47, 0.8), transparent 50%);
-    background-attachment: fixed;
-  }
-
-  html.light body {
-    background-color: #F4EFF6 !important;
-    color: #0E1B48 !important;
-    background-image: 
-      radial-gradient(ellipse at 50% 0%, rgba(193, 141, 180, 0.15), transparent 45%),
-      radial-gradient(ellipse at 100% 40%, rgba(135, 167, 208, 0.2), transparent 50%),
-      radial-gradient(ellipse at 0% 100%, rgba(226, 202, 216, 0.4), transparent 50%) !important;
+    background: linear-gradient(
+      to bottom,
+      #0E1B48 0%,
+      #87A7D0 35%,
+      #C18DB4 70%,
+      #E2CAD8 100%
+    ) !important;
+    background-attachment: fixed !important;
+    background-size: cover !important;
+    color: #F8FAFC;
   }
 
   h1, h2, h3, .font-serif-luxury {
@@ -58,45 +55,48 @@
 @layer components {
   
   .card-vault, .card-berry {
-    background: rgba(39, 66, 93, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(193, 141, 180, 0.25);
+    background: rgba(14, 27, 72, 0.75);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(226, 202, 216, 0.35);
     box-shadow: 
-      0 20px 40px -15px rgba(14, 27, 72, 0.7),
-      0 0 20px rgba(135, 167, 208, 0.15);
+      0 20px 40px -15px rgba(14, 27, 72, 0.6),
+      0 0 25px rgba(193, 141, 180, 0.15);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   html.light .card-vault, html.light .card-berry {
     background: #FFFFFF !important;
-    border: 1px solid rgba(193, 141, 180, 0.2) !important;
+    border: 1px solid rgba(226, 202, 216, 0.3) !important;
     box-shadow: 
-      0 20px 40px rgba(193, 141, 180, 0.1),
-      0 4px 12px rgba(14, 27, 72, 0.05) !important;
+      0 20px 40px rgba(193, 141, 180, 0.12),
+      0 4px 12px rgba(14, 27, 72, 0.04) !important;
   }
 
   .card-vault:hover, .card-berry:hover {
-    border-color: rgba(193, 141, 180, 0.5);
+    border-color: rgba(193, 141, 180, 0.6);
+    box-shadow: 
+      0 25px 50px -10px rgba(14, 27, 72, 0.8),
+      0 0 35px rgba(226, 202, 216, 0.30);
     transform: translateY(-2px);
   }
 
   html.light .card-vault:hover, html.light .card-berry:hover {
-    border-color: rgba(193, 141, 180, 0.4) !important;
+    border-color: rgba(193, 141, 180, 0.5) !important;
     box-shadow: 
-      0 25px 50px rgba(193, 141, 180, 0.15),
-      0 6px 16px rgba(14, 27, 72, 0.04) !important;
+      0 25px 50px rgba(193, 141, 180, 0.18),
+      0 6px 16px rgba(14, 27, 72, 0.05) !important;
   }
 
   nav {
     transition: background 0.3s ease, border-color 0.3s ease;
-    background-color: #0E1F2F !important;
-    border-color: rgba(193, 141, 180, 0.25) !important;
+    background-color: rgba(14, 27, 72, 0.90) !important;
+    border-color: rgba(226, 202, 216, 0.35) !important;
   }
 
   html.light nav {
     background: rgba(255, 255, 255, 0.95) !important;
-    border-color: rgba(193, 141, 180, 0.25) !important;
+    border-color: rgba(135, 167, 208, 0.30) !important;
     box-shadow: 0 10px 30px rgba(14, 27, 72, 0.06) !important;
   }
 
@@ -122,41 +122,24 @@
 
   html.light .bg-slate-900 {
     background-color: #E2CAD8 !important;
-    border-color: rgba(193, 141, 180, 0.3) !important;
+    border-color: rgba(135, 167, 208, 0.3) !important;
     color: #0E1B48 !important;
-  }
-
-  html.light body, html.light .min-h-screen, html.light .bg-background {
-    background-color: #F4EFF6 !important;
-    color: #0E1B48 !important;
-    background-image: 
-      radial-gradient(ellipse at 50% 0%, rgba(193, 141, 180, 0.15), transparent 45%),
-      radial-gradient(ellipse at 100% 40%, rgba(135, 167, 208, 0.2), transparent 50%),
-      radial-gradient(ellipse at 0% 100%, rgba(226, 202, 216, 0.4), transparent 50%) !important;
-  }
-
-  html.light .bg-[#060913], html.light .bg-[#0E1B48] {
-    background-color: #F4EFF6 !important;
-  }
-
-  html.light .bg-[#0E1F2F] {
-    background-color: #E2CAD8 !important;
   }
 
   .text-gold-metallic, .text-berry-gradient {
-    background: linear-gradient(135deg, #E2CAD8 0%, #C18DB4 50%, #87A7D0 100%);
+    background: linear-gradient(135deg, #0E1B48 0%, #27425D 60%, #0E1B48 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   html.light .text-gold-metallic, html.light .text-berry-gradient {
-    background: linear-gradient(135deg, #C18DB4 0%, #27425D 50%, #0E1B48 100%);
+    background: linear-gradient(135deg, #0E1B48 0%, #C18DB4 60%, #87A7D0 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   .text-aurora-gradient {
-    background: linear-gradient(135deg, #FFFFFF 0%, #E2CAD8 60%, #C18DB4 100%);
+    background: linear-gradient(135deg, #0E1B48 0%, #27425D 50%, #0E1B48 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -168,20 +151,22 @@
   }
 
   .btn-gold-vault, .btn-berry {
-    background: linear-gradient(135deg, #C18DB4 0%, #87A7D0 100%);
-    color: #FFFFFF !important;
-    font-weight: 700;
+    background: linear-gradient(135deg, #C18DB4 0%, #E2CAD8 50%, #C18DB4 100%);
+    color: #0E1B48 !important;
+    font-weight: 800;
     box-shadow: 
-      0 10px 25px -5px rgba(193, 141, 180, 0.45),
-      inset 0 1px 1px rgba(255, 255, 255, 0.4);
+      0 10px 25px -5px rgba(193, 141, 180, 0.5),
+      0 0 20px rgba(135, 167, 208, 0.3),
+      inset 0 1px 1px rgba(255, 255, 255, 0.6);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .btn-gold-vault:hover, .btn-berry:hover {
     background: linear-gradient(135deg, #E2CAD8 0%, #C18DB4 50%, #87A7D0 100%);
+    color: #FFFFFF !important;
     box-shadow: 
-      0 15px 35px -5px rgba(193, 141, 180, 0.65),
-      0 0 25px rgba(135, 167, 208, 0.4);
+      0 15px 35px -5px rgba(193, 141, 180, 0.7),
+      0 0 30px rgba(135, 167, 208, 0.5);
     transform: translateY(-2px);
   }
 }

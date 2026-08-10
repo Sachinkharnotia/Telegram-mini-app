@@ -113,8 +113,8 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0E1B48] font-sans text-slate-100 overflow-hidden relative">
-      <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5 bg-[#0E1F2F]/90 border border-[#C18DB4]/30 rounded-full p-1.5 shadow-2xl backdrop-blur-md opacity-75 hover:opacity-100 transition-opacity">
+    <div className="min-h-screen bg-transparent font-sans text-slate-100 overflow-hidden relative">
+      <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5 bg-[#0E1B48]/90 border border-[#C18DB4]/30 rounded-full p-1.5 shadow-2xl backdrop-blur-md opacity-75 hover:opacity-100 transition-opacity">
         <button 
           onClick={() => setViewMode('website')}
           className="px-3 py-1 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 text-slate-400 hover:text-white"
@@ -123,13 +123,13 @@ const App: React.FC = () => {
         </button>
         <button 
           onClick={() => setViewMode('app')}
-          className="px-3 py-1 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 bg-gradient-to-r from-[#C18DB4] to-[#87A7D0] text-slate-950 shadow-md"
+          className="px-3 py-1 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 bg-gradient-to-r from-[#0E1B48] to-[#C18DB4] text-white shadow-md"
         >
           <Smartphone size={12} /> Mini App
         </button>
         <button
           onClick={toggleTheme}
-          className="p-1 rounded-full bg-[#27425D] text-[#E2CAD8] hover:bg-[#1A285A] transition-all border border-[#C18DB4]/30"
+          className="p-1 rounded-full bg-[#0E1B48] text-[#E2CAD8] hover:bg-[#1A285A] transition-all border border-[#C18DB4]/30"
           title="Toggle Light/Dark Theme"
         >
           {themeMode === 'dark' ? <Sun size={12} /> : <Moon size={12} />}
@@ -148,7 +148,7 @@ const App: React.FC = () => {
         </main>
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0E1F2F]/95 backdrop-blur-2xl border-t border-[#C18DB4]/30 pb-safe shadow-[0_-15px_40px_rgba(0,0,0,0.8)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0E1B48]/95 backdrop-blur-2xl border-t border-[#C18DB4]/30 pb-safe shadow-[0_-15px_40px_rgba(0,0,0,0.8)]">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto px-2">
           {[
             { id: 'home', icon: Home, label: 'Dashboard' },
@@ -166,13 +166,13 @@ const App: React.FC = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className="flex flex-col items-center justify-center w-16 h-14 transition-all"
               >
-                <div className={`relative flex items-center justify-center p-1 rounded-full transition-all duration-300 ${isActive ? 'shadow-[0_0_15px_rgba(0,245,212,0.4)]' : ''}`}>
+                <div className={`relative flex items-center justify-center p-1 rounded-full transition-all duration-300 ${isActive ? 'shadow-[0_0_15px_rgba(135,167,208,0.6)] bg-[#87A7D0]/20' : ''}`}>
                   <Icon 
                     size={20} 
-                    className={`transition-all duration-300 ${isActive ? 'text-teal-300 scale-110' : 'text-slate-500 hover:text-slate-300'}`} 
+                    className={`transition-all duration-300 ${isActive ? 'text-[#87A7D0] scale-110' : 'text-slate-400 hover:text-slate-200'}`} 
                   />
                 </div>
-                <span className={`text-[10px] font-medium tracking-wide transition-all duration-300 ${isActive ? 'text-teal-300 font-bold font-serif-luxury' : 'text-slate-500'}`}>
+                <span className={`text-[10px] font-medium tracking-wide transition-all duration-300 ${isActive ? 'text-[#87A7D0] font-bold font-serif-luxury' : 'text-slate-400'}`}>
                   {tab.label}
                 </span>
               </button>
