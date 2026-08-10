@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, Sparkles } from 'lucide-react';
 import { SpinWheelModal } from '../common/SpinWheelModal';
+import { GiftBoxModal } from '../common/GiftBoxModal';
 
 export const Tasks = ({ onBack }: { onBack?: () => void }) => {
   const [tasksList, setTasksList] = useState([
@@ -12,6 +13,7 @@ export const Tasks = ({ onBack }: { onBack?: () => void }) => {
   ]);
   const [notice, setNotice] = useState<string | null>(null);
   const [wheelModalOpen, setWheelModalOpen] = useState(false);
+  const [giftBoxModalOpen, setGiftBoxModalOpen] = useState(false);
 
   const handleTaskClaim = (id: number, title: string, reward: string) => {
     setTasksList(prev => prev.map(t => t.id === id ? { ...t, completed: true } : t));
@@ -19,14 +21,14 @@ export const Tasks = ({ onBack }: { onBack?: () => void }) => {
     setTimeout(() => setNotice(null), 3000);
   };
 
-  const handleRewardWon = (prize: string) => {
+  const handleWheelRewardWon = (prize: string) => {
     setNotice(`Lucky Wheel Winner! Credited +${prize} to your balance.`);
     setTimeout(() => setNotice(null), 3500);
   };
 
-  const handleDailyBox = () => {
-    setNotice('Daily Chest Unlocked: Won +0.50 USDT!');
-    setTimeout(() => setNotice(null), 3000);
+  const handleGiftBoxRewardWon = (prize: string) => {
+    setNotice(`Mystery Gift Opened! Won +${prize}!`);
+    setTimeout(() => setNotice(null), 3500);
   };
 
   return (
@@ -35,7 +37,13 @@ export const Tasks = ({ onBack }: { onBack?: () => void }) => {
       <SpinWheelModal 
         isOpen={wheelModalOpen}
         onClose={() => setWheelModalOpen(false)}
-        onRewardWon={handleRewardWon}
+        onRewardWon={handleWheelRewardWon}
+      />
+
+      <GiftBoxModal
+        isOpen={giftBoxModalOpen}
+        onClose={() => setGiftBoxModalOpen(false)}
+        onRewardWon={handleGiftBoxRewardWon}
       />
 
       {notice && (
@@ -58,12 +66,12 @@ export const Tasks = ({ onBack }: { onBack?: () => void }) => {
       <div className="px-4 space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div 
-            onClick={handleDailyBox}
+            onClick={() => setGiftBoxModalOpen(true)}
             className="bg-slate-900 border border-slate-800 hover:border-amber-400/50 rounded-2xl p-4 shadow-lg cursor-pointer active:scale-95 transition-all"
           >
             <div className="text-2xl mb-1">🎁</div>
-            <div className="text-sm font-bold text-slate-100 font-serif-luxury">Daily Reward</div>
-            <div className="text-xs text-amber-400 font-medium">Tap to Claim</div>
+            <div className="text-sm font-bold text-slate-100 font-serif-luxury">Daily Gift Box</div>
+            <div className="text-xs text-amber-400 font-medium">Tap to Open Gift &rarr;</div>
           </div>
 
           <div 

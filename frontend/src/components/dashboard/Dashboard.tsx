@@ -10,11 +10,11 @@ import {
   Wallet,
   ChevronRight,
   Gift,
-  CalendarCheck,
   Compass,
   Award
 } from 'lucide-react';
 import { SpinWheelModal } from '../common/SpinWheelModal';
+import { GiftBoxModal } from '../common/GiftBoxModal';
 
 export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) => {
   const { user } = useAuthStore();
@@ -25,6 +25,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
   const [walletBalance, setWalletBalance] = useState(user?.balance ?? 0);
   const [expandActivities, setExpandActivities] = useState(true);
   const [wheelOpen, setWheelOpen] = useState(false);
+  const [giftModalOpen, setGiftModalOpen] = useState(false);
 
   const handleClaim = () => {
     if (unclaimedYield > 0) {
@@ -58,6 +59,15 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
       <SpinWheelModal 
         isOpen={wheelOpen}
         onClose={() => setWheelOpen(false)}
+        onRewardWon={(prize) => {
+          const amountNum = parseFloat(prize) || 0;
+          setWalletBalance((prev: number) => prev + amountNum);
+        }}
+      />
+
+      <GiftBoxModal 
+        isOpen={giftModalOpen}
+        onClose={() => setGiftModalOpen(false)}
         onRewardWon={(prize) => {
           const amountNum = parseFloat(prize) || 0;
           setWalletBalance((prev: number) => prev + amountNum);
@@ -186,7 +196,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
             </div>
             <div>
               <span className="text-sm font-bold text-slate-200 font-serif-luxury tracking-wide">Welfare & Rewards Hub</span>
-              <p className="text-[11px] text-slate-400">Daily Spin, Check-in & Tasks</p>
+              <p className="text-[11px] text-slate-400 font-medium">Daily Gift Chest, Spin & Tasks</p>
             </div>
           </div>
           <ChevronDown size={18} className={`text-amber-400 transition-transform duration-300 ${expandActivities ? 'rotate-180' : ''}`} />
@@ -196,6 +206,17 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
           <div className="space-y-3 animate-slide-up">
             <div className="grid grid-cols-2 gap-3.5">
               <div 
+                onClick={() => setGiftModalOpen(true)}
+                className="card-vault rounded-2xl p-4 border border-amber-400/40 cursor-pointer hover:border-amber-400/70 transition-all space-y-2 group shadow-lg bg-gradient-to-br from-amber-500/10 via-transparent to-transparent"
+              >
+                <div className="w-8 h-8 rounded-lg bg-amber-400/20 flex items-center justify-center text-amber-300 group-hover:scale-110 transition-transform">
+                  <Gift size={18} />
+                </div>
+                <h4 className="text-xs font-bold text-slate-100 font-serif-luxury">Daily Gift Box</h4>
+                <p className="text-[10px] text-amber-300 font-bold">Tap to unboxing gift &rarr;</p>
+              </div>
+
+              <div 
                 onClick={() => setWheelOpen(true)}
                 className="card-vault rounded-2xl p-4 border border-teal-400/30 cursor-pointer hover:border-teal-400/60 transition-all space-y-2 group"
               >
@@ -204,17 +225,6 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
                 </div>
                 <h4 className="text-xs font-bold text-slate-100 font-serif-luxury">Lucky Wheel Draw</h4>
                 <p className="text-[10px] text-slate-400">Tap to spin wheel &rarr;</p>
-              </div>
-
-              <div 
-                onClick={() => onNavigate?.('tasks')}
-                className="card-vault rounded-2xl p-4 border border-amber-400/30 cursor-pointer hover:border-amber-400/60 transition-all space-y-2"
-              >
-                <div className="w-8 h-8 rounded-lg bg-amber-400/10 flex items-center justify-center text-amber-400">
-                  <CalendarCheck size={18} />
-                </div>
-                <h4 className="text-xs font-bold text-slate-100 font-serif-luxury">Daily Check-in</h4>
-                <p className="text-[10px] text-slate-400">Consecutive check-in bonuses</p>
               </div>
             </div>
 
@@ -227,8 +237,8 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
                   <Award size={18} />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-100 font-serif-luxury">Community Discussion</h4>
-                  <p className="text-[10px] text-slate-400">Join the official Telegram group</p>
+                  <h4 className="text-xs font-bold text-slate-100 font-serif-luxury">Daily Task Rewards</h4>
+                  <p className="text-[10px] text-slate-400">Complete tasks & check-in</p>
                 </div>
               </div>
               <ChevronRight size={16} className="text-purple-300" />
