@@ -21,7 +21,7 @@ export class MiningService {
     const nextUpdate = new Date().getTime() + 15 * 60 * 1000;
     
     return {
-      currentRate,
+      current_rate: currentRate,
       total_mining: totalEarned,
       earned_today: totalEarnedToday,
       next_update: nextUpdate,

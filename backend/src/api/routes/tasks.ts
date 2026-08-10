@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { taskService } from '../../services/task.service';
 import { authMiddleware } from '../../middleware/auth';
 import { Task } from '../../models';
+import { pool } from '../../config/database';
 
 const router = Router();
 
@@ -9,7 +10,7 @@ router.use(authMiddleware);
 
 router.get('/available', async (req: any, res) => {
   try {
-    const tasks = await Task.getActiveTasks();
+    const tasks = await Task.findAllActive();
     res.json({ tasks });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
@@ -28,8 +29,11 @@ router.post('/:id/complete', async (req: any, res) => {
 
 router.get('/completed', async (req: any, res) => {
   try {
-    const completedTasks = await Task.getUserTasks(req.user.id);
-    res.json({ completed_tasks: completedTasks });
+    const result = await pool.query(
+      'SELECT * FROM user_tasks WHERE user_id = $1 AND reward_claimed = true',
+      [req.user.id]
+    );
+    res.json({ completed_tasks: result.rows });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }

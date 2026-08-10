@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { User } from '../models';
+import { User } from '../../models';
 import { authMiddleware } from '../../middleware/auth';
 import { validateWalletAddress } from '../../utils/crypto';
 

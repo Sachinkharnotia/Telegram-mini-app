@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { Deposit } from '../../shared/types/models';
+import { Deposit } from '../../../shared/types/models';
 
 export class DepositModel {
   constructor(private db: Pool) {}

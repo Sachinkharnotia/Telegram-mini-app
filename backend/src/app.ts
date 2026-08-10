@@ -16,6 +16,9 @@ import transactionsRoutes from './api/routes/transactions';
 import statsRoutes from './api/routes/stats';
 import adminRoutes from './api/routes/admin';
 import { MiningCalculator } from './jobs/miningCalculator';
+import { tronIndexer } from './jobs/tronIndexer';
+import { yieldWorkerService } from './jobs/yieldQueue';
+import { telegramBotService } from './services/telegramBot';
 
 dotenv.config();
 
@@ -49,6 +52,15 @@ const authLimiter = rateLimit({
 app.use('/api/', apiLimiter);
 app.use('/api/auth/telegram', authLimiter);
 
+app.post('/api/telegram/webhook', async (req, res) => {
+  try {
+    await telegramBotService.handleWebhookUpdate(req.body);
+    res.status(200).send('OK');
+  } catch (err) {
+    res.status(500).send('Error');
+  }
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/deposit', depositRoutes);
@@ -81,6 +93,9 @@ wss.on('connection', (ws, req) => {
 
 const calculator = new MiningCalculator();
 calculator.start();
+
+tronIndexer.startPeriodicIndexer(30000);
+yieldWorkerService.startYieldCron(60000);
 
 const PORT = process.env.PORT || 3000;
 

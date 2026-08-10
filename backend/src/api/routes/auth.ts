@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import jwt from 'jsonwebtoken';
-import { User } from '../models';
-import { verifyTelegramData } from '../utils/crypto';
+import jwt, { SignOptions } from 'jsonwebtoken';
+import { User } from '../../models';
+import { verifyTelegramData } from '../../utils/crypto';
 
 const router = Router();
 
@@ -46,10 +46,11 @@ router.post('/telegram', async (req, res) => {
       is_new = true;
     }
     
+    const options: SignOptions = { expiresIn: '7d' };
     const access_token = jwt.sign(
       { id: user.id, telegram_id: user.telegram_id },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRE || '7d' }
+      process.env.JWT_SECRET || 'secret',
+      options
     );
     
     res.json({ access_token, user, is_new });

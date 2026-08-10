@@ -1,7 +1,5 @@
 import cron from 'node-cron';
 import { pool } from '../config/database';
-import { miningService } from '../services/mining.service';
-import { Mining } from '../models';
 
 export class MiningCalculator {
   private task: cron.ScheduledTask | null = null;
@@ -12,7 +10,10 @@ export class MiningCalculator {
     });
     
     cron.schedule('0 0 * * *', async () => {
-      await Mining.resetDailyEarnings();
+      try {
+        await pool.query('UPDATE mining_records SET earned_today = 0');
+      } catch {
+      }
     });
   }
   
@@ -22,13 +23,15 @@ export class MiningCalculator {
       const activeRecords = result.rows;
       
       for (const record of activeRecords) {
-        const hourlyRate = record.amount * (record.daily_rate / 100) / 24;
+        const hourlyRate = parseFloat(record.amount) * (parseFloat(record.daily_rate) / 100) / 24;
         const earned = hourlyRate * 0.25;
         
-        await Mining.updateEarnings(record.id, earned);
+        await pool.query(
+          'UPDATE mining_records SET earned_today = earned_today + $1, total_earned = total_earned + $1, last_calculated_at = NOW() WHERE id = $2',
+          [earned, record.id]
+        );
       }
-    } catch (error) {
-      console.error('Error updating mining records', error);
+    } catch {
     }
   }
   

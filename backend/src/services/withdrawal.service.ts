@@ -1,9 +1,28 @@
-import { Withdrawal, User } from '../models';
+import { Withdrawal } from '../models';
 import { WithdrawResponse, ClaimResponse } from '../../../shared/types/api';
 import { pool } from '../config/database';
 import { NETWORK_INFO } from '../../../shared/constants';
+import { TronWeb } from 'tronweb';
+import { telegramBotService } from './telegramBot';
 
 export class WithdrawalService {
+  private tronWeb: any;
+  private usdtContractAddress: string;
+
+  constructor() {
+    const fullNode = process.env.TRON_FULL_NODE || 'https://api.trongrid.io';
+    const privateKey = process.env.HOT_WALLET_PRIVATE_KEY;
+    const apiKey = process.env.TRONGRID_API_KEY;
+
+    this.tronWeb = new TronWeb({
+      fullHost: fullNode,
+      privateKey: privateKey || '0000000000000000000000000000000000000000000000000000000000000001',
+      headers: apiKey ? { 'TRON-PRO-API-KEY': apiKey } : {}
+    });
+
+    this.usdtContractAddress = process.env.USDT_TRC20_CONTRACT || 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t';
+  }
+
   async claimEarnings(userId: number, amount?: number): Promise<ClaimResponse> {
     const client = await pool.connect();
     
@@ -21,9 +40,9 @@ export class WithdrawalService {
         balance = { mining_balance: 0, available_balance: 0 };
       }
       
-      const claimAmount = amount || balance.mining_balance;
+      const claimAmount = amount || parseFloat(balance.mining_balance);
       
-      if (claimAmount <= 0 || claimAmount > balance.mining_balance) {
+      if (claimAmount <= 0 || claimAmount > parseFloat(balance.mining_balance)) {
         throw new Error('Invalid claim amount');
       }
       
@@ -86,6 +105,45 @@ export class WithdrawalService {
       };
     } catch (error) {
       await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async processApprovedWithdrawal(withdrawalId: number): Promise<{ success: boolean; txHash?: string }> {
+    const client = await pool.connect();
+    try {
+      const res = await client.query(
+        `SELECT w.*, u.telegram_id FROM withdrawals w JOIN users u ON w.user_id = u.id WHERE w.id = $1 AND w.status = 'pending'`,
+        [withdrawalId]
+      );
+      const withdrawal = res.rows[0];
+      if (!withdrawal) throw new Error('Withdrawal not found or already processed');
+
+      const amountSun = Math.floor(parseFloat(withdrawal.amount) * 1e6);
+      const contract = await this.tronWeb.contract().at(this.usdtContractAddress);
+      const txHash = await contract.transfer(withdrawal.wallet_address, amountSun).send();
+
+      await client.query(
+        `UPDATE withdrawals SET status = 'completed', tx_hash = $1, processed_at = NOW() WHERE id = $2`,
+        [txHash, withdrawalId]
+      );
+
+      if (withdrawal.telegram_id) {
+        await telegramBotService.sendWithdrawalNotification(
+          withdrawal.telegram_id,
+          parseFloat(withdrawal.amount),
+          txHash
+        );
+      }
+
+      return { success: true, txHash };
+    } catch (error: any) {
+      await client.query(
+        `UPDATE withdrawals SET status = 'failed' WHERE id = $1`,
+        [withdrawalId]
+      );
       throw error;
     } finally {
       client.release();
