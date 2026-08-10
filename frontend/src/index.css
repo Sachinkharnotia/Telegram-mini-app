@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #0c0914;
-  --color-surface-plum: #161122;
-  --color-surface-card: rgba(22, 17, 34, 0.9);
+  --color-background: #0E1B48;
+  --color-surface-navy: #0E1F2F;
+  --color-surface-card: #27425D;
   
-  --color-berry-main: #d946ef;
-  --color-berry-light: #e879f9;
-  --color-berry-dark: #c026d3;
+  --color-orchid-main: #C18DB4;
+  --color-rose-light: #E2CAD8;
+  --color-periwinkle: #87A7D0;
   
-  --color-text: #f8fafc;
-  --color-muted: #9c92b3;
+  --color-text: #F8FAFC;
+  --color-muted: #E2CAD8;
 
   --animate-float-slow: floatSlow 6s ease-in-out infinite;
   --animate-pulse-subtle: pulseSubtle 3s ease-in-out infinite;
@@ -32,21 +32,21 @@
   body {
     @apply bg-background text-text antialiased transition-colors duration-300;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #0c0914;
+    background-color: #0E1B48;
     background-image: 
-      radial-gradient(ellipse at 50% 0%, rgba(217, 70, 239, 0.15), transparent 50%),
-      radial-gradient(ellipse at 100% 50%, rgba(138, 35, 135, 0.1), transparent 50%),
-      radial-gradient(ellipse at 0% 100%, rgba(255, 65, 108, 0.08), transparent 45%);
+      radial-gradient(ellipse at 50% 0%, rgba(193, 141, 180, 0.25), transparent 50%),
+      radial-gradient(ellipse at 100% 50%, rgba(135, 167, 208, 0.20), transparent 50%),
+      radial-gradient(ellipse at 0% 100%, rgba(14, 31, 47, 0.8), transparent 50%);
     background-attachment: fixed;
   }
 
   html.light body {
-    background-color: #f6f3f9 !important;
-    color: #181224 !important;
+    background-color: #F4EFF6 !important;
+    color: #0E1B48 !important;
     background-image: 
-      radial-gradient(ellipse at 50% 0%, rgba(217, 70, 239, 0.08), transparent 45%),
-      radial-gradient(ellipse at 100% 40%, rgba(245, 208, 254, 0.4), transparent 50%),
-      radial-gradient(ellipse at 0% 100%, rgba(253, 242, 248, 0.6), transparent 50%) !important;
+      radial-gradient(ellipse at 50% 0%, rgba(193, 141, 180, 0.15), transparent 45%),
+      radial-gradient(ellipse at 100% 40%, rgba(135, 167, 208, 0.2), transparent 50%),
+      radial-gradient(ellipse at 0% 100%, rgba(226, 202, 216, 0.4), transparent 50%) !important;
   }
 
   h1, h2, h3, .font-serif-luxury {
@@ -58,128 +58,130 @@
 @layer components {
   
   .card-vault, .card-berry {
-    background: rgba(22, 17, 34, 0.9);
+    background: rgba(39, 66, 93, 0.85);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(217, 70, 239, 0.18);
+    border: 1px solid rgba(193, 141, 180, 0.25);
     box-shadow: 
-      0 20px 40px -15px rgba(0, 0, 0, 0.7),
-      0 0 20px rgba(217, 70, 239, 0.08);
+      0 20px 40px -15px rgba(14, 27, 72, 0.7),
+      0 0 20px rgba(135, 167, 208, 0.15);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   html.light .card-vault, html.light .card-berry {
-    background: #ffffff !important;
-    border: 1px solid rgba(217, 70, 239, 0.12) !important;
+    background: #FFFFFF !important;
+    border: 1px solid rgba(193, 141, 180, 0.2) !important;
     box-shadow: 
-      0 20px 40px rgba(217, 70, 239, 0.07),
-      0 4px 12px rgba(0, 0, 0, 0.03) !important;
+      0 20px 40px rgba(193, 141, 180, 0.1),
+      0 4px 12px rgba(14, 27, 72, 0.05) !important;
   }
 
   .card-vault:hover, .card-berry:hover {
-    border-color: rgba(217, 70, 239, 0.4);
+    border-color: rgba(193, 141, 180, 0.5);
     transform: translateY(-2px);
   }
 
   html.light .card-vault:hover, html.light .card-berry:hover {
-    border-color: rgba(217, 70, 239, 0.35) !important;
+    border-color: rgba(193, 141, 180, 0.4) !important;
     box-shadow: 
-      0 25px 50px rgba(217, 70, 239, 0.12),
-      0 6px 16px rgba(0, 0, 0, 0.04) !important;
+      0 25px 50px rgba(193, 141, 180, 0.15),
+      0 6px 16px rgba(14, 27, 72, 0.04) !important;
   }
 
   nav {
     transition: background 0.3s ease, border-color 0.3s ease;
+    background-color: #0E1F2F !important;
+    border-color: rgba(193, 141, 180, 0.25) !important;
   }
 
   html.light nav {
     background: rgba(255, 255, 255, 0.95) !important;
-    border-color: rgba(217, 70, 239, 0.15) !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06) !important;
+    border-color: rgba(193, 141, 180, 0.25) !important;
+    box-shadow: 0 10px 30px rgba(14, 27, 72, 0.06) !important;
   }
 
   html.light .text-slate-100 {
-    color: #181224 !important;
+    color: #0E1B48 !important;
   }
 
   html.light .text-slate-200 {
-    color: #261f35 !important;
+    color: #1A285A !important;
   }
 
   html.light .text-slate-300 {
-    color: #483d5c !important;
+    color: #27425D !important;
   }
 
   html.light .text-slate-400 {
-    color: #645978 !important;
+    color: #556B85 !important;
   }
 
   html.light .text-slate-500 {
-    color: #8c829e !important;
+    color: #87A7D0 !important;
   }
 
   html.light .bg-slate-900 {
-    background-color: #f4f0f8 !important;
-    border-color: rgba(217, 70, 239, 0.15) !important;
-    color: #181224 !important;
+    background-color: #E2CAD8 !important;
+    border-color: rgba(193, 141, 180, 0.3) !important;
+    color: #0E1B48 !important;
   }
 
   html.light body, html.light .min-h-screen, html.light .bg-background {
-    background-color: #f6f3f9 !important;
-    color: #181224 !important;
+    background-color: #F4EFF6 !important;
+    color: #0E1B48 !important;
     background-image: 
-      radial-gradient(ellipse at 50% 0%, rgba(217, 70, 239, 0.08), transparent 45%),
-      radial-gradient(ellipse at 100% 40%, rgba(245, 208, 254, 0.4), transparent 50%),
-      radial-gradient(ellipse at 0% 100%, rgba(253, 242, 248, 0.6), transparent 50%) !important;
+      radial-gradient(ellipse at 50% 0%, rgba(193, 141, 180, 0.15), transparent 45%),
+      radial-gradient(ellipse at 100% 40%, rgba(135, 167, 208, 0.2), transparent 50%),
+      radial-gradient(ellipse at 0% 100%, rgba(226, 202, 216, 0.4), transparent 50%) !important;
   }
 
-  html.light .bg-[#060913] {
-    background-color: #f6f3f9 !important;
+  html.light .bg-[#060913], html.light .bg-[#0E1B48] {
+    background-color: #F4EFF6 !important;
   }
 
-  html.light .bg-[#0b132b] {
-    background-color: #f3ecf9 !important;
+  html.light .bg-[#0E1F2F] {
+    background-color: #E2CAD8 !important;
   }
 
   .text-gold-metallic, .text-berry-gradient {
-    background: linear-gradient(135deg, #f5d0fe 0%, #d946ef 50%, #c026d3 100%);
+    background: linear-gradient(135deg, #E2CAD8 0%, #C18DB4 50%, #87A7D0 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   html.light .text-gold-metallic, html.light .text-berry-gradient {
-    background: linear-gradient(135deg, #d946ef 0%, #c026d3 50%, #a21caf 100%);
+    background: linear-gradient(135deg, #C18DB4 0%, #27425D 50%, #0E1B48 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   .text-aurora-gradient {
-    background: linear-gradient(135deg, #ffffff 0%, #e879f9 70%, #d946ef 100%);
+    background: linear-gradient(135deg, #FFFFFF 0%, #E2CAD8 60%, #C18DB4 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   html.light .text-aurora-gradient {
-    background: linear-gradient(135deg, #181224 0%, #c026d3 70%, #d946ef 100%);
+    background: linear-gradient(135deg, #0E1B48 0%, #C18DB4 70%, #87A7D0 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   .btn-gold-vault, .btn-berry {
-    background: linear-gradient(135deg, #e879f9 0%, #d946ef 50%, #c026d3 100%);
-    color: #ffffff !important;
+    background: linear-gradient(135deg, #C18DB4 0%, #87A7D0 100%);
+    color: #FFFFFF !important;
     font-weight: 700;
     box-shadow: 
-      0 10px 25px -5px rgba(217, 70, 239, 0.45),
+      0 10px 25px -5px rgba(193, 141, 180, 0.45),
       inset 0 1px 1px rgba(255, 255, 255, 0.4);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .btn-gold-vault:hover, .btn-berry:hover {
-    background: linear-gradient(135deg, #f5d0fe 0%, #e879f9 50%, #d946ef 100%);
+    background: linear-gradient(135deg, #E2CAD8 0%, #C18DB4 50%, #87A7D0 100%);
     box-shadow: 
-      0 15px 35px -5px rgba(217, 70, 239, 0.65),
-      0 0 25px rgba(232, 121, 249, 0.4);
+      0 15px 35px -5px rgba(193, 141, 180, 0.65),
+      0 0 25px rgba(135, 167, 208, 0.4);
     transform: translateY(-2px);
   }
 }
