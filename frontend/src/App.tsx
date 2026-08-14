@@ -19,8 +19,18 @@ const App: React.FC = () => {
   const { user, token, setAuth, isLoading, error } = useAuthStore();
   const { t } = useI18nStore();
 
-  const [activeTab, setActiveTab] = useState('home');
-  const [viewMode, setViewMode] = useState<'app' | 'website'>(isTelegramEnvironment() ? 'app' : 'website');
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    if (typeof window !== 'undefined' && (window.location.search.includes('admin=true') || window.location.hash === '#admin')) {
+      return 'admin';
+    }
+    return 'home';
+  });
+  const [viewMode, setViewMode] = useState<'app' | 'website'>(() => {
+    if (typeof window !== 'undefined' && (window.location.search.includes('admin=true') || window.location.hash === '#admin')) {
+      return 'app';
+    }
+    return isTelegramEnvironment() ? 'app' : 'website';
+  });
   const [mandatoryVerified, setMandatoryVerified] = useState<boolean>(() => {
     return localStorage.getItem('mandatory_joined') === 'true';
   });
