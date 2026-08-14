@@ -1,88 +1,167 @@
-import { useState } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronLeft, Copy, Check, QrCode, RefreshCw } from 'lucide-react';
 
-export const Deposit = ({ onBack }: { onBack?: () => void }) => {
-  const [amount, setAmount] = useState('10');
-  const [activeTab, setActiveTab] = useState('Month');
-  
-  const timeTabs = ['1 day', 'Week', 'Month', '3 months', '1 year'];
-  const depositAmount = parseFloat(amount || '0');
-  const dailyRate = depositAmount * 0.015;
+export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
+  const [network, setNetwork] = useState<'BEP20' | 'TON'>('BEP20');
+  const [amount, setAmount] = useState('50');
+  const [bep20Wallet, setBep20Wallet] = useState('0x71C7656EC7ab88b098defB751B7401B5f6d8976F');
+  const [tonWallet, setTonWallet] = useState('EQBvW8Z5huBkMJY78A29P0nLw84920kLzW190kLs920pL');
+  const [copied, setCopied] = useState(false);
+  const [txSubmitted, setTxSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    fetch('/api/deposit/wallets')
+      .then(res => res.json())
+      .then(data => {
+        if (data.bep20_wallet) setBep20Wallet(data.bep20_wallet);
+        if (data.ton_wallet) setTonWallet(data.ton_wallet);
+      })
+      .catch(() => {});
+  }, []);
+
+  const activeWallet = network === 'TON' ? tonWallet : bep20Wallet;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(activeWallet);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCreateDeposit = async () => {
+    const numAmt = parseFloat(amount);
+    if (isNaN(numAmt) || numAmt < 10) {
+      setErrorMsg('Minimum deposit amount is $10 USDT');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/deposit/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: numAmt, network })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setErrorMsg(data.error || 'Failed to submit deposit');
+        return;
+      }
+      setTxSubmitted(true);
+    } catch {
+      setErrorMsg('Failed to submit deposit request');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="animate-fade-in bg-background min-h-[calc(100vh-64px)] pb-20 max-w-md mx-auto">
-      <header className="flex items-center gap-4 p-4 pt-6 mb-2">
-        <button className="text-slate-100 hover:text-white" onClick={onBack}>
-          <ChevronLeft size={24} />
+    <div className="animate-fade-in min-h-[calc(100vh-64px)] pb-20 max-w-md mx-auto p-4 space-y-6">
+      
+      <header className="flex items-center gap-4 py-2">
+        <button onClick={onBack} className="p-2 rounded-xl bg-[#0E1B48] text-[#E2CAD8] hover:bg-[#1A285A]">
+          <ChevronLeft size={20} />
         </button>
-        <h2 className="text-lg font-bold text-slate-100 font-serif-luxury flex-1">Deposit Funds</h2>
-      </header>
-      
-      <div className="flex justify-center items-center gap-2 mb-8 mt-2">
-        <div className="w-8 h-8 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-sm shadow-md">1</div>
-        <div className="w-8 h-8 rounded-full bg-slate-900 text-slate-500 border border-slate-800 flex items-center justify-center font-bold text-sm">2</div>
-        <div className="w-8 h-8 rounded-full bg-slate-900 text-slate-500 border border-slate-800 flex items-center justify-center font-bold text-sm">✓</div>
-      </div>
-      
-      <div className="px-4 space-y-6">
         <div>
-          <label className="block text-slate-200 font-bold text-[15px] mb-2 font-serif-luxury">Amount (USDT)</label>
-          <p className="text-slate-400 text-xs mb-3 leading-relaxed">
-            Minimum deposit threshold is 3.00 USDT. Transfers will automatically activate your yield allocations upon network confirmation.
+          <h2 className="text-lg font-bold text-white font-serif-luxury">Deposit USDT</h2>
+          <p className="text-xs text-[#E2CAD8]">Select Network & Send Transfer</p>
+        </div>
+      </header>
+
+      {errorMsg && (
+        <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs">
+          {errorMsg}
+        </div>
+      )}
+
+      {txSubmitted ? (
+        <div className="card-vault p-6 rounded-3xl text-center space-y-4 border border-emerald-500/40">
+          <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center mx-auto border border-emerald-500/40">
+            <Check size={24} />
+          </div>
+          <h3 className="text-xl font-bold text-white font-serif-luxury">Deposit Order Created</h3>
+          <p className="text-xs text-[#E2CAD8]">
+            Your deposit request for <strong>${amount} USDT ({network})</strong> has been registered. Your internal balance will update upon network confirmation.
           </p>
-          <div className="relative">
-            <input 
-              type="number" 
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full bg-slate-900/80 border border-amber-500/30 rounded-2xl py-4 px-4 text-white focus:outline-none focus:border-amber-400 transition-all text-lg"
-            />
-          </div>
+          <button onClick={() => setTxSubmitted(false)} className="w-full py-3 btn-gold-vault text-xs font-bold rounded-xl">
+            Make Another Deposit
+          </button>
         </div>
-        
-        <div className="card-vault rounded-3xl p-5 relative overflow-hidden shadow-xl">
-          <h3 className="text-center font-bold text-slate-100 text-base mb-5 font-serif-luxury">
-            Estimated Yield Output
-          </h3>
+      ) : (
+        <div className="space-y-5">
           
-          <div className="flex justify-between items-center gap-1.5 mb-6">
-            {timeTabs.map(tab => (
-              <button 
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`py-2 px-2.5 rounded-xl text-[11px] font-bold transition-all border ${activeTab === tab ? 'bg-amber-500 border-amber-400 text-slate-950 shadow-md' : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200'}`}
+          <div>
+            <label className="block text-xs font-bold text-white mb-2">1. Select Network</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setNetwork('BEP20')}
+                className={`p-3.5 rounded-2xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                  network === 'BEP20'
+                    ? 'btn-gold-vault shadow-lg'
+                    : 'bg-[#0E1B48]/80 text-[#E2CAD8] border border-[#C18DB4]/30 hover:bg-[#0E1B48]'
+                }`}
               >
-                {tab}
+                <span>USDT BEP20</span>
               </button>
-            ))}
-          </div>
-          
-          <div className="border border-dashed border-teal-400/30 rounded-2xl p-5 text-center bg-teal-400/5 mb-6">
-            <p className="text-slate-400 font-bold text-[10px] tracking-widest uppercase mb-2">EXPECTED RETURN</p>
-            <div className="text-teal-300 text-3xl font-bold leading-none tracking-tight flex items-baseline justify-center gap-2">
-              <span>+ {(dailyRate * (activeTab === '1 day' ? 1 : activeTab === 'Week' ? 7 : activeTab === 'Month' ? 30 : activeTab === '3 months' ? 90 : 365)).toFixed(4)}</span>
-              <span className="text-lg font-bold text-teal-400/80">USDT</span>
+
+              <button
+                onClick={() => setNetwork('TON')}
+                className={`p-3.5 rounded-2xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                  network === 'TON'
+                    ? 'btn-gold-vault shadow-lg'
+                    : 'bg-[#0E1B48]/80 text-[#E2CAD8] border border-[#C18DB4]/30 hover:bg-[#0E1B48]'
+                }`}
+              >
+                <span>TON Network</span>
+              </button>
             </div>
           </div>
-          
-          <div className="space-y-3.5 px-1 text-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">Daily Return</span>
-              <span className="text-slate-100 font-bold font-mono">+{dailyRate.toFixed(4)} USDT</span>
-            </div>
-            <div className="h-px bg-slate-800"></div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">Weekly Return</span>
-              <span className="text-slate-100 font-bold font-mono">+{(dailyRate * 7).toFixed(4)} USDT</span>
-            </div>
-            <div className="h-px bg-slate-800"></div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">Monthly Return</span>
-              <span className="text-slate-100 font-bold font-mono">+{(dailyRate * 30).toFixed(4)} USDT</span>
-            </div>
+
+          <div>
+            <label className="block text-xs font-bold text-white mb-2">2. Deposit Amount (USDT)</label>
+            <input
+              type="number"
+              min="10"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              className="w-full px-4 py-3.5 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-2xl text-white font-bold text-base focus:outline-none"
+            />
+            <span className="text-[10px] text-[#E2CAD8] mt-1 block">Minimum Deposit: $10.00 USDT</span>
           </div>
+
+          <div className="card-vault p-5 rounded-3xl space-y-4 border border-[#C18DB4]/40">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                <QrCode size={16} className="text-[#C18DB4]" /> Deposit Address
+              </span>
+              <span className="text-[10px] text-emerald-400 font-bold">Auto-Detected</span>
+            </div>
+
+            <div className="p-3 bg-[#0E1B48] border border-[#C18DB4]/30 rounded-2xl flex items-center justify-between gap-2">
+              <span className="text-xs text-white font-mono truncate select-all">{activeWallet}</span>
+              <button onClick={handleCopy} className="p-2 rounded-xl bg-[#27425D] text-white hover:bg-[#1A285A] shrink-0">
+                {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
+              </button>
+            </div>
+
+            <p className="text-[10px] text-[#E2CAD8] leading-relaxed">
+              Send exact USDT amount to the wallet above via <strong>{network}</strong>. Balance updates automatically upon confirmation.
+            </p>
+          </div>
+
+          <button
+            onClick={handleCreateDeposit}
+            disabled={loading}
+            className="w-full py-4 btn-gold-vault text-xs font-extrabold rounded-2xl uppercase tracking-wider shadow-xl flex items-center justify-center gap-2"
+          >
+            {loading ? <RefreshCw size={16} className="animate-spin" /> : <span>I Have Transferred ${amount} USDT</span>}
+          </button>
+
         </div>
-      </div>
+      )}
+
     </div>
   );
 };

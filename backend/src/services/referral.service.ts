@@ -54,8 +54,8 @@ export class ReferralService {
     
     const stats = {
       total_referrals: referrals.length,
-      total_earned: referrals.reduce((sum, ref) => sum + parseFloat(ref.total_earned.toString()), 0),
-      active_referrals: referrals.filter(r => parseFloat(r.total_earned.toString()) > 0).length,
+      total_earned: referrals.reduce((sum, ref) => sum + parseFloat((ref.total_earned || 0).toString()), 0),
+      active_referrals: referrals.filter(r => parseFloat((r.total_earned || 0).toString()) > 0).length,
       tier_structure: REFERRAL_TIERS
     };
     

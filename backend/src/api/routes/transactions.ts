@@ -1,19 +1,12 @@
 import { Router } from 'express';
-import { authMiddleware } from '../../middleware/auth';
-import { Transaction } from '../../models';
+import { dataStore } from '../../services/store';
 
 const router = Router();
 
-router.use(authMiddleware);
-
-router.get('/history', async (req: any, res) => {
-  try {
-    const { limit = 20, offset = 0 } = req.query;
-    const history = await Transaction.findByUserId(req.user.id, Number(limit), Number(offset));
-    res.json({ transactions: history });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
+router.get('/history', (req: any, res) => {
+  const userId = req.user?.id || 1001;
+  const transactions = dataStore.getTransactions(userId);
+  res.json({ transactions });
 });
 
 export default router;

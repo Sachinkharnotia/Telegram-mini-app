@@ -1,95 +1,92 @@
-import { useState } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { Pickaxe } from 'lucide-react';
 
-export const Mining = () => {
-  const [amount, setAmount] = useState('100');
-  const [activeTab, setActiveTab] = useState('1 day');
-  const [mainTab, setMainTab] = useState("Estimated Return");
-  
-  const timeTabs = ['1 day', 'Week', 'Month', '3 months', '1 year'];
-  const mainTabs = ['Estimated Return', 'Allocation Strategy', 'Vault Balance'];
-  
-  const numAmount = parseFloat(amount || '0');
-  const dailyRate = numAmount * 0.005;
-  
+export const Mining: React.FC = () => {
+  const [vxAmount, setVxAmount] = useState('500');
+  const [activeTimeframe, setActiveTimeframe] = useState<'1 day' | 'Week' | 'Month' | '1 year'>('Month');
+
+  const numVx = parseFloat(vxAmount) || 0;
+  const vxPriceUsdt = 0.10;
+  const usdtValue = numVx * vxPriceUsdt;
+  const dailyRate = usdtValue * 0.015;
+
+  const multiplier = activeTimeframe === '1 day' ? 1 : activeTimeframe === 'Week' ? 7 : activeTimeframe === 'Month' ? 30 : 365;
+  const projectedReturn = dailyRate * multiplier;
+
   return (
-    <div className="animate-fade-in bg-background min-h-[calc(100vh-64px)] pb-20 max-w-md mx-auto">
-      <header className="flex items-center gap-4 p-4 pt-6 mb-2">
-        <button className="text-white">
-          <ChevronLeft size={24} />
-        </button>
-        <h2 className="text-lg font-bold text-white flex-1 font-serif-luxury">
-          Yield Calculator
-        </h2>
-      </header>
+    <div className="animate-fade-in min-h-[calc(100vh-64px)] pb-24 max-w-md mx-auto p-4 space-y-5">
       
-      <div className="px-4 space-y-5">
-        <div className="flex bg-slate-900 border border-slate-800 rounded-xl p-1 overflow-x-auto scrollbar-hide">
-          {mainTabs.map(tab => (
-            <button 
-              key={tab}
-              onClick={() => setMainTab(tab)}
-              className={`py-3 px-4 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex-1 ${mainTab === tab ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              {tab}
-            </button>
-          ))}
+      <header className="py-2 flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-extrabold text-white font-serif-luxury">VX Yield Calculator</h2>
+          <p className="text-xs text-[#E2CAD8]">Simulate USDT Mining Earnings From VX Balance</p>
+        </div>
+        <div className="p-2.5 rounded-2xl bg-[#0E1B48] text-[#C18DB4] border border-[#C18DB4]/30">
+          <Pickaxe size={20} />
+        </div>
+      </header>
+
+      <div className="card-vault p-5 rounded-3xl space-y-4 border border-[#C18DB4]/40">
+        <div>
+          <label className="block text-xs font-bold text-white mb-2">Simulated VX Token Balance</label>
+          <div className="relative">
+            <input
+              type="number"
+              min="100"
+              value={vxAmount}
+              onChange={e => setVxAmount(e.target.value)}
+              className="w-full px-4 py-3.5 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-2xl text-white font-bold text-lg focus:outline-none"
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#87A7D0]">VX</span>
+          </div>
+          <span className="text-[10px] text-[#E2CAD8] mt-1 block">Capital Value: ${usdtValue.toFixed(2)} USDT</span>
         </div>
 
-        <div>
-          <label className="block text-slate-300 font-medium text-sm mb-2 font-serif-luxury">Deposit Capital (USDT)</label>
-          <div className="relative">
-            <input 
-              type="number" 
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-4 px-4 pr-16 text-white focus:outline-none focus:border-amber-400 transition-colors text-lg font-medium shadow-inner"
-            />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs">
-              USDT
-            </span>
-          </div>
-        </div>
-        
-        <div className="flex justify-between items-center gap-2">
-          {timeTabs.map(tab => (
-            <button 
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border ${activeTab === tab ? 'bg-amber-500 border-amber-400 text-slate-950 shadow-md' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'}`}
+        <div className="flex gap-2">
+          {(['1 day', 'Week', 'Month', '1 year'] as const).map(tf => (
+            <button
+              key={tf}
+              onClick={() => setActiveTimeframe(tf)}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTimeframe === tf ? 'btn-gold-vault shadow-md' : 'bg-[#0E1B48] text-[#E2CAD8] border border-[#C18DB4]/20'
+              }`}
             >
-              {tab}
+              {tf}
             </button>
           ))}
-        </div>
-        
-        <div className="card-vault rounded-3xl p-6 text-center relative overflow-hidden">
-          <div className="relative z-10">
-            <p className="text-slate-400 font-bold text-xs tracking-widest uppercase mb-3 font-serif-luxury">PROJECTED YIELD</p>
-            <div className="text-teal-300 text-3xl font-bold leading-none tracking-tight flex items-baseline justify-center gap-2">
-              <span>+ {activeTab === '1 day' ? dailyRate.toFixed(4) : (dailyRate * (activeTab === 'Week' ? 7 : activeTab === 'Month' ? 30 : activeTab === '3 months' ? 90 : 365)).toFixed(4)}</span>
-              <span className="text-lg font-bold text-teal-400/80">USDT</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-3.5 shadow-lg text-sm">
-          <div className="flex justify-between items-center">
-            <span className="text-slate-400">Per Day</span>
-            <span className="text-slate-100 font-bold font-mono">+{dailyRate.toFixed(4)} USDT</span>
-          </div>
-          <div className="h-px bg-slate-800"></div>
-          <div className="flex justify-between items-center">
-            <span className="text-slate-400">Per Week</span>
-            <span className="text-slate-100 font-bold font-mono">+{(dailyRate * 7).toFixed(4)} USDT</span>
-          </div>
-          <div className="h-px bg-slate-800"></div>
-          <div className="flex justify-between items-center">
-            <span className="text-slate-400">Per Month</span>
-            <span className="text-slate-100 font-bold font-mono">+{(dailyRate * 30).toFixed(4)} USDT</span>
-          </div>
         </div>
       </div>
+
+      <div className="card-vault p-6 rounded-3xl text-center space-y-2 border border-[#C18DB4]/40 shadow-xl">
+        <span className="text-[10px] uppercase font-bold text-[#E2CAD8] tracking-widest">Projected USDT Yield Output</span>
+        <div className="text-3xl font-extrabold text-white font-serif-luxury">
+          + ${projectedReturn.toFixed(4)} USDT
+        </div>
+        <p className="text-[11px] text-emerald-400 font-bold">1.5% Daily Continuous Return</p>
+      </div>
+
+      <div className="card-vault p-5 rounded-3xl space-y-3 text-xs border border-[#C18DB4]/30">
+        <div className="flex justify-between text-[#E2CAD8]">
+          <span>Daily Return:</span>
+          <span className="font-bold text-white">+${dailyRate.toFixed(4)} USDT</span>
+        </div>
+        <div className="h-px bg-[#C18DB4]/20"></div>
+        <div className="flex justify-between text-[#E2CAD8]">
+          <span>Weekly Return:</span>
+          <span className="font-bold text-white">+${(dailyRate * 7).toFixed(4)} USDT</span>
+        </div>
+        <div className="h-px bg-[#C18DB4]/20"></div>
+        <div className="flex justify-between text-[#E2CAD8]">
+          <span>Monthly Return:</span>
+          <span className="font-bold text-white">+${(dailyRate * 30).toFixed(4)} USDT</span>
+        </div>
+        <div className="h-px bg-[#C18DB4]/20"></div>
+        <div className="flex justify-between text-[#E2CAD8]">
+          <span>Annual Projected Output:</span>
+          <span className="font-bold text-emerald-400">+${(dailyRate * 365).toFixed(2)} USDT</span>
+        </div>
+      </div>
+
     </div>
   );
 };

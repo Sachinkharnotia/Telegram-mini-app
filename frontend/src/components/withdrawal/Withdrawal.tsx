@@ -1,79 +1,177 @@
-import { useState } from 'react';
-import { ChevronLeft, Lock } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronLeft, Check, AlertCircle, RefreshCw } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
-export const Withdrawal = ({ onBack }: { onBack?: () => void }) => {
+export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const { user } = useAuthStore();
-  const [amount, setAmount] = useState('3.00');
-  const [activeTab, setActiveTab] = useState('Month');
-  
-  const tabs = ['1 day', 'Week', 'Month', '3 months', '1 year'];
-  const userBalance = user?.balance ?? 0;
-  const numAmount = parseFloat(amount || '0');
-  const isBalanceSufficient = userBalance >= numAmount && numAmount >= 3.0;
+  const [network, setNetwork] = useState<'BEP20' | 'TON'>('BEP20');
+  const [amount, setAmount] = useState('20');
+  const [walletAddress, setWalletAddress] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const userBalance = user?.balance ?? 50.00;
+  const minWithdrawal = 3.00;
+  const withdrawalFee = 1.00;
+  const numAmount = parseFloat(amount) || 0;
+  const netAmount = Math.max(0, numAmount - withdrawalFee);
+
+  const handleWithdrawalRequest = async () => {
+    if (numAmount < minWithdrawal) {
+      setErrorMsg(`Minimum withdrawal amount is $${minWithdrawal} USDT`);
+      return;
+    }
+    if (numAmount > userBalance) {
+      setErrorMsg('Insufficient USDT balance');
+      return;
+    }
+    if (!walletAddress || walletAddress.trim().length < 6) {
+      setErrorMsg('Please enter a valid destination wallet address');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/withdrawal/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: numAmount,
+          network,
+          wallet_address: walletAddress.trim()
+        })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setErrorMsg(data.error || 'Withdrawal request failed');
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setErrorMsg('Failed to submit withdrawal request');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="animate-fade-in bg-background min-h-[calc(100vh-64px)] pb-20 max-w-md mx-auto">
-      <header className="flex items-center gap-4 p-4 pt-6 mb-2">
-        <button className="text-slate-100 hover:text-white" onClick={onBack}>
-          <ChevronLeft size={24} />
+    <div className="animate-fade-in min-h-[calc(100vh-64px)] pb-20 max-w-md mx-auto p-4 space-y-6">
+      
+      <header className="flex items-center gap-4 py-2">
+        <button onClick={onBack} className="p-2 rounded-xl bg-[#0E1B48] text-[#E2CAD8] hover:bg-[#1A285A]">
+          <ChevronLeft size={20} />
         </button>
-        <h2 className="text-lg font-bold text-slate-100 font-serif-luxury flex-1">Withdraw Funds</h2>
-      </header>
-      
-      <div className="flex justify-center items-center gap-2 mb-8 mt-2">
-        <div className="w-8 h-8 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-sm shadow-md">1</div>
-        <div className="w-8 h-8 rounded-full bg-slate-900 text-slate-500 border border-slate-800 flex items-center justify-center font-bold text-sm">2</div>
-        <div className="w-8 h-8 rounded-full bg-slate-900 text-slate-500 border border-slate-800 flex items-center justify-center font-bold text-sm">3</div>
-        <div className="w-8 h-8 rounded-full bg-slate-900 text-slate-500 border border-slate-800 flex items-center justify-center font-bold text-sm">✓</div>
-      </div>
-      
-      <div className="px-4 space-y-6">
         <div>
-          <label className="block text-slate-200 font-bold text-[15px] mb-1 font-serif-luxury">Amount (USDT)</label>
-          <p className="text-slate-400 text-xs mb-3">Minimum withdrawal threshold is 3.00 USDT.</p>
-          <input 
-            type="number" 
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full bg-slate-900/80 border border-amber-500/30 rounded-2xl py-4 px-4 text-white focus:outline-none focus:border-amber-400 transition-all text-lg"
-          />
+          <h2 className="text-lg font-bold text-white font-serif-luxury">Withdraw USDT</h2>
+          <p className="text-xs text-[#E2CAD8]">Fast Automated Payouts</p>
         </div>
-        
-        <div className="card-vault rounded-3xl p-5 relative overflow-hidden">
-          <h3 className="text-center font-bold text-slate-100 text-base mb-4 font-serif-luxury">
-            Opportunity Cost Assessment
-          </h3>
-          
-          <div className="flex justify-between items-center bg-slate-900/90 rounded-xl p-1 mb-6 border border-slate-800">
-            {tabs.map(tab => (
-              <button 
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-colors ${activeTab === tab ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
-              >
-                {tab}
-              </button>
-            ))}
+      </header>
+
+      {errorMsg && (
+        <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2">
+          <AlertCircle size={16} className="shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {submitted ? (
+        <div className="card-vault p-6 rounded-3xl text-center space-y-4 border border-emerald-500/40">
+          <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center mx-auto border border-emerald-500/40">
+            <Check size={24} />
           </div>
+          <h3 className="text-xl font-bold text-white font-serif-luxury">Withdrawal Submitted</h3>
+          <p className="text-xs text-[#E2CAD8]">
+            Your withdrawal request for <strong>${numAmount.toFixed(2)} USDT ({network})</strong> has been placed in processing. Net payout of <strong>${netAmount.toFixed(2)} USDT</strong> will be transferred to:
+          </p>
+          <div className="p-3 bg-[#0E1B48] rounded-xl text-xs text-white font-mono truncate">{walletAddress}</div>
+          <button onClick={() => setSubmitted(false)} className="w-full py-3 btn-gold-vault text-xs font-bold rounded-xl">
+            Request Another Withdrawal
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-5">
           
-          <div className="border border-dashed border-rose-500/40 rounded-2xl p-4 text-center mb-6 bg-rose-500/5">
-            <p className="text-slate-400 font-bold text-[10px] tracking-wider uppercase mb-2">POTENTIAL YIELD FOREGONE</p>
-            <div className="text-rose-400 text-3xl font-bold leading-none">
-              - {(numAmount * 0.15 * (activeTab === '1 day' ? 1 : activeTab === 'Week' ? 7 : activeTab === 'Month' ? 30 : activeTab === '3 months' ? 90 : 365)).toFixed(2)} <span className="text-lg">USDT</span>
+          <div>
+            <label className="block text-xs font-bold text-white mb-2">1. Select Network</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setNetwork('BEP20')}
+                className={`p-3.5 rounded-2xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                  network === 'BEP20'
+                    ? 'btn-gold-vault shadow-lg'
+                    : 'bg-[#0E1B48]/80 text-[#E2CAD8] border border-[#C18DB4]/30 hover:bg-[#0E1B48]'
+                }`}
+              >
+                <span>USDT BEP20</span>
+              </button>
+
+              <button
+                onClick={() => setNetwork('TON')}
+                className={`p-3.5 rounded-2xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                  network === 'TON'
+                    ? 'btn-gold-vault shadow-lg'
+                    : 'bg-[#0E1B48]/80 text-[#E2CAD8] border border-[#C18DB4]/30 hover:bg-[#0E1B48]'
+                }`}
+              >
+                <span>TON Network</span>
+              </button>
             </div>
           </div>
-        </div>
-        
-        {!isBalanceSufficient && (
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex items-center justify-between">
-            <p className="text-amber-300 font-bold text-xs pr-4">
-              Insufficient balance or amount below minimum (3.00 USDT).
-            </p>
-            <Lock className="text-amber-400 flex-shrink-0" size={18} />
+
+          <div>
+            <label className="block text-xs font-bold text-white mb-2">2. Destination Wallet Address</label>
+            <input
+              type="text"
+              placeholder={`Enter your ${network} wallet address...`}
+              value={walletAddress}
+              onChange={e => setWalletAddress(e.target.value)}
+              className="w-full px-4 py-3 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-2xl text-white text-xs font-mono focus:outline-none"
+            />
           </div>
-        )}
-      </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-xs font-bold text-white">3. Withdrawal Amount (USDT)</label>
+              <span className="text-[10px] text-emerald-400 font-bold">Available: ${userBalance.toFixed(2)}</span>
+            </div>
+            <input
+              type="number"
+              min="3"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              className="w-full px-4 py-3.5 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-2xl text-white font-bold text-base focus:outline-none"
+            />
+          </div>
+
+          <div className="card-vault p-4 rounded-2xl space-y-2 text-xs border border-[#C18DB4]/30">
+            <div className="flex justify-between text-[#E2CAD8]">
+              <span>Requested Amount:</span>
+              <span className="font-bold text-white">${numAmount.toFixed(2)} USDT</span>
+            </div>
+            <div className="flex justify-between text-[#E2CAD8]">
+              <span>Network Fee:</span>
+              <span className="font-bold text-rose-300">-${withdrawalFee.toFixed(2)} USDT</span>
+            </div>
+            <div className="h-px bg-[#C18DB4]/20"></div>
+            <div className="flex justify-between text-white font-bold">
+              <span>Net Payout Amount:</span>
+              <span className="text-emerald-400 text-sm">${netAmount.toFixed(2)} USDT</span>
+            </div>
+          </div>
+
+          <button
+            onClick={handleWithdrawalRequest}
+            disabled={loading}
+            className="w-full py-4 btn-gold-vault text-xs font-extrabold rounded-2xl uppercase tracking-wider shadow-xl flex items-center justify-center gap-2"
+          >
+            {loading ? <RefreshCw size={16} className="animate-spin" /> : <span>Confirm Payout Request</span>}
+          </button>
+
+        </div>
+      )}
+
     </div>
   );
 };

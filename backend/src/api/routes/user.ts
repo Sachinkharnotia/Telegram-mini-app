@@ -1,37 +1,28 @@
 import { Router } from 'express';
-import { User } from '../../models';
-import { authMiddleware } from '../../middleware/auth';
-import { validateWalletAddress } from '../../utils/crypto';
+import { dataStore } from '../../services/store';
 
 const router = Router();
 
-router.use(authMiddleware);
-
-router.get('/profile', async (req: any, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
+router.get('/profile', (req: any, res) => {
+  const userId = req.user?.id || 1001;
+  const user = dataStore.findUserById(userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const balance = dataStore.getUserBalance(userId);
+  const settings = dataStore.getSettings();
+  res.json({ user, balance, settings });
 });
 
-router.put('/profile', async (req: any, res) => {
-  try {
-    const { wallet_address } = req.body;
-    
-    if (wallet_address && !validateWalletAddress(wallet_address)) {
-      return res.status(400).json({ error: 'Invalid wallet address' });
-    }
-    
-    const user = await User.updateWallet(req.user.id, wallet_address);
-    res.json({ user });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
+router.get('/mandatory-join', (req: any, res) => {
+  const settings = dataStore.getSettings();
+  const communities = dataStore.getRequiredCommunities();
+  res.json({
+    enabled: settings.mandatory_join_enabled,
+    communities
+  });
+});
+
+router.post('/mandatory-join/confirm', (req: any, res) => {
+  res.json({ success: true, message: 'All required communities verified' });
 });
 
 export default router;

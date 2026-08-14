@@ -1,128 +1,148 @@
-import { useState } from 'react';
-import { ChevronLeft, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronLeft, Sparkles, Gift, Compass } from 'lucide-react';
 import { SpinWheelModal } from '../common/SpinWheelModal';
 import { GiftBoxModal } from '../common/GiftBoxModal';
 
-export const Tasks = ({ onBack }: { onBack?: () => void }) => {
-  const [tasksList, setTasksList] = useState([
-    { id: 1, title: 'Daily Login Reward', reward: '0.10 USDT', completed: false },
-    { id: 2, title: 'Join Community Channel', reward: '1.00 USDT', completed: true },
-    { id: 3, title: 'Follow Official Announcement Channel', reward: '1.00 USDT', completed: false },
-    { id: 4, title: 'Platform Onboarding Guide', reward: '0.50 USDT', completed: false },
-    { id: 5, title: 'Invite Active Members', reward: '5.00 USDT', completed: false }
-  ]);
+export const Tasks: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
+  const [tasksList, setTasksList] = useState<any[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [wheelModalOpen, setWheelModalOpen] = useState(false);
   const [giftBoxModalOpen, setGiftBoxModalOpen] = useState(false);
 
-  const handleTaskClaim = (id: number, title: string, reward: string) => {
-    setTasksList(prev => prev.map(t => t.id === id ? { ...t, completed: true } : t));
-    setNotice(`Claimed +${reward} for "${title}"`);
-    setTimeout(() => setNotice(null), 3000);
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = () => {
+    fetch('/api/tasks/list')
+      .then(res => res.json())
+      .then(data => {
+        if (data.tasks) setTasksList(data.tasks);
+      })
+      .catch(() => {});
   };
 
-  const handleWheelRewardWon = (prize: string) => {
-    setNotice(`Lucky Wheel Winner! Credited +${prize} to your balance.`);
-    setTimeout(() => setNotice(null), 3500);
-  };
+  const handleTaskClaim = async (task: any) => {
+    if (task.action_url) {
+      window.open(task.action_url, '_blank');
+    }
 
-  const handleGiftBoxRewardWon = (prize: string) => {
-    setNotice(`Mystery Gift Opened! Won +${prize}!`);
+    try {
+      const res = await fetch('/api/tasks/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task_id: task.id })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotice(`Claimed +${task.reward_amount} ${task.reward_currency} for "${task.title}"!`);
+        fetchTasks();
+      } else {
+        setNotice(data.error || 'Failed to claim task');
+      }
+    } catch {
+      setNotice('Task claim failed');
+    }
     setTimeout(() => setNotice(null), 3500);
   };
 
   return (
-    <div className="animate-fade-in bg-background min-h-[calc(100vh-64px)] pb-20 max-w-md mx-auto">
+    <div className="animate-fade-in min-h-[calc(100vh-64px)] pb-24 max-w-md mx-auto p-4 space-y-5">
       
       <SpinWheelModal 
         isOpen={wheelModalOpen}
         onClose={() => setWheelModalOpen(false)}
-        onRewardWon={handleWheelRewardWon}
+        onRewardWon={(prize) => {
+          setNotice(`Won +${prize} from Lucky Wheel!`);
+          setTimeout(() => setNotice(null), 3500);
+        }}
       />
 
       <GiftBoxModal
         isOpen={giftBoxModalOpen}
         onClose={() => setGiftBoxModalOpen(false)}
-        onRewardWon={handleGiftBoxRewardWon}
+        onRewardWon={(prize) => {
+          setNotice(`Unboxed +${prize} from Mystery Chest!`);
+          setTimeout(() => setNotice(null), 3500);
+        }}
       />
 
       {notice && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-amber-500 text-slate-950 px-4 py-2 rounded-full text-xs font-bold shadow-2xl flex items-center gap-2 animate-bounce">
-          <Sparkles size={16} /> {notice}
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#0E1B48] text-white border border-[#C18DB4] px-4 py-2 rounded-full text-xs font-bold shadow-2xl flex items-center gap-2 animate-bounce">
+          <Sparkles size={16} className="text-[#C18DB4]" /> {notice}
         </div>
       )}
 
-      <header className="flex items-center gap-4 p-4 pt-6 mb-2">
+      <header className="flex items-center gap-4 py-2">
         {onBack && (
-          <button className="text-white" onClick={onBack}>
-            <ChevronLeft size={24} />
+          <button onClick={onBack} className="p-2 rounded-xl bg-[#0E1B48] text-[#E2CAD8] hover:bg-[#1A285A]">
+            <ChevronLeft size={20} />
           </button>
         )}
-        <h2 className="text-lg font-bold text-white flex-1 font-serif-luxury">
-          Tasks & Rewards
-        </h2>
+        <div>
+          <h2 className="text-xl font-extrabold text-white font-serif-luxury">Tasks & Rewards</h2>
+          <p className="text-xs text-[#E2CAD8]">Complete Community Tasks & Spin Wheel</p>
+        </div>
       </header>
-      
-      <div className="px-4 space-y-5">
-        <div className="grid grid-cols-2 gap-4">
-          <div 
-            onClick={() => setGiftBoxModalOpen(true)}
-            className="bg-slate-900 border border-slate-800 hover:border-amber-400/50 rounded-2xl p-4 shadow-lg cursor-pointer active:scale-95 transition-all"
-          >
-            <div className="text-2xl mb-1">🎁</div>
-            <div className="text-sm font-bold text-slate-100 font-serif-luxury">Daily Gift Box</div>
-            <div className="text-xs text-amber-400 font-medium">Tap to Open Gift &rarr;</div>
-          </div>
 
-          <div 
-            onClick={() => setWheelModalOpen(true)}
-            className="bg-slate-900 border border-slate-800 hover:border-teal-400/50 rounded-2xl p-4 shadow-lg cursor-pointer active:scale-95 transition-all group"
-          >
-            <div className="text-2xl mb-1 group-hover:rotate-45 transition-transform">🎡</div>
-            <div className="text-sm font-bold text-slate-100 font-serif-luxury">Lucky Wheel</div>
-            <div className="text-xs text-teal-400 font-medium">Tap to Spin Wheel &rarr;</div>
+      <div className="grid grid-cols-2 gap-3.5">
+        <div 
+          onClick={() => setGiftBoxModalOpen(true)}
+          className="card-vault p-4 rounded-3xl border border-[#C18DB4]/40 cursor-pointer hover:border-[#C18DB4]/70 transition-all space-y-2 group"
+        >
+          <div className="w-10 h-10 rounded-2xl bg-[#0E1B48] border border-[#C18DB4]/30 flex items-center justify-center text-[#C18DB4] group-hover:scale-110 transition-transform">
+            <Gift size={20} />
           </div>
+          <h4 className="text-xs font-bold text-white font-serif-luxury">Daily Gift Box</h4>
+          <p className="text-[10px] text-[#E2CAD8] font-bold">Unbox mystery gift &rarr;</p>
         </div>
-        
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-slate-200 text-sm font-serif-luxury">Active Tasks</h3>
-          <span className="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-800">
-            {tasksList.filter(t => !t.completed).length} Available
-          </span>
-        </div>
-        
-        <div className="space-y-3">
-          {tasksList.map((task) => (
-            <div 
-              key={task.id} 
-              className={`bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between p-4 transition-all ${
-                task.completed ? 'opacity-50' : ''
-              }`}
-            >
-              <div>
-                <div className={`text-sm font-bold ${task.completed ? 'text-slate-500 line-through' : 'text-slate-100'}`}>
-                  {task.title}
-                </div>
-                <div className="text-xs font-bold text-teal-400 mt-0.5">
-                  +{task.reward}
-                </div>
-              </div>
-              
-              <button 
-                onClick={() => !task.completed && handleTaskClaim(task.id, task.title, task.reward)}
-                className={`py-2 px-4 rounded-xl font-bold text-xs transition-all active:scale-95 ${
-                  task.completed 
-                    ? 'bg-transparent text-teal-400 cursor-not-allowed' 
-                    : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md'
-                }`}
-                disabled={task.completed}
-              >
-                {task.completed ? 'Claimed' : 'Complete'}
-              </button>
-            </div>
-          ))}
+
+        <div 
+          onClick={() => setWheelModalOpen(true)}
+          className="card-vault p-4 rounded-3xl border border-[#C18DB4]/30 cursor-pointer hover:border-[#C18DB4]/60 transition-all space-y-2 group"
+        >
+          <div className="w-10 h-10 rounded-2xl bg-[#0E1B48] border border-[#C18DB4]/30 flex items-center justify-center text-[#87A7D0] group-hover:rotate-45 transition-transform">
+            <Compass size={20} />
+          </div>
+          <h4 className="text-xs font-bold text-white font-serif-luxury">Lucky Wheel Draw</h4>
+          <p className="text-[10px] text-[#87A7D0]">Spin wheel & win &rarr;</p>
         </div>
       </div>
+
+      <div className="space-y-3">
+        <h3 className="font-bold text-white text-xs uppercase tracking-wider font-serif-luxury">Available Earning Tasks</h3>
+
+        {tasksList.map(task => (
+          <div 
+            key={task.id} 
+            className={`card-vault p-4 rounded-2xl flex items-center justify-between gap-3 border border-[#C18DB4]/30 transition-all ${
+              task.completed ? 'opacity-60' : ''
+            }`}
+          >
+            <div>
+              <h4 className={`text-xs font-bold ${task.completed ? 'line-through text-[#E2CAD8]' : 'text-white'}`}>
+                {task.title}
+              </h4>
+              <span className="text-[10px] font-bold text-amber-300">
+                +{task.reward_amount} {task.reward_currency}
+              </span>
+            </div>
+
+            <button 
+              onClick={() => !task.completed && handleTaskClaim(task)}
+              disabled={task.completed}
+              className={`px-4 py-2 rounded-xl font-bold text-xs transition-all ${
+                task.completed 
+                  ? 'bg-transparent text-emerald-400 font-bold cursor-not-allowed' 
+                  : 'btn-gold-vault'
+              }`}
+            >
+              {task.completed ? 'Completed' : 'Claim Task'}
+            </button>
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 };

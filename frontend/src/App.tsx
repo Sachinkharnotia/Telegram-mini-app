@@ -9,6 +9,7 @@ import { Withdrawal } from './components/withdrawal/Withdrawal';
 import { Profile } from './components/profile/Profile';
 import { Tasks } from './components/tasks/Tasks';
 import { Landing } from './components/website/Landing';
+import { MandatoryJoin } from './components/common/MandatoryJoin';
 import { Loader, Home, TrendingUp, FileText, Users, User, Monitor, Smartphone, Sun, Moon } from 'lucide-react';
 import { isTelegramEnvironment, getStartParam, initTelegramApp } from './utils/telegram';
 
@@ -17,6 +18,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [viewMode, setViewMode] = useState<'app' | 'website'>(isTelegramEnvironment() ? 'app' : 'website');
   const [themeMode, setThemeMode] = useState<'dark' | 'light'>('dark');
+  const [mandatoryVerified, setMandatoryVerified] = useState(false);
 
   const toggleTheme = () => {
     const nextTheme = themeMode === 'dark' ? 'light' : 'dark';
@@ -55,16 +57,41 @@ const App: React.FC = () => {
         firstName: 'Investor',
         first_name: 'Investor',
         status: 'active',
-        isAdmin: false,
+        isAdmin: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
+    }
+
+    const tgData = window.Telegram?.WebApp?.initData;
+    if (tgData) {
+      fetch('/api/auth/telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telegramData: tgData, startParam: param })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.access_token && data.user) {
+            setAuth(data.access_token, {
+              id: data.user.id.toString(),
+              telegramId: data.user.telegram_id.toString(),
+              firstName: data.user.first_name,
+              first_name: data.user.first_name,
+              status: 'active',
+              isAdmin: data.user.is_admin,
+              createdAt: data.user.created_at,
+              updatedAt: data.user.updated_at
+            });
+          }
+        })
+        .catch(() => {});
     }
   }, []);
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-background text-amber-400">
+      <div className="flex h-screen w-screen items-center justify-center bg-[#0E1B48] text-[#C18DB4]">
         <Loader className="w-8 h-8 animate-spin" />
       </div>
     );
@@ -72,7 +99,7 @@ const App: React.FC = () => {
 
   if (error) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-background text-rose-500 p-6 text-center">
+      <div className="flex h-screen w-screen items-center justify-center bg-[#0E1B48] text-rose-300 p-6 text-center">
         <div className="card-vault max-w-sm border-rose-500/30 p-6 rounded-2xl">
           <h2 className="text-xl font-bold mb-2 font-serif-luxury">Authentication Error</h2>
           <p className="text-sm opacity-80">{error}</p>
@@ -83,13 +110,17 @@ const App: React.FC = () => {
 
   if (!user) return null;
 
+  if (!mandatoryVerified && viewMode === 'app') {
+    return <MandatoryJoin onVerified={() => setMandatoryVerified(true)} />;
+  }
+
   if (viewMode === 'website') {
     return (
       <div className="transition-colors duration-300">
-        <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5 bg-slate-900 border border-slate-700/60 rounded-full p-1.5 shadow-2xl backdrop-blur-md">
+        <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5 bg-[#0E1B48]/90 border border-[#C18DB4]/30 rounded-full p-1.5 shadow-2xl backdrop-blur-md">
           <button 
             onClick={() => setViewMode('website')}
-            className="px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 bg-amber-500 text-slate-950 shadow-md"
+            className="px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 bg-gradient-to-r from-[#0E1B48] to-[#C18DB4] text-white shadow-md"
           >
             <Monitor size={14} /> Website
           </button>
@@ -101,7 +132,7 @@ const App: React.FC = () => {
           </button>
           <button
             onClick={toggleTheme}
-            className="p-1.5 rounded-full bg-slate-800 text-amber-400 hover:bg-slate-700 transition-all border border-slate-700 ml-1"
+            className="p-1.5 rounded-full bg-[#0E1B48] text-[#E2CAD8] hover:bg-[#1A285A] transition-all border border-[#C18DB4]/30 ml-1"
             title="Toggle Light/Dark Theme"
           >
             {themeMode === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
@@ -135,6 +166,7 @@ const App: React.FC = () => {
           {themeMode === 'dark' ? <Sun size={12} /> : <Moon size={12} />}
         </button>
       </div>
+      
       <div className="h-full overflow-y-auto overflow-x-hidden pb-20">
         <main className="relative">
           {activeTab === 'home' && <Dashboard onNavigate={(tab: string) => setActiveTab(tab)} />}

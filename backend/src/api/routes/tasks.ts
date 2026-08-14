@@ -1,41 +1,39 @@
 import { Router } from 'express';
-import { taskService } from '../../services/task.service';
-import { authMiddleware } from '../../middleware/auth';
-import { Task } from '../../models';
-import { pool } from '../../config/database';
+import { dataStore } from '../../services/store';
 
 const router = Router();
 
-router.use(authMiddleware);
+router.get('/list', (req: any, res) => {
+  const userId = req.user?.id || 1001;
+  const tasks = dataStore.getTasks();
+  const completedIds = dataStore.getUserTaskIds(userId);
 
-router.get('/available', async (req: any, res) => {
-  try {
-    const tasks = await Task.findAllActive();
-    res.json({ tasks });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
+  const formattedTasks = tasks.map(t => ({
+    ...t,
+    completed: completedIds.includes(t.id)
+  }));
+
+  res.json({ tasks: formattedTasks });
 });
 
-router.post('/:id/complete', async (req: any, res) => {
+router.post('/claim', (req: any, res) => {
   try {
-    const taskId = parseInt(req.params.id);
-    const result = await taskService.completeTask(req.user.id, taskId);
-    res.json(result);
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
-  }
-});
+    const userId = req.user?.id || 1001;
+    const { task_id } = req.body;
 
-router.get('/completed', async (req: any, res) => {
-  try {
-    const result = await pool.query(
-      'SELECT * FROM user_tasks WHERE user_id = $1 AND reward_claimed = true',
-      [req.user.id]
-    );
-    res.json({ completed_tasks: result.rows });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    const result = dataStore.completeTask(userId, parseInt(task_id, 10));
+    if (!result.success) {
+      return res.status(400).json({ error: result.message });
+    }
+
+    res.json({
+      success: true,
+      reward_amount: result.rewardAmount,
+      reward_currency: result.currency,
+      message: 'Reward claimed successfully'
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to claim task' });
   }
 });
 
