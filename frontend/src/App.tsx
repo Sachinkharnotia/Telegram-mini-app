@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
-import { useThemeStore } from './store/themeStore';
 import { useI18nStore } from './store/i18nStore';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { Deposit } from './components/deposit/Deposit';
@@ -10,14 +9,14 @@ import { Referral } from './components/referral/Referral';
 import { Withdrawal } from './components/withdrawal/Withdrawal';
 import { Profile } from './components/profile/Profile';
 import { Tasks } from './components/tasks/Tasks';
+import { AdminPanel } from './components/admin/AdminPanel';
 import { Landing } from './components/website/Landing';
 import { MandatoryJoin } from './components/common/MandatoryJoin';
-import { Home, TrendingUp, FileText, Users, User, Monitor, Smartphone, Sun, Moon } from 'lucide-react';
+import { Home, TrendingUp, FileText, Users, User } from 'lucide-react';
 import { isTelegramEnvironment, getStartParam, initTelegramApp } from './utils/telegram';
 
 const App: React.FC = () => {
   const { user, token, setAuth, isLoading, error } = useAuthStore();
-  const { theme, toggleTheme } = useThemeStore();
   const { t } = useI18nStore();
 
   const [activeTab, setActiveTab] = useState('home');
@@ -28,6 +27,11 @@ const App: React.FC = () => {
 
   useEffect(() => {
     initTelegramApp();
+
+    if (window.location.search.includes('admin=true') || window.location.hash === '#admin') {
+      setActiveTab('admin');
+      setViewMode('app');
+    }
 
     const param = getStartParam();
     if (param) {
@@ -40,30 +44,29 @@ const App: React.FC = () => {
       } else if (param === 'tasks' || param === 'wheel') {
         setActiveTab('tasks');
         setViewMode('app');
-      } else if (param === 'history') {
-        setActiveTab('history');
+      } else if (param === 'admin') {
+        setActiveTab('admin');
         setViewMode('app');
       }
     }
   }, []);
 
   useEffect(() => {
-    if (!token || !user) {
-      const tgUser = (window as any)?.Telegram?.WebApp?.initDataUnsafe?.user;
-      const initData = (window as any)?.Telegram?.WebApp?.initData || '';
-
+    if (!token && !user) {
       const fallbackUserData = {
-        id: tgUser?.id || 1001,
-        telegram_id: tgUser?.id || 1001,
-        first_name: tgUser?.first_name || 'Support',
-        last_name: tgUser?.last_name || '',
-        username: tgUser?.username || 'user_1001',
-        photo_url: tgUser?.photo_url || '',
-        balance: 50.00,
-        vx_balance: 500,
-        vx_mining_active: true,
-        isAdmin: true
+        id: 99887766,
+        first_name: 'Alex',
+        username: 'alex_trader',
+        is_verified: true,
+        referrer_id: 10001,
+        balance_usdt: 25.50,
+        balance_vx: 1250.00,
+        mining_active: true,
+        mining_rate: 1.50
       };
+
+      const tg = (window as any).Telegram?.WebApp;
+      const initData = tg?.initData;
 
       if (initData) {
         fetch('/api/auth/telegram', {
@@ -132,27 +135,6 @@ const App: React.FC = () => {
   if (viewMode === 'website') {
     return (
       <div className="min-h-screen bg-transparent font-sans text-slate-100">
-        <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5 bg-[#0E1B48]/90 border border-[#C18DB4]/30 rounded-full p-1.5 shadow-2xl backdrop-blur-md">
-          <button 
-            onClick={() => setViewMode('website')}
-            className="px-3 py-1 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 bg-gradient-to-r from-[#0E1B48] to-[#C18DB4] text-white shadow-md"
-          >
-            <Monitor size={12} /> Website
-          </button>
-          <button 
-            onClick={() => setViewMode('app')}
-            className="px-3 py-1 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 text-slate-400 hover:text-white"
-          >
-            <Smartphone size={12} /> Mini App
-          </button>
-          <button
-            onClick={toggleTheme}
-            className="p-1 rounded-full bg-[#0E1B48] text-[#E2CAD8] hover:bg-[#1A285A] transition-all border border-[#C18DB4]/30"
-            title="Toggle Light/Dark Theme"
-          >
-            {theme === 'dark' ? <Sun size={12} /> : <Moon size={12} />}
-          </button>
-        </div>
         <Landing onLaunchApp={() => setViewMode('app')} />
       </div>
     );
@@ -160,28 +142,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-transparent font-sans text-slate-100 overflow-hidden relative">
-      <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5 bg-[#0E1B48]/90 border border-[#C18DB4]/30 rounded-full p-1.5 shadow-2xl backdrop-blur-md opacity-75 hover:opacity-100 transition-opacity">
-        <button 
-          onClick={() => setViewMode('website')}
-          className="px-3 py-1 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 text-slate-400 hover:text-white"
-        >
-          <Monitor size={12} /> Website
-        </button>
-        <button 
-          onClick={() => setViewMode('app')}
-          className="px-3 py-1 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 bg-gradient-to-r from-[#0E1B48] to-[#C18DB4] text-white shadow-md"
-        >
-          <Smartphone size={12} /> Mini App
-        </button>
-        <button
-          onClick={toggleTheme}
-          className="p-1 rounded-full bg-[#0E1B48] text-[#E2CAD8] hover:bg-[#1A285A] transition-all border border-[#C18DB4]/30"
-          title="Toggle Light/Dark Theme"
-        >
-          {theme === 'dark' ? <Sun size={12} /> : <Moon size={12} />}
-        </button>
-      </div>
-      
       <div className="h-full overflow-y-auto overflow-x-hidden pb-20">
         <main className="relative">
           {activeTab === 'home' && <Dashboard onNavigate={(tab: string) => setActiveTab(tab)} />}
@@ -192,6 +152,7 @@ const App: React.FC = () => {
           {activeTab === 'withdrawal' && <Withdrawal onBack={() => setActiveTab('home')} />}
           {activeTab === 'deposit' && <Deposit onBack={() => setActiveTab('home')} />}
           {activeTab === 'tasks' && <Tasks onBack={() => setActiveTab('home')} />}
+          {activeTab === 'admin' && <AdminPanel onBack={() => setActiveTab('profile')} />}
         </main>
       </div>
 
@@ -203,25 +164,34 @@ const App: React.FC = () => {
             { id: 'history', icon: FileText, label: t.navHistory },
             { id: 'referrals', icon: Users, label: t.navRef },
             { id: 'profile', icon: User, label: t.navProfile }
-          ].map(tab => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            
+          ].map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
             return (
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className="flex flex-col items-center justify-center w-16 h-14 transition-all"
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`relative flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all duration-300 ${
+                  isActive
+                    ? 'text-white'
+                    : 'text-[#E2CAD8]/70 hover:text-white'
+                }`}
               >
-                <div className={`relative flex items-center justify-center p-1 rounded-full transition-all duration-300 ${isActive ? 'shadow-[0_0_15px_rgba(135,167,208,0.6)] bg-[#87A7D0]/20' : ''}`}>
-                  <Icon 
-                    size={20} 
-                    className={`transition-all duration-300 ${isActive ? 'text-[#87A7D0] scale-110' : 'text-slate-400 hover:text-slate-200'}`} 
-                  />
-                </div>
-                <span className={`text-[10px] font-medium tracking-wide transition-all duration-300 ${isActive ? 'text-[#87A7D0] font-bold font-serif-luxury' : 'text-slate-400'}`}>
-                  {tab.label}
+                {isActive && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#C18DB4]/30 to-transparent rounded-xl -z-10" />
+                )}
+                <Icon
+                  size={20}
+                  className={`transition-transform duration-300 ${
+                    isActive ? 'scale-110 stroke-[2.5] text-[#C18DB4]' : 'stroke-[1.75]'
+                  }`}
+                />
+                <span className={`text-[10px] mt-1 font-bold ${isActive ? 'text-white font-serif-luxury' : 'text-[#E2CAD8]/70'}`}>
+                  {item.label}
                 </span>
+                {isActive && (
+                  <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#87A7D0] shadow-[0_0_8px_#87A7D0]" />
+                )}
               </button>
             );
           })}
