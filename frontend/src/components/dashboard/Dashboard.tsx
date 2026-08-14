@@ -259,7 +259,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         <div className="flex items-center gap-2 font-bold text-white truncate">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
           <span className="text-[#87A7D0]">Real-time:</span>
-          <span className="truncate">Murazimana — claimed profit 0.0034 USDT (2s ago)</span>
+          <span className="truncate">Active Member — claimed yield +0.0520 USDT (2s ago)</span>
         </div>
       </div>
 
