@@ -22,7 +22,9 @@ const App: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState('home');
   const [viewMode, setViewMode] = useState<'app' | 'website'>(isTelegramEnvironment() ? 'app' : 'website');
-  const [mandatoryVerified, setMandatoryVerified] = useState(false);
+  const [mandatoryVerified, setMandatoryVerified] = useState<boolean>(() => {
+    return localStorage.getItem('mandatory_joined') === 'true';
+  });
 
   useEffect(() => {
     initTelegramApp();
@@ -86,7 +88,7 @@ const App: React.FC = () => {
     }
   }, [token, user, setAuth]);
 
-  if (!mandatoryVerified && isTelegramEnvironment()) {
+  if (viewMode === 'app' && !mandatoryVerified) {
     return <MandatoryJoin onVerified={() => setMandatoryVerified(true)} />;
   }
 
