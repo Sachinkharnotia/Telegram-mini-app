@@ -11,38 +11,15 @@ interface AdminPanelProps {
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'vx' | 'finance' | 'communities' | 'tasks' | 'settings'>('stats');
-  const [stats, setStats] = useState<any>(null);
-  const [settings, setSettings] = useState<any>(null);
-  const [users, setUsers] = useState<any[]>([]);
-  const [deposits, setDeposits] = useState<any[]>([]);
-  const [withdrawals, setWithdrawals] = useState<any[]>([]);
-  const [communities, setCommunities] = useState<any[]>([]);
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [adjAmount, setAdjAmount] = useState('');
-  const [adjCurrency, setAdjCurrency] = useState<'USDT' | 'VX'>('USDT');
-  const [adjAction, setAdjAction] = useState<'add' | 'deduct'>('add');
-
-  const [newCommunityName, setNewCommunityName] = useState('');
-  const [newCommunityLink, setNewCommunityLink] = useState('');
-  const [newCommunityType, setNewCommunityType] = useState<'channel' | 'group'>('channel');
-
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskReward, setNewTaskReward] = useState('');
-  const [newTaskCurrency, setNewTaskCurrency] = useState<'USDT' | 'VX'>('USDT');
-  const [newTaskUrl, setNewTaskUrl] = useState('');
-
   const defaultStats = {
-    totalUsers: 0,
-    activeMiners: 0,
-    totalVxCirculating: 0,
-    totalUsdtDeposited: 0,
-    totalUsdtWithdrawn: 0,
-    totalMinedUsdt: 0
+    total_users: 0,
+    active_users: 0,
+    total_deposits_usdt: 0.00,
+    total_withdrawals_usdt: 0.00,
+    total_vx_purchased: 0,
+    total_mining_yield_paid: 0.00,
+    pending_withdrawals_count: 0,
+    pending_deposits_count: 0
   };
 
   const defaultSettings = {
@@ -68,6 +45,32 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     { id: 3, name: 'Vextoral Mining News', link: 'https://t.me/telegram', type: 'channel' }
   ];
   const defaultTasks: any[] = [];
+
+  const [stats, setStats] = useState<any>(defaultStats);
+  const [settings, setSettings] = useState<any>(defaultSettings);
+  const [users, setUsers] = useState<any[]>(defaultUsers);
+  const [deposits, setDeposits] = useState<any[]>(defaultDeposits);
+  const [withdrawals, setWithdrawals] = useState<any[]>(defaultWithdrawals);
+  const [communities, setCommunities] = useState<any[]>(defaultCommunities);
+  const [tasks, setTasks] = useState<any[]>(defaultTasks);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [adjAmount, setAdjAmount] = useState('');
+  const [adjCurrency, setAdjCurrency] = useState<'USDT' | 'VX'>('USDT');
+  const [adjAction, setAdjAction] = useState<'add' | 'deduct'>('add');
+
+  const [newCommunityName, setNewCommunityName] = useState('');
+  const [newCommunityLink, setNewCommunityLink] = useState('');
+  const [newCommunityType, setNewCommunityType] = useState<'channel' | 'group'>('channel');
+
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskReward, setNewTaskReward] = useState('');
+  const [newTaskCurrency, setNewTaskCurrency] = useState<'USDT' | 'VX'>('USDT');
+  const [newTaskUrl, setNewTaskUrl] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -361,39 +364,39 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         })}
       </div>
 
-      {activeTab === 'stats' && stats && (
+      {activeTab === 'stats' && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="card-vault p-4 rounded-2xl">
             <span className="text-[10px] text-[#E2CAD8]">Total Registered Users</span>
-            <h3 className="text-xl font-extrabold text-white mt-1">{stats.total_users}</h3>
+            <h3 className="text-xl font-extrabold text-white mt-1">{stats?.total_users || 0}</h3>
           </div>
           <div className="card-vault p-4 rounded-2xl">
             <span className="text-[10px] text-[#E2CAD8]">Active Users</span>
-            <h3 className="text-xl font-extrabold text-emerald-400 mt-1">{stats.active_users}</h3>
+            <h3 className="text-xl font-extrabold text-emerald-400 mt-1">{stats?.active_users || 0}</h3>
           </div>
           <div className="card-vault p-4 rounded-2xl">
             <span className="text-[10px] text-[#E2CAD8]">Total Confirmed Deposits</span>
-            <h3 className="text-xl font-extrabold text-[#87A7D0] mt-1">${stats.total_deposits_usdt.toFixed(2)}</h3>
+            <h3 className="text-xl font-extrabold text-[#87A7D0] mt-1">${Number(stats?.total_deposits_usdt || 0).toFixed(2)}</h3>
           </div>
           <div className="card-vault p-4 rounded-2xl">
             <span className="text-[10px] text-[#E2CAD8]">Total Approved Withdrawals</span>
-            <h3 className="text-xl font-extrabold text-rose-300 mt-1">${stats.total_withdrawals_usdt.toFixed(2)}</h3>
+            <h3 className="text-xl font-extrabold text-rose-300 mt-1">${Number(stats?.total_withdrawals_usdt || 0).toFixed(2)}</h3>
           </div>
           <div className="card-vault p-4 rounded-2xl">
             <span className="text-[10px] text-[#E2CAD8]">Total VX Tokens Purchased</span>
-            <h3 className="text-xl font-extrabold text-[#E2CAD8] mt-1">{stats.total_vx_purchased.toLocaleString()} VX</h3>
+            <h3 className="text-xl font-extrabold text-[#E2CAD8] mt-1">{Number(stats?.total_vx_purchased || 0).toLocaleString()} VX</h3>
           </div>
           <div className="card-vault p-4 rounded-2xl">
             <span className="text-[10px] text-[#E2CAD8]">Total Mining Yield Paid</span>
-            <h3 className="text-xl font-extrabold text-amber-300 mt-1">${stats.total_mining_yield_paid.toFixed(2)}</h3>
+            <h3 className="text-xl font-extrabold text-amber-300 mt-1">${Number(stats?.total_mining_yield_paid || 0).toFixed(2)}</h3>
           </div>
           <div className="card-vault p-4 rounded-2xl">
             <span className="text-[10px] text-[#E2CAD8]">Pending Withdrawals</span>
-            <h3 className="text-xl font-extrabold text-amber-400 mt-1">{stats.pending_withdrawals_count}</h3>
+            <h3 className="text-xl font-extrabold text-amber-400 mt-1">{stats?.pending_withdrawals_count || 0}</h3>
           </div>
           <div className="card-vault p-4 rounded-2xl">
             <span className="text-[10px] text-[#E2CAD8]">Pending Deposits</span>
-            <h3 className="text-xl font-extrabold text-sky-400 mt-1">{stats.pending_deposits_count}</h3>
+            <h3 className="text-xl font-extrabold text-sky-400 mt-1">{stats?.pending_deposits_count || 0}</h3>
           </div>
         </div>
       )}
