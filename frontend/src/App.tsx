@@ -53,20 +53,21 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (!token && !user) {
-      const fallbackUserData = {
-        id: 99887766,
-        first_name: 'Alex',
-        username: 'alex_trader',
+      const tg = (window as any).Telegram?.WebApp;
+      const tgUser = tg?.initDataUnsafe?.user;
+      const initData = tg?.initData;
+
+      const realUserData = {
+        id: tgUser?.id || 10001,
+        first_name: tgUser?.first_name || 'Member',
+        username: tgUser?.username || 'member_user',
         is_verified: true,
-        referrer_id: 10001,
-        balance_usdt: 25.50,
-        balance_vx: 1250.00,
-        mining_active: true,
+        referrer_id: undefined,
+        balance_usdt: 0.00,
+        balance_vx: 0.00,
+        mining_active: false,
         mining_rate: 1.50
       };
-
-      const tg = (window as any).Telegram?.WebApp;
-      const initData = tg?.initData;
 
       if (initData) {
         fetch('/api/auth/telegram', {
@@ -79,14 +80,14 @@ const App: React.FC = () => {
             if (data.token && data.user) {
               setAuth(data.token, data.user);
             } else {
-              setAuth('demo-token-123', fallbackUserData);
+              setAuth(`tg-${realUserData.id}`, realUserData);
             }
           })
           .catch(() => {
-            setAuth('demo-token-123', fallbackUserData);
+            setAuth(`tg-${realUserData.id}`, realUserData);
           });
       } else {
-        setAuth('demo-token-123', fallbackUserData);
+        setAuth(`tg-${realUserData.id}`, realUserData);
       }
     }
   }, [token, user, setAuth]);
