@@ -608,57 +608,88 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
 
       {activeTab === 'tasks' && (
         <div className="card-vault p-6 rounded-3xl space-y-6 max-w-xl">
-          <h3 className="text-sm font-bold text-white font-serif-luxury">Task Manager</h3>
-
-          <div className="space-y-3">
-            <input
-              type="text"
-              placeholder="Task Title..."
-              value={newTaskTitle}
-              onChange={e => setNewTaskTitle(e.target.value)}
-              className="w-full px-4 py-2 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-xs text-white"
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                type="number"
-                placeholder="Reward Amount..."
-                value={newTaskReward}
-                onChange={e => setNewTaskReward(e.target.value)}
-                className="w-full px-4 py-2 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-xs text-white"
-              />
-              <select
-                value={newTaskCurrency}
-                onChange={e => setNewTaskCurrency(e.target.value as any)}
-                className="w-full px-4 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-xs text-white"
-              >
-                <option value="USDT">USDT</option>
-                <option value="VX">VX Tokens</option>
-              </select>
+          <div className="flex items-center justify-between border-b border-[#C18DB4]/30 pb-3">
+            <div>
+              <h3 className="text-base font-bold text-white font-serif-luxury">Task Creation & Upload Portal</h3>
+              <p className="text-[11px] text-[#E2CAD8]">Upload new tasks for platform users to complete and earn rewards.</p>
             </div>
-            <input
-              type="text"
-              placeholder="Action Link URL (Optional)..."
-              value={newTaskUrl}
-              onChange={e => setNewTaskUrl(e.target.value)}
-              className="w-full px-4 py-2 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-xs text-white"
-            />
-            <button onClick={handleAddTask} className="w-full py-2.5 btn-gold-vault text-xs font-bold rounded-xl flex items-center justify-center gap-1">
-              <Plus size={14} /> Add Task
+            <Briefcase size={20} className="text-[#C18DB4]" />
+          </div>
+
+          <div className="space-y-3 bg-[#0E1B48]/60 p-4 rounded-2xl border border-[#C18DB4]/30">
+            <div>
+              <label className="text-[11px] font-bold text-white mb-1 block">Task Title</label>
+              <input
+                type="text"
+                placeholder="e.g. Join Official Telegram Channel"
+                value={newTaskTitle}
+                onChange={e => setNewTaskTitle(e.target.value)}
+                className="w-full px-4 py-2.5 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-xs text-white outline-none focus:border-[#C18DB4]"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-bold text-white mb-1 block">Reward Amount</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 5.0"
+                  value={newTaskReward}
+                  onChange={e => setNewTaskReward(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-xs text-white outline-none focus:border-[#C18DB4]"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-white mb-1 block">Reward Currency</label>
+                <select
+                  value={newTaskCurrency}
+                  onChange={e => setNewTaskCurrency(e.target.value as any)}
+                  className="w-full px-4 py-2.5 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-xs text-white outline-none"
+                >
+                  <option value="USDT">USDT</option>
+                  <option value="VX">VX Tokens</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-white mb-1 block">Action Link / URL</label>
+              <input
+                type="text"
+                placeholder="https://t.me/channel or action link..."
+                value={newTaskUrl}
+                onChange={e => setNewTaskUrl(e.target.value)}
+                className="w-full px-4 py-2.5 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-xs text-white outline-none focus:border-[#C18DB4]"
+              />
+            </div>
+
+            <button onClick={handleAddTask} className="w-full py-3 btn-gold-vault text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg pt-2">
+              <Plus size={16} /> Upload & Publish Task
             </button>
           </div>
 
-          <div className="space-y-2">
-            {tasks.map(t => (
-              <div key={t.id} className="p-3 rounded-xl bg-[#0E1B48]/80 border border-[#C18DB4]/30 flex items-center justify-between gap-3 text-xs">
-                <div>
-                  <h4 className="font-bold text-white">{t.title}</h4>
-                  <span className="text-[10px] text-amber-300 font-bold">Reward: {t.reward_amount} {t.reward_currency}</span>
-                </div>
-                <button onClick={() => handleDeleteTask(t.id)} className="p-2 text-rose-400 hover:text-rose-300">
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold text-white">Active Uploaded Tasks ({tasks.length})</h4>
+            <div className="space-y-2">
+              {tasks.length === 0 ? (
+                <p className="text-xs text-[#E2CAD8] italic">No active tasks uploaded yet.</p>
+              ) : (
+                tasks.map(t => (
+                  <div key={t.id} className="p-3.5 rounded-2xl bg-[#0E1B48]/80 border border-[#C18DB4]/30 flex items-center justify-between gap-3 text-xs">
+                    <div>
+                      <h4 className="font-bold text-white">{t.title}</h4>
+                      <span className="text-[11px] text-amber-300 font-bold">Reward: +{t.reward_amount} {t.reward_currency}</span>
+                      {t.action_url && (
+                        <p className="text-[10px] text-[#87A7D0] truncate max-w-xs">{t.action_url}</p>
+                      )}
+                    </div>
+                    <button onClick={() => handleDeleteTask(t.id)} className="p-2 text-rose-400 hover:text-rose-300 transition-colors" title="Delete Task">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
