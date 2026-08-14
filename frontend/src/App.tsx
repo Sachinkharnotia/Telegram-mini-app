@@ -92,6 +92,14 @@ const App: React.FC = () => {
     }
   }, [token, user, setAuth]);
 
+  if (activeTab === 'admin') {
+    return (
+      <div className="min-h-screen bg-[#0E1B48] text-slate-100 p-4 sm:p-6 overflow-y-auto">
+        <AdminPanel onBack={() => { setActiveTab('home'); setViewMode('app'); }} />
+      </div>
+    );
+  }
+
   if (viewMode === 'app' && !mandatoryVerified) {
     return <MandatoryJoin onVerified={() => setMandatoryVerified(true)} />;
   }
