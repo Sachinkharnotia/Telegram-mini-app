@@ -46,6 +46,16 @@
     color: #F8FAFC;
   }
 
+  html.light, html.light body, html.light #root {
+    background: linear-gradient(
+      to bottom,
+      #F0F4F9 0%,
+      #E2E8F0 40%,
+      #CBD5E1 100%
+    ) !important;
+    color: #0E1B48 !important;
+  }
+
   h1, h2, h3, .font-serif-luxury {
     font-family: 'Plus Jakarta Sans', sans-serif;
     letter-spacing: -0.01em;
@@ -67,25 +77,43 @@
 
   html.light .card-vault, html.light .card-berry {
     background: #FFFFFF !important;
-    border: 1px solid rgba(226, 202, 216, 0.3) !important;
-    box-shadow: 
-      0 20px 40px rgba(193, 141, 180, 0.12),
-      0 4px 12px rgba(14, 27, 72, 0.04) !important;
+    border: 1px solid #CBD5E1 !important;
+    box-shadow: 0 10px 30px rgba(14, 27, 72, 0.08) !important;
+    color: #0E1B48 !important;
   }
 
-  .card-vault:hover, .card-berry:hover {
-    border-color: rgba(193, 141, 180, 0.6);
-    box-shadow: 
-      0 25px 50px -10px rgba(14, 27, 72, 0.8),
-      0 0 35px rgba(226, 202, 216, 0.30);
-    transform: translateY(-2px);
+  html.light .card-vault h1,
+  html.light .card-vault h2,
+  html.light .card-vault h3,
+  html.light .card-vault h4,
+  html.light .card-vault span,
+  html.light .card-vault p {
+    color: #0E1B48;
   }
 
-  html.light .card-vault:hover, html.light .card-berry:hover {
-    border-color: rgba(193, 141, 180, 0.5) !important;
-    box-shadow: 
-      0 25px 50px rgba(193, 141, 180, 0.18),
-      0 6px 16px rgba(14, 27, 72, 0.05) !important;
+  html.light .text-white {
+    color: #0E1B48 !important;
+  }
+
+  html.light .text-\[\#E2CAD8\] {
+    color: #475569 !important;
+  }
+
+  html.light .text-\[\#87A7D0\] {
+    color: #1E293B !important;
+  }
+
+  html.light .bg-\[\#0E1B48\] {
+    background-color: #F1F5F9 !important;
+    border-color: #CBD5E1 !important;
+    color: #0E1B48 !important;
+  }
+
+  html.light .bg-\[\#0E1B48\]\/80,
+  html.light .bg-\[\#0E1B48\]\/60 {
+    background-color: #F8FAFC !important;
+    border-color: #E2E8F0 !important;
+    color: #0E1B48 !important;
   }
 
   nav {
@@ -95,59 +123,13 @@
   }
 
   html.light nav {
-    background: rgba(255, 255, 255, 0.95) !important;
-    border-color: rgba(135, 167, 208, 0.30) !important;
-    box-shadow: 0 10px 30px rgba(14, 27, 72, 0.06) !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    border-color: #CBD5E1 !important;
+    box-shadow: 0 -10px 30px rgba(14, 27, 72, 0.08) !important;
   }
 
-  html.light .text-slate-100 {
+  html.light nav span, html.light nav svg {
     color: #0E1B48 !important;
-  }
-
-  html.light .text-slate-200 {
-    color: #1A285A !important;
-  }
-
-  html.light .text-slate-300 {
-    color: #27425D !important;
-  }
-
-  html.light .text-slate-400 {
-    color: #556B85 !important;
-  }
-
-  html.light .text-slate-500 {
-    color: #87A7D0 !important;
-  }
-
-  html.light .bg-slate-900 {
-    background-color: #E2CAD8 !important;
-    border-color: rgba(135, 167, 208, 0.3) !important;
-    color: #0E1B48 !important;
-  }
-
-  .text-gold-metallic, .text-berry-gradient {
-    background: linear-gradient(135deg, #0E1B48 0%, #27425D 60%, #0E1B48 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  html.light .text-gold-metallic, html.light .text-berry-gradient {
-    background: linear-gradient(135deg, #0E1B48 0%, #C18DB4 60%, #87A7D0 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  .text-aurora-gradient {
-    background: linear-gradient(135deg, #0E1B48 0%, #27425D 50%, #0E1B48 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  html.light .text-aurora-gradient {
-    background: linear-gradient(135deg, #0E1B48 0%, #C18DB4 70%, #87A7D0 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
   }
 
   .btn-gold-vault, .btn-berry {
@@ -164,9 +146,6 @@
   .btn-gold-vault:hover, .btn-berry:hover {
     background: linear-gradient(135deg, #E2CAD8 0%, #C18DB4 50%, #87A7D0 100%);
     color: #FFFFFF !important;
-    box-shadow: 
-      0 15px 35px -5px rgba(193, 141, 180, 0.7),
-      0 0 30px rgba(135, 167, 208, 0.5);
     transform: translateY(-2px);
   }
 }

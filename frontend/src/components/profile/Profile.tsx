@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
+import { useI18nStore, type LanguageCode } from '../../store/i18nStore';
 import { 
   Globe, ChevronRight, ArrowLeft, CheckCircle2, Send, HelpCircle, LifeBuoy, 
   ShieldCheck, Moon, Sun, Bell, Lock, QrCode, ArrowDownLeft, ArrowUpRight, Pickaxe
@@ -11,9 +13,10 @@ interface ProfileProps {
 
 export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
   const { user } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
+  const { language, setLanguage, t } = useI18nStore();
+
   const [activeSubView, setActiveSubView] = useState<string | null>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState('English');
-  const [themeMode, setThemeMode] = useState<'Dark' | 'Light'>('Dark');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [ticketMessage, setTicketMessage] = useState('');
   const [ticketSent, setTicketSent] = useState(false);
@@ -25,6 +28,8 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
     { code: 'ru', name: 'Русский', flag: '🇷🇺' }
   ];
+
+  const currentLangObj = languages.find(l => l.code === language) || languages[0];
 
   const faqs = [
     { q: 'How does VextoralMining token mining work?', a: 'Users with min 100 VX tokens automatically earn continuous daily USDT yield at the admin configured rate.' },
@@ -57,18 +62,18 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
           </button>
 
           <div className="card-vault rounded-3xl p-6 space-y-4 border border-[#C18DB4]/30">
-            <h2 className="text-xl font-bold text-white font-serif-luxury">Select Interface Language</h2>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">{t.language}</h2>
 
             <div className="space-y-2 pt-2">
               {languages.map(lang => (
                 <div 
                   key={lang.code}
                   onClick={() => {
-                    setSelectedLanguage(lang.name);
+                    setLanguage(lang.code as LanguageCode);
                     setActiveSubView(null);
                   }}
                   className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer ${
-                    selectedLanguage === lang.name 
+                    language === lang.code 
                       ? 'bg-[#0E1B48] border-[#C18DB4] text-white' 
                       : 'bg-[#0E1B48]/60 border-[#C18DB4]/30 text-[#E2CAD8]'
                   }`}
@@ -77,7 +82,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
                     <span className="text-xl">{lang.flag}</span>
                     <span className="text-xs font-bold">{lang.name}</span>
                   </div>
-                  {selectedLanguage === lang.name && <CheckCircle2 size={18} className="text-[#C18DB4]" />}
+                  {language === lang.code && <CheckCircle2 size={18} className="text-[#C18DB4]" />}
                 </div>
               ))}
             </div>
@@ -95,7 +100,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
           </button>
 
           <div className="card-vault rounded-3xl p-6 space-y-4 border border-[#C18DB4]/30">
-            <h2 className="text-xl font-bold text-white font-serif-luxury">Privacy Policy</h2>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">{t.privacy}</h2>
             <div className="space-y-3 text-xs text-[#E2CAD8] leading-relaxed">
               <p>VextoralMining is committed to protecting your privacy. We use Telegram WebApp initData HMAC-SHA256 authentication to verify user identity strictly server-side.</p>
               <p>No personal passwords or financial keys are stored. All wallet interactions execute via secure blockchain nodes (USDT BEP20 & TON).</p>
@@ -115,10 +120,10 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
 
           <div className="card-vault rounded-3xl p-6 space-y-4 border border-[#C18DB4]/30 text-center">
             <ShieldCheck size={40} className="text-emerald-400 mx-auto" />
-            <h2 className="text-xl font-bold text-white font-serif-luxury">Telegram 2FA Verification</h2>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">{t.authenticator}</h2>
             <p className="text-xs text-[#E2CAD8]">Your account is automatically verified and secured via Telegram server initData authentication.</p>
             <div className="p-3 rounded-2xl bg-[#0E1B48] border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center justify-center gap-2">
-              <CheckCircle2 size={16} /> Status: Verified Account
+              <CheckCircle2 size={16} /> Status: {t.verified} Account
             </div>
           </div>
         </div>
@@ -134,7 +139,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
           </button>
 
           <div className="card-vault rounded-3xl p-6 space-y-4 border border-[#C18DB4]/30">
-            <h2 className="text-xl font-bold text-white font-serif-luxury">Frequently Asked Questions</h2>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">{t.faq}</h2>
             <div className="space-y-3 pt-2">
               {faqs.map((faq, idx) => (
                 <div key={idx} className="bg-[#0E1B48] border border-[#C18DB4]/30 rounded-2xl p-4 space-y-1">
@@ -157,7 +162,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
           </button>
 
           <div className="card-vault rounded-3xl p-6 space-y-4 border border-[#C18DB4]/30">
-            <h2 className="text-xl font-bold text-white font-serif-luxury">Help & Support Desk</h2>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">{t.support}</h2>
             <p className="text-xs text-[#E2CAD8]">Submit your inquiry to 24/7 VextoralMining support.</p>
 
             {ticketSent ? (
@@ -208,7 +213,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
                     {user?.first_name || 'Support'}
                   </h1>
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-300 text-[10px] font-bold">
-                    <CheckCircle2 size={10} /> Verified
+                    <CheckCircle2 size={10} /> {t.verified}
                   </span>
                 </div>
                 <p className="text-[11px] text-[#87A7D0]">ID: {user?.telegram_id || '98765432'}</p>
@@ -217,7 +222,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
 
             <div className="text-right">
               <span className="text-[10px] text-[#E2CAD8] uppercase font-bold tracking-widest block">APP NAME</span>
-              <span className="text-xs font-extrabold text-[#C18DB4] font-serif-luxury">VextoralMining</span>
+              <span className="text-xs font-extrabold text-[#C18DB4] font-serif-luxury">{t.appName}</span>
             </div>
           </div>
 
@@ -226,7 +231,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
               onClick={() => onNavigate?.('deposit')}
               className="flex-1 py-2.5 px-3 rounded-2xl bg-gradient-to-r from-sky-500/20 to-indigo-500/20 border border-sky-400/40 text-sky-200 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md"
             >
-              <ArrowDownLeft size={14} className="text-sky-300" /> + Deposit
+              <ArrowDownLeft size={14} className="text-sky-300" /> + {t.deposit}
             </button>
 
             <div className="py-2 px-3 rounded-2xl bg-[#0E1B48] border border-[#C18DB4]/30 text-center">
@@ -243,7 +248,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
               onClick={() => onNavigate?.('withdrawal')}
               className="flex-1 py-2.5 px-3 rounded-2xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/40 text-purple-200 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md"
             >
-              <ArrowUpRight size={14} className="text-purple-300" /> Withdraw
+              <ArrowUpRight size={14} className="text-purple-300" /> {t.withdraw}
             </button>
           </div>
 
@@ -268,10 +273,10 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
             >
               <div className="flex items-center gap-3">
                 <ShieldCheck size={18} className="text-emerald-400" />
-                <span className="text-xs font-bold text-white">Authenticator</span>
+                <span className="text-xs font-bold text-white">{t.authenticator}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">Verified</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">{t.verified}</span>
                 <QrCode size={16} className="text-[#87A7D0]" />
               </div>
             </div>
@@ -282,24 +287,24 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
             >
               <div className="flex items-center gap-3">
                 <Globe size={18} className="text-[#87A7D0]" />
-                <span className="text-xs font-bold text-white">Language</span>
+                <span className="text-xs font-bold text-white">{t.language}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-[#E2CAD8]">🇬🇧 {selectedLanguage}</span>
+                <span className="text-xs text-[#E2CAD8]">{currentLangObj.flag} {currentLangObj.name}</span>
                 <ChevronRight size={16} className="text-[#E2CAD8]" />
               </div>
             </div>
 
             <div 
-              onClick={() => setThemeMode(themeMode === 'Dark' ? 'Light' : 'Dark')}
+              onClick={toggleTheme}
               className="flex items-center justify-between p-3.5 bg-[#0E1B48] border border-[#C18DB4]/30 rounded-2xl cursor-pointer hover:border-[#C18DB4]"
             >
               <div className="flex items-center gap-3">
-                {themeMode === 'Dark' ? <Moon size={18} className="text-amber-400" /> : <Sun size={18} className="text-amber-400" />}
-                <span className="text-xs font-bold text-white">Theme</span>
+                {theme === 'dark' ? <Moon size={18} className="text-amber-400" /> : <Sun size={18} className="text-amber-400" />}
+                <span className="text-xs font-bold text-white">{t.theme}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-[#E2CAD8]">{themeMode === 'Dark' ? '🌙 Dark' : '☀️ Light'}</span>
+                <span className="text-xs text-[#E2CAD8]">{theme === 'dark' ? '🌙 Dark' : '☀️ Light'}</span>
                 <ChevronRight size={16} className="text-[#E2CAD8]" />
               </div>
             </div>
@@ -307,7 +312,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
             <div className="flex items-center justify-between p-3.5 bg-[#0E1B48] border border-[#C18DB4]/30 rounded-2xl">
               <div className="flex items-center gap-3">
                 <Bell size={18} className="text-purple-400" />
-                <span className="text-xs font-bold text-white">Notifications</span>
+                <span className="text-xs font-bold text-white">{t.notifications}</span>
               </div>
               <button 
                 onClick={() => setNotificationsEnabled(!notificationsEnabled)}
@@ -323,7 +328,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
             >
               <div className="flex items-center gap-3">
                 <Lock size={18} className="text-[#87A7D0]" />
-                <span className="text-xs font-bold text-white">Privacy Policy</span>
+                <span className="text-xs font-bold text-white">{t.privacy}</span>
               </div>
               <ChevronRight size={16} className="text-[#E2CAD8]" />
             </div>
@@ -334,7 +339,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
             >
               <div className="flex items-center gap-3">
                 <HelpCircle size={18} className="text-[#87A7D0]" />
-                <span className="text-xs font-bold text-white">FAQ</span>
+                <span className="text-xs font-bold text-white">{t.faq}</span>
               </div>
               <ChevronRight size={16} className="text-[#E2CAD8]" />
             </div>
@@ -345,7 +350,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
             >
               <div className="flex items-center gap-3">
                 <LifeBuoy size={18} className="text-[#87A7D0]" />
-                <span className="text-xs font-bold text-white">Support</span>
+                <span className="text-xs font-bold text-white">{t.support}</span>
               </div>
               <ChevronRight size={16} className="text-[#E2CAD8]" />
             </div>
