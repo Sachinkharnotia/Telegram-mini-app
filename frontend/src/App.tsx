@@ -173,7 +173,7 @@ const App: React.FC = () => {
           {activeTab === 'statistics' && <Mining />}
           {activeTab === 'history' && <History />}
           {activeTab === 'referrals' && <Referral />}
-          {activeTab === 'profile' && <Profile />}
+          {activeTab === 'profile' && <Profile onNavigate={(tab: string) => setActiveTab(tab)} />}
           {activeTab === 'withdrawal' && <Withdrawal onBack={() => setActiveTab('home')} />}
           {activeTab === 'deposit' && <Deposit onBack={() => setActiveTab('home')} />}
           {activeTab === 'tasks' && <Tasks onBack={() => setActiveTab('home')} />}

@@ -254,7 +254,7 @@ export const Landing = ({ onLaunchApp }: { onLaunchApp: () => void }) => {
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#C18DB4] via-[#E2CAD8] to-[#87A7D0] flex items-center justify-center text-[#0E1B48] font-bold text-base sm:text-lg shadow-[0_0_20px_rgba(193,141,180,0.4)]">
                 <TrendingUp size={18} className="sm:w-5 sm:h-5" />
               </div>
-              <span className="text-base sm:text-xl font-bold font-serif-luxury text-slate-100 tracking-wide">VAULT YIELD</span>
+              <span className="text-base sm:text-xl font-bold font-serif-luxury text-slate-100 tracking-wide">VEXTORAL MINING</span>
             </div>
 
             <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-300">
