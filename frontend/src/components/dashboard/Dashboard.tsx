@@ -255,6 +255,38 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         </button>
       </div>
 
+      <div className="card-vault rounded-2xl p-2.5 border border-[#C18DB4]/30 flex items-center justify-between overflow-hidden text-xs text-[#E2CAD8] bg-gradient-to-r from-[#0E1B48] via-[#0E1B48]/80 to-[#C18DB4]/20 shadow-md">
+        <div className="flex items-center gap-2 font-bold text-white truncate">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span className="text-[#87A7D0]">Real-time:</span>
+          <span className="truncate">Murazimana — claimed profit 0.0034 USDT (2s ago)</span>
+        </div>
+      </div>
+
+      <div className="card-vault rounded-3xl p-5 border border-[#C18DB4]/40 bg-gradient-to-tr from-[#0E1B48] via-purple-950/60 to-[#C18DB4]/30 space-y-3 shadow-xl">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-extrabold text-white font-serif-luxury">300,000 User Sprint Plan</h3>
+            <p className="text-[11px] text-[#E2CAD8]">Global VextoralMining Community Target</p>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-extrabold">
+            Goal Achieved
+          </span>
+        </div>
+
+        <div className="flex items-end justify-between">
+          <div>
+            <span className="text-[10px] text-[#87A7D0] uppercase font-bold tracking-wider block">Current Registrations</span>
+            <span className="text-2xl font-extrabold text-white font-serif-luxury">329,260</span>
+          </div>
+          <span className="text-xl font-extrabold text-emerald-400 font-serif-luxury">100.00%</span>
+        </div>
+
+        <div className="w-full h-2.5 rounded-full bg-[#0E1B48] border border-[#C18DB4]/30 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-[#87A7D0] via-[#C18DB4] to-emerald-400 rounded-full w-full animate-pulse"></div>
+        </div>
+      </div>
+
       <div className="space-y-4 pt-1">
         <div 
           onClick={() => setExpandActivities(!expandActivities)}
