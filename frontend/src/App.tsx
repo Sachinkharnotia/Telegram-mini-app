@@ -12,7 +12,7 @@ import { Profile } from './components/profile/Profile';
 import { Tasks } from './components/tasks/Tasks';
 import { Landing } from './components/website/Landing';
 import { MandatoryJoin } from './components/common/MandatoryJoin';
-import { Loader, Home, TrendingUp, FileText, Users, User, Monitor, Smartphone, Sun, Moon } from 'lucide-react';
+import { Home, TrendingUp, FileText, Users, User, Monitor, Smartphone, Sun, Moon } from 'lucide-react';
 import { isTelegramEnvironment, getStartParam, initTelegramApp } from './utils/telegram';
 
 const App: React.FC = () => {
@@ -92,10 +92,19 @@ const App: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0E1B48] flex items-[#center] justify-center text-slate-100 p-4">
-        <div className="text-center space-y-4">
-          <Loader className="w-10 h-10 animate-spin text-[#C18DB4] mx-auto" />
-          <p className="text-xs font-bold font-serif-luxury tracking-wider text-[#87A7D0]">Loading VextoralMining...</p>
+      <div className="min-h-screen bg-[#0E1B48] flex flex-col items-center justify-center text-slate-100 p-6 space-y-6">
+        <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-[#C18DB4] via-[#87A7D0] to-[#E2CAD8] p-[2px] shadow-[0_0_50px_rgba(193,141,180,0.5)] animate-pulse">
+          <div className="w-full h-full rounded-3xl bg-[#0E1B48] flex items-center justify-center border border-[#C18DB4]/30">
+            <span className="text-3xl font-extrabold text-white font-serif-luxury tracking-tight">VM</span>
+          </div>
+        </div>
+
+        <div className="text-center space-y-2 max-w-xs w-full">
+          <h2 className="text-xl font-extrabold text-white font-serif-luxury tracking-wide">VextoralMining</h2>
+          <p className="text-xs text-[#87A7D0] font-medium">Connecting to VextoralMining server...</p>
+          <div className="w-full h-1.5 rounded-full bg-[#0E1B48] border border-[#C18DB4]/30 overflow-hidden mt-3">
+            <div className="h-full bg-gradient-to-r from-[#87A7D0] via-[#C18DB4] to-[#E2CAD8] rounded-full w-full animate-pulse"></div>
+          </div>
         </div>
       </div>
     );
