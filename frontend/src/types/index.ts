@@ -25,6 +25,7 @@ export interface User {
   updatedAt?: string;
   updated_at?: string;
   referredBy?: string;
+  referrer_name?: string;
   isAdmin?: boolean;
   is_premium?: boolean;
   lastLoginAt?: string;
