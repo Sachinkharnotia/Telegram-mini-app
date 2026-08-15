@@ -124,10 +124,16 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         isOpen={wheelOpen}
         onClose={() => setWheelOpen(false)}
         onRewardWon={(prize) => {
-          const amountNum = parseFloat(prize) || 0;
+          const isVx = prize.toUpperCase().includes('VX');
+          const amountNum = parseFloat(prize.replace(/[^0-9.]/g, '')) || 0;
           if (amountNum > 0) {
-            updateBalance(amountNum, 0, { type: 'spin_reward', title: 'Lucky Wheel Spin Win' });
-            setWalletBalance(prev => prev + amountNum);
+            if (isVx) {
+              updateBalance(0, amountNum, { type: 'spin_reward', title: `Lucky Wheel Spin: +${amountNum} VX` });
+              setVxBalance(prev => prev + amountNum);
+            } else {
+              updateBalance(amountNum, 0, { type: 'spin_reward', title: `Lucky Wheel Spin: +$${amountNum.toFixed(2)} USDT` });
+              setWalletBalance(prev => prev + amountNum);
+            }
           }
         }}
       />
@@ -136,10 +142,16 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         isOpen={giftModalOpen}
         onClose={() => setGiftModalOpen(false)}
         onRewardWon={(prize) => {
-          const amountNum = parseFloat(prize) || 0;
+          const isVx = prize.toUpperCase().includes('VX');
+          const amountNum = parseFloat(prize.replace(/[^0-9.]/g, '')) || 0;
           if (amountNum > 0) {
-            updateBalance(amountNum, 0, { type: 'gift_reward', title: 'Mystery Gift Box Reward' });
-            setWalletBalance(prev => prev + amountNum);
+            if (isVx) {
+              updateBalance(0, amountNum, { type: 'gift_reward', title: `Mystery Gift Chest: +${amountNum} VX` });
+              setVxBalance(prev => prev + amountNum);
+            } else {
+              updateBalance(amountNum, 0, { type: 'gift_reward', title: `Mystery Gift Chest: +$${amountNum.toFixed(2)} USDT` });
+              setWalletBalance(prev => prev + amountNum);
+            }
           }
         }}
       />

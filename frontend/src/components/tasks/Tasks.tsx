@@ -96,6 +96,14 @@ export const Tasks: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         isOpen={wheelModalOpen}
         onClose={() => setWheelModalOpen(false)}
         onRewardWon={(prize) => {
+          const isVx = prize.toUpperCase().includes('VX');
+          const amountNum = parseFloat(prize.replace(/[^0-9.]/g, '')) || 0;
+          if (amountNum > 0) {
+            updateBalance(isVx ? 0 : amountNum, isVx ? amountNum : 0, {
+              type: 'spin_reward',
+              title: `Lucky Wheel: +${amountNum} ${isVx ? 'VX' : 'USDT'}`
+            });
+          }
           setNotice(`Won +${prize} from Lucky Wheel!`);
           setTimeout(() => setNotice(null), 3500);
         }}
@@ -105,6 +113,14 @@ export const Tasks: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         isOpen={giftBoxModalOpen}
         onClose={() => setGiftBoxModalOpen(false)}
         onRewardWon={(prize) => {
+          const isVx = prize.toUpperCase().includes('VX');
+          const amountNum = parseFloat(prize.replace(/[^0-9.]/g, '')) || 0;
+          if (amountNum > 0) {
+            updateBalance(isVx ? 0 : amountNum, isVx ? amountNum : 0, {
+              type: 'gift_reward',
+              title: `Mystery Chest: +${amountNum} ${isVx ? 'VX' : 'USDT'}`
+            });
+          }
           setNotice(`Unboxed +${prize} from Mystery Chest!`);
           setTimeout(() => setNotice(null), 3500);
         }}
