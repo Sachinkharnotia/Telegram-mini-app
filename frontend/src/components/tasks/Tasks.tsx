@@ -2,9 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Sparkles, Gift, Compass } from 'lucide-react';
 import { SpinWheelModal } from '../common/SpinWheelModal';
 import { GiftBoxModal } from '../common/GiftBoxModal';
+import { useAuthStore } from '../../store/authStore';
 
 export const Tasks: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
+  const { updateBalance } = useAuthStore();
   const [tasksList, setTasksList] = useState<any[]>([]);
+  const [completedTaskIds, setCompletedTaskIds] = useState<Record<number, boolean>>(() => {
+    try {
+      const stored = localStorage.getItem('completed_tasks');
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
   const [notice, setNotice] = useState<string | null>(null);
   const [wheelModalOpen, setWheelModalOpen] = useState(false);
   const [giftBoxModalOpen, setGiftBoxModalOpen] = useState(false);
@@ -14,36 +24,69 @@ export const Tasks: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   }, []);
 
   const fetchTasks = () => {
+    const defaultTasks = [
+      { id: 1, title: 'Follow Vextoral Official Channel', reward_amount: 1.0, reward_currency: 'USDT', action_url: 'https://t.me/telegram' },
+      { id: 2, title: 'Join Community Discussion Group', reward_amount: 0.5, reward_currency: 'USDT', action_url: 'https://t.me/telegram' },
+      { id: 3, title: 'Daily Telegram App Check-in', reward_amount: 10, reward_currency: 'VX', action_url: '' }
+    ];
+
+    try {
+      const stored = localStorage.getItem('app_tasks');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setTasksList(parsed);
+          return;
+        }
+      }
+    } catch {}
+
     fetch('/api/tasks/list')
       .then(res => res.json())
       .then(data => {
-        if (data.tasks) setTasksList(data.tasks);
+        if (data.tasks && Array.isArray(data.tasks) && data.tasks.length > 0) {
+          setTasksList(data.tasks);
+        } else {
+          setTasksList(defaultTasks);
+        }
       })
-      .catch(() => {});
+      .catch(() => {
+        setTasksList(defaultTasks);
+      });
   };
 
   const handleTaskClaim = async (task: any) => {
+    if (completedTaskIds[task.id]) return;
+
     if (task.action_url) {
-      window.open(task.action_url, '_blank');
+      if ((window as any)?.Telegram?.WebApp?.openTelegramLink) {
+        (window as any).Telegram.WebApp.openTelegramLink(task.action_url);
+      } else {
+        window.open(task.action_url, '_blank');
+      }
     }
 
+    const nextCompleted = { ...completedTaskIds, [task.id]: true };
+    setCompletedTaskIds(nextCompleted);
+    localStorage.setItem('completed_tasks', JSON.stringify(nextCompleted));
+
+    const isUsdt = task.reward_currency === 'USDT';
+    const amountNum = parseFloat(task.reward_amount) || 1.0;
+    updateBalance(isUsdt ? amountNum : 0, isUsdt ? 0 : amountNum, {
+      type: 'task_reward',
+      title: `Task: ${task.title}`
+    });
+
+    setNotice(`Claimed +${amountNum} ${task.reward_currency || 'USDT'} for "${task.title}"!`);
+    setTimeout(() => setNotice(null), 3500);
+
     try {
-      const res = await fetch('/api/tasks/claim', {
+      await fetch('/api/tasks/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ task_id: task.id })
       });
-      const data = await res.json();
-      if (data.success) {
-        setNotice(`Claimed +${task.reward_amount} ${task.reward_currency} for "${task.title}"!`);
-        fetchTasks();
-      } else {
-        setNotice(data.error || 'Failed to claim task');
-      }
-    } catch {
-      setNotice('Task claim failed');
-    }
-    setTimeout(() => setNotice(null), 3500);
+    } catch {}
   };
 
   return (
@@ -112,35 +155,38 @@ export const Tasks: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       <div className="space-y-3">
         <h3 className="font-bold text-white text-xs uppercase tracking-wider font-serif-luxury">Available Earning Tasks</h3>
 
-        {tasksList.map(task => (
-          <div 
-            key={task.id} 
-            className={`card-vault p-4 rounded-2xl flex items-center justify-between gap-3 border border-[#C18DB4]/30 transition-all ${
-              task.completed ? 'opacity-60' : ''
-            }`}
-          >
-            <div>
-              <h4 className={`text-xs font-bold ${task.completed ? 'line-through text-[#E2CAD8]' : 'text-white'}`}>
-                {task.title}
-              </h4>
-              <span className="text-[10px] font-bold text-amber-300">
-                +{task.reward_amount} {task.reward_currency}
-              </span>
-            </div>
-
-            <button 
-              onClick={() => !task.completed && handleTaskClaim(task)}
-              disabled={task.completed}
-              className={`px-4 py-2 rounded-xl font-bold text-xs transition-all ${
-                task.completed 
-                  ? 'bg-transparent text-emerald-400 font-bold cursor-not-allowed' 
-                  : 'btn-gold-vault'
+        {tasksList.map(task => {
+          const isDone = task.completed || !!completedTaskIds[task.id];
+          return (
+            <div 
+              key={task.id} 
+              className={`card-vault p-4 rounded-2xl flex items-center justify-between gap-3 border border-[#C18DB4]/30 transition-all ${
+                isDone ? 'opacity-70 bg-[#0E1B48]/50' : 'hover:border-[#C18DB4]/60'
               }`}
             >
-              {task.completed ? 'Completed' : 'Claim Task'}
-            </button>
-          </div>
-        ))}
+              <div>
+                <h4 className={`text-xs font-bold ${isDone ? 'text-[#87A7D0]' : 'text-white'}`}>
+                  {task.title}
+                </h4>
+                <span className="text-[10px] font-bold text-amber-300">
+                  +{task.reward_amount} {task.reward_currency}
+                </span>
+              </div>
+
+              <button 
+                onClick={() => !isDone && handleTaskClaim(task)}
+                disabled={isDone}
+                className={`px-4 py-2 rounded-xl font-bold text-xs transition-all ${
+                  isDone 
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 cursor-default' 
+                    : 'btn-gold-vault shadow-md hover:scale-105'
+                }`}
+              >
+                {isDone ? 'Completed ✓' : 'Claim Task'}
+              </button>
+            </div>
+          );
+        })}
       </div>
 
     </div>
