@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Copy, Check, QrCode, RefreshCw } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 
 export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
+  const { user } = useAuthStore();
   const [network, setNetwork] = useState<'BEP20' | 'TON'>('BEP20');
   const [amount, setAmount] = useState('50');
   const [bep20Wallet, setBep20Wallet] = useState('0x71C7656EC7ab88b098defB751B7401B5f6d8976F');
@@ -10,6 +12,7 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [txSubmitted, setTxSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [lastOrderId, setLastOrderId] = useState<string>('');
 
   useEffect(() => {
     try {
@@ -45,22 +48,30 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const handleCreateDeposit = async () => {
     const numAmt = parseFloat(amount);
     if (isNaN(numAmt) || numAmt < 10) {
-      setErrorMsg('Minimum deposit amount is $10 USDT');
+      setErrorMsg('Minimum deposit amount is $10.00 USDT');
       return;
     }
 
     setLoading(true);
     setErrorMsg('');
 
+    const orderId = `DEP-${Date.now()}`;
+    setLastOrderId(orderId);
+    const userId = user?.id || user?.telegram_id || 10001;
+    const userName = user?.first_name || user?.username || 'Member';
+
     try {
       const raw = localStorage.getItem('admin_deposits') || '[]';
       const deps = JSON.parse(raw);
       deps.unshift({
         id: Date.now(),
-        user_id: 10001,
+        order_id: orderId,
+        user_id: userId,
+        user_name: userName,
         amount: numAmt,
         currency: 'USDT',
         network,
+        wallet_address: activeWallet,
         status: 'pending',
         created_at: new Date().toISOString()
       });
@@ -69,7 +80,7 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       const rawTxs = localStorage.getItem('app_transactions') || '[]';
       const txs = JSON.parse(rawTxs);
       txs.unshift({
-        id: `DEP-${Date.now()}`,
+        id: orderId,
         type: 'deposit',
         title: `USDT Deposit Order (${network})`,
         amount: numAmt.toFixed(2),
@@ -87,7 +98,7 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       await fetch('/api/deposit/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: numAmt, network })
+        body: JSON.stringify({ amount: numAmt, network, user_id: userId })
       });
     } catch {}
   };
@@ -113,14 +124,30 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
       {txSubmitted ? (
         <div className="card-vault p-6 rounded-3xl text-center space-y-4 border border-emerald-500/40">
-          <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center mx-auto border border-emerald-500/40">
-            <Check size={24} />
+          <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center mx-auto border border-emerald-500/40 shadow-lg">
+            <Check size={28} />
           </div>
           <h3 className="text-xl font-bold text-white font-serif-luxury">Deposit Order Created</h3>
           <p className="text-xs text-[#E2CAD8]">
-            Your deposit request for <strong>${amount} USDT ({network})</strong> has been registered. Your internal balance will update upon network confirmation.
+            Your deposit order for <strong className="text-emerald-400 font-mono text-sm">${parseFloat(amount || '0').toFixed(2)} USDT ({network})</strong> has been registered with Order ID <span className="font-mono text-white">{lastOrderId}</span>.
           </p>
-          <button onClick={() => setTxSubmitted(false)} className="w-full py-3 btn-gold-vault text-xs font-bold rounded-xl">
+
+          <div className="p-3.5 bg-[#0E1B48] border border-[#C18DB4]/30 rounded-2xl text-left space-y-1.5">
+            <div className="flex justify-between text-[11px]">
+              <span className="text-[#87A7D0]">Status:</span>
+              <span className="text-amber-300 font-bold uppercase">Pending Verification</span>
+            </div>
+            <div className="flex justify-between text-[11px]">
+              <span className="text-[#87A7D0]">Network:</span>
+              <span className="text-white font-bold">{network}</span>
+            </div>
+            <div className="flex justify-between text-[11px]">
+              <span className="text-[#87A7D0]">Amount:</span>
+              <span className="text-emerald-400 font-bold font-mono">${parseFloat(amount || '0').toFixed(2)} USDT</span>
+            </div>
+          </div>
+
+          <button onClick={() => setTxSubmitted(false)} className="w-full py-3.5 btn-gold-vault text-xs font-bold rounded-xl uppercase tracking-wider">
             Make Another Deposit
           </button>
         </div>
