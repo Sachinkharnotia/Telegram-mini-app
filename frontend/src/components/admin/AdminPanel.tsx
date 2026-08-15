@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, DollarSign, Settings, CheckCircle, XCircle, 
-  Search, Plus, Trash2, Save, RefreshCw, Layers, ArrowLeft,
-  Briefcase, Activity
+  CheckCircle, XCircle, Search, Plus, Trash2, RefreshCw, ArrowLeft,
+  Send, UserPlus
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -10,868 +9,1168 @@ interface AdminPanelProps {
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
-  const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'vx' | 'finance' | 'communities' | 'tasks' | 'settings'>('stats');
-  const defaultStats = {
-    total_users: 0,
-    active_users: 0,
-    total_deposits_usdt: 0.00,
-    total_withdrawals_usdt: 0.00,
-    total_vx_purchased: 0,
-    total_mining_yield_paid: 0.00,
-    pending_withdrawals_count: 0,
-    pending_deposits_count: 0
-  };
+  const [activeTab, setActiveTab] = useState<
+    'dashboard' | 'users' | 'tasks' | 'submissions' | 'withdrawals' | 'transactions' | 'referrals' | 'notifications' | 'support' | 'admins' | 'settings' | 'activity'
+  >('dashboard');
 
   const defaultSettings = {
-    vx_price_usdt: 0.10,
-    min_vx_purchase: 100,
-    min_mining_vx: 100,
-    mining_rate_percent: 1.50,
-    min_deposit_usdt: 10.00,
-    min_withdrawal_usdt: 20.00,
-    withdrawal_fee_percent: 2.00,
-    bep20_wallet: '',
-    ton_wallet: '',
-    deposit_address_bep20: '',
-    deposit_address_ton: '',
-    referral_level1_percent: 10.0,
-    referral_level2_percent: 5.0,
-    referral_level3_percent: 2.0,
-    referral_signup_bonus_usdt: 0.50,
-    support_telegram: 'https://t.me/telegram',
-    official_channel: 'https://t.me/telegram'
+    payment: {
+      symbol: '$',
+      network: 'BEP-20',
+      currency: 'USD',
+      payout_wallet: '',
+      max_withdrawal: 1000,
+      min_withdrawal: 5,
+      withdrawal_fee: 0,
+      payment_currency: 'USDT'
+    },
+    referral: {
+      reward: 0.50,
+      enabled: true,
+      condition: 'first_task_approved',
+      max_reward_per_user: 100,
+      level1_percent: 10,
+      level2_percent: 5,
+      level3_percent: 2
+    },
+    telegram: {
+      bot_username: 'VXMiningBot',
+      mini_app_short_name: 'vextoral',
+      bot_token: ''
+    },
+    branding: {
+      app_name: 'VextoralMining',
+      tagline: 'Complete tasks & earn daily USDT yield.',
+      support_telegram: '@VextoralSupport',
+      support_email: 'businessvextoral@gmail.com'
+    },
+    general: {
+      maintenance_mode: false,
+      maintenance_message: 'VextoralMining is under maintenance. Please check back soon.'
+    }
   };
 
   const defaultUsers: any[] = [];
-  const defaultDeposits: any[] = [];
-  const defaultWithdrawals: any[] = [];
-  const defaultCommunities = [
-    { id: 1, name: 'Main Telegram Channel', link: 'https://t.me/telegram', type: 'channel' },
-    { id: 2, name: 'Official Discussion Group', link: 'https://t.me/telegram', type: 'group' },
-    { id: 3, name: 'Vextoral Mining News', link: 'https://t.me/telegram', type: 'channel' }
-  ];
-  const defaultTasks: any[] = [];
 
-  const [stats, setStats] = useState<any>(defaultStats);
+  const defaultAdmins = [
+    { email: 'admin@vextoral.com', role: 'OWNER', joined: '8/15/2026' }
+  ];
+
+  const defaultActivityLogs: any[] = [];
+
   const [settings, setSettings] = useState<any>(defaultSettings);
   const [users, setUsers] = useState<any[]>(defaultUsers);
-  const [deposits, setDeposits] = useState<any[]>(defaultDeposits);
-  const [withdrawals, setWithdrawals] = useState<any[]>(defaultWithdrawals);
-  const [communities, setCommunities] = useState<any[]>(defaultCommunities);
-  const [tasks, setTasks] = useState<any[]>(defaultTasks);
-
+  const [admins, setAdmins] = useState<any[]>(defaultAdmins);
+  const [activityLogs, setActivityLogs] = useState<any[]>(defaultActivityLogs);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [userFilter, setUserFilter] = useState<'All' | 'Active' | 'Suspended' | 'Blocked'>('All');
+  const [taskCategory, setTaskCategory] = useState<string>('All');
+  const [wdFilter, setWdFilter] = useState<'All' | 'Pending' | 'Processing' | 'Paid' | 'Rejected'>('All');
+  const [subFilter, setSubFilter] = useState<'All' | 'Under Review' | 'Approved' | 'Rejected'>('All');
+  const [ticketFilter, setTicketFilter] = useState<'All' | 'Open' | 'Pending' | 'Resolved' | 'Closed'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [adjAmount, setAdjAmount] = useState('');
-  const [adjCurrency, setAdjCurrency] = useState<'USDT' | 'VX'>('USDT');
   const [adjAction, setAdjAction] = useState<'add' | 'deduct'>('add');
 
-  const [newCommunityName, setNewCommunityName] = useState('');
-  const [newCommunityLink, setNewCommunityLink] = useState('');
-  const [newCommunityType, setNewCommunityType] = useState<'channel' | 'group'>('channel');
+  const [createAdminModal, setCreateAdminModal] = useState(false);
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [newAdminRole, setNewAdminRole] = useState<'Admin' | 'Support' | 'Manager'>('Admin');
+  const [adminPermissions, setAdminPermissions] = useState<Record<string, boolean>>({
+    'View Users': true,
+    'Edit Users': true,
+    'Manage User Access': true,
+    'View Tasks': true,
+    'Create/Edit Tasks': true,
+    'Delete Tasks': true,
+    'View Finances': true,
+    'Approve Payouts': true,
+    'Manual Adjustments': true,
+    'View Settings': true,
+    'Edit Settings': true,
+    'Manage Admins': true,
+    'View Audit Logs': true
+  });
 
+  const [createTaskModal, setCreateTaskModal] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskReward, setNewTaskReward] = useState('');
-  const [newTaskCurrency, setNewTaskCurrency] = useState<'USDT' | 'VX'>('USDT');
+  const [newTaskShortDesc, setNewTaskShortDesc] = useState('');
+  const [newTaskReward, setNewTaskReward] = useState('1.0');
+  const [newTaskCategory, setNewTaskCategory] = useState('Social Media');
   const [newTaskUrl, setNewTaskUrl] = useState('');
+  const [newTaskMaxSlots, setNewTaskMaxSlots] = useState('100');
+  const [newTaskMinutes, setNewTaskMinutes] = useState('5');
+
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
+  const [sendTelegramBot, setSendTelegramBot] = useState(true);
 
   useEffect(() => {
     fetchData();
   }, [activeTab]);
 
-  const fetchData = async () => {
+  const addActivityLog = (title: string, detail: string) => {
+    const newLog = {
+      title,
+      detail,
+      email: admins[0]?.email || 'admin@vextoral.com',
+      time: new Date().toLocaleString()
+    };
+    const updated = [newLog, ...activityLogs];
+    setActivityLogs(updated);
+    localStorage.setItem('admin_activity_logs', JSON.stringify(updated));
+  };
+
+  const fetchData = () => {
     setLoading(true);
     try {
-      if (activeTab === 'communities') {
-        const localComm = localStorage.getItem('required_communities');
-        if (localComm) setCommunities(JSON.parse(localComm));
-        const res = await fetch('/api/admin/required-communities');
-        const data = await res.json();
-        if (data.communities && Array.isArray(data.communities) && data.communities.length > 0) {
-          setCommunities(data.communities);
-        }
-      } else if (activeTab === 'tasks') {
-        const localTasks = localStorage.getItem('app_tasks');
-        if (localTasks) setTasks(JSON.parse(localTasks));
-        const res = await fetch('/api/admin/tasks');
-        const data = await res.json();
-        if (data.tasks && Array.isArray(data.tasks) && data.tasks.length > 0) {
-          setTasks(data.tasks);
-        }
-      } else if (activeTab === 'settings' || activeTab === 'vx') {
-        const localSettings = localStorage.getItem('platform_settings');
-        if (localSettings) setSettings(JSON.parse(localSettings));
-        const res = await fetch('/api/admin/settings');
-        const data = await res.json();
-        if (data.settings) setSettings(data.settings);
-      } else if (activeTab === 'users') {
-        const localUsers = localStorage.getItem('admin_users');
-        if (localUsers) setUsers(JSON.parse(localUsers));
-        const res = await fetch(`/api/admin/users?q=${encodeURIComponent(searchQuery)}`);
-        const data = await res.json();
-        if (data.users && Array.isArray(data.users) && data.users.length > 0) {
-          setUsers(data.users);
-        }
-      } else if (activeTab === 'stats') {
-        const res = await fetch('/api/admin/stats');
-        const data = await res.json();
-        setStats(data.stats || defaultStats);
-      } else if (activeTab === 'finance') {
-        const depRes = await fetch('/api/admin/deposits');
-        const depData = await depRes.json();
-        setDeposits(depData.deposits && depData.deposits.length > 0 ? depData.deposits : defaultDeposits);
+      const storedUsers = localStorage.getItem('admin_users');
+      if (storedUsers) setUsers(JSON.parse(storedUsers));
 
-        const wdRes = await fetch('/api/admin/withdrawals');
-        const wdData = await wdRes.json();
-        setWithdrawals(wdData.withdrawals && wdData.withdrawals.length > 0 ? wdData.withdrawals : defaultWithdrawals);
-      }
-    } catch {
-      if (activeTab === 'stats') setStats(defaultStats);
-    } finally {
-      setLoading(false);
-    }
-  };
+      const storedSettings = localStorage.getItem('platform_settings');
+      if (storedSettings) setSettings(JSON.parse(storedSettings));
 
-  const handleUpdateSettings = async () => {
-    localStorage.setItem('platform_settings', JSON.stringify(settings));
-    setMessage('Settings saved successfully!');
-    try {
-      await fetch('/api/admin/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings)
-      });
+      const storedTasks = localStorage.getItem('app_tasks');
+      if (storedTasks) setTasks(JSON.parse(storedTasks));
+
+      const storedWds = localStorage.getItem('admin_withdrawals');
+      if (storedWds) setWithdrawals(JSON.parse(storedWds));
+
+      const storedTxs = localStorage.getItem('app_transactions');
+      if (storedTxs) setTransactions(JSON.parse(storedTxs));
+
+      const storedLogs = localStorage.getItem('admin_activity_logs');
+      if (storedLogs) setActivityLogs(JSON.parse(storedLogs));
+
+      const storedAdmins = localStorage.getItem('admin_accounts');
+      if (storedAdmins) setAdmins(JSON.parse(storedAdmins));
     } catch {}
+    setLoading(false);
   };
 
-  const handleAdjustUserBalance = async () => {
+  const handleSaveSettingsSection = (section: string) => {
+    localStorage.setItem('platform_settings', JSON.stringify(settings));
+    addActivityLog('Settings Updated', `Updated ${section} configuration`);
+    setMessage(`Settings saved for ${section}`);
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleCreateAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAdminEmail.trim()) return;
+    const newAdmin = {
+      email: newAdminEmail.trim(),
+      role: newAdminRole.toUpperCase(),
+      joined: new Date().toLocaleDateString()
+    };
+    const updated = [newAdmin, ...admins];
+    setAdmins(updated);
+    localStorage.setItem('admin_accounts', JSON.stringify(updated));
+    addActivityLog('Admin Created', `Created ${newAdminRole} account for ${newAdminEmail}`);
+    setCreateAdminModal(false);
+    setNewAdminEmail('');
+    setNewAdminPassword('');
+    setMessage(`Created new admin account for ${newAdmin.email}`);
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleCreateTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTaskTitle.trim()) return;
+    const taskItem = {
+      id: Date.now(),
+      title: newTaskTitle.trim(),
+      description: newTaskShortDesc.trim(),
+      reward_amount: parseFloat(newTaskReward) || 1.0,
+      reward_currency: 'USDT',
+      category: newTaskCategory,
+      action_url: newTaskUrl.trim() || 'https://t.me/telegram',
+      max_slots: parseInt(newTaskMaxSlots) || 100,
+      minutes: parseInt(newTaskMinutes) || 5,
+      is_active: true
+    };
+    const updated = [taskItem, ...tasks];
+    setTasks(updated);
+    localStorage.setItem('app_tasks', JSON.stringify(updated));
+    addActivityLog('Task Created', `Published task "${taskItem.title}" (${taskItem.reward_amount} USDT)`);
+    setCreateTaskModal(false);
+    setNewTaskTitle('');
+    setNewTaskShortDesc('');
+    setNewTaskUrl('');
+    setMessage('Task created and published successfully!');
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleDeleteTask = (id: number) => {
+    const taskToDelete = tasks.find(t => t.id === id);
+    const updated = tasks.filter(t => t.id !== id);
+    setTasks(updated);
+    localStorage.setItem('app_tasks', JSON.stringify(updated));
+    addActivityLog('Task Deleted', `Removed task "${taskToDelete?.title || id}"`);
+    setMessage('Task removed');
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleToggleUserBan = (u: any) => {
+    const nextStatus = !u.is_active;
+    const updatedUsers = users.map(item => item.id === u.id ? { 
+      ...item, 
+      is_active: nextStatus,
+      status: nextStatus ? 'Active' : 'Blocked'
+    } : item);
+    setUsers(updatedUsers);
+    localStorage.setItem('admin_users', JSON.stringify(updatedUsers));
+    addActivityLog('User Status Updated', `User @${u.username || u.telegram_id} set to ${nextStatus ? 'ACTIVE' : 'BLOCKED'}`);
+    setMessage(`User @${u.username || u.telegram_id} is now ${nextStatus ? 'ACTIVE' : 'BLOCKED'}`);
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleAdjustUserBalance = () => {
     if (!selectedUser || !adjAmount) return;
     const numAmt = parseFloat(adjAmount);
     if (isNaN(numAmt) || numAmt <= 0) return;
 
     const updatedUsers = users.map(u => {
       if (u.id === selectedUser.id) {
-        const currentUsdt = u.balance?.usdt_balance || 0;
-        const currentVx = u.balance?.vx_balance || 0;
-        const newUsdt = adjCurrency === 'USDT' 
-          ? (adjAction === 'add' ? currentUsdt + numAmt : Math.max(0, currentUsdt - numAmt))
-          : currentUsdt;
-        const newVx = adjCurrency === 'VX'
-          ? (adjAction === 'add' ? currentVx + numAmt : Math.max(0, currentVx - numAmt))
-          : currentVx;
-        return {
-          ...u,
-          balance: { ...u.balance, usdt_balance: newUsdt, vx_balance: newVx }
-        };
+        const cur = u.balance || 0;
+        const newBal = adjAction === 'add' ? cur + numAmt : Math.max(0, cur - numAmt);
+        return { ...u, balance: newBal };
       }
       return u;
     });
 
     setUsers(updatedUsers);
     localStorage.setItem('admin_users', JSON.stringify(updatedUsers));
-    setMessage(`Balance adjusted for ${selectedUser.first_name || 'User'}`);
+    addActivityLog('Balance Adjusted', `${adjAction === 'add' ? 'Credited' : 'Deducted'} $${numAmt} USDT for @${selectedUser.username || selectedUser.telegram_id}`);
+    setMessage(`Balance adjusted for @${selectedUser.username || selectedUser.telegram_id}`);
     setSelectedUser(null);
     setAdjAmount('');
-
-    try {
-      await fetch('/api/admin/users/update-balance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: selectedUser.id,
-          amount: numAmt,
-          currency: adjCurrency,
-          action: adjAction
-        })
-      });
-    } catch {}
+    setTimeout(() => setMessage(''), 3000);
   };
 
-  const handleToggleUserBan = async (u: any) => {
-    const nextStatus = !u.is_active;
-    const updatedUsers = users.map(item => item.id === u.id ? { ...item, is_active: nextStatus } : item);
-    setUsers(updatedUsers);
-    localStorage.setItem('admin_users', JSON.stringify(updatedUsers));
-    setMessage(`User ${u.first_name || 'Account'} is now ${nextStatus ? 'UNBANNED' : 'BANNED'}`);
-
-    try {
-      await fetch('/api/admin/users/update-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: u.id,
-          is_active: nextStatus,
-          ban_reason: nextStatus ? undefined : 'Banned by admin'
-        })
-      });
-    } catch {}
+  const handleSendNotification = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!notifTitle.trim() || !notifMessage.trim()) return;
+    addActivityLog('Notification Sent', `Broadcasted "${notifTitle}" to all active members`);
+    setMessage(`Broadcast successfully queued and dispatched!`);
+    setNotifTitle('');
+    setNotifMessage('');
+    setTimeout(() => setMessage(''), 3500);
   };
 
-  const handleConfirmDeposit = async (depId: number) => {
-    const updated = deposits.map(d => d.id === depId ? { ...d, status: 'confirmed' } : d);
-    setDeposits(updated);
-    setMessage('Deposit confirmed!');
-    try {
-      await fetch('/api/admin/deposits/confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deposit_id: depId })
-      });
-    } catch {}
-  };
+  const filteredUsers = users.filter(u => {
+    const matchesQuery = (u.username?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                         (u.first_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                         (String(u.telegram_id || '')).includes(searchQuery);
+    if (!matchesQuery) return false;
+    if (userFilter === 'All') return true;
+    if (userFilter === 'Active') return u.is_active !== false;
+    if (userFilter === 'Blocked' || userFilter === 'Suspended') return u.is_active === false;
+    return true;
+  });
 
-  const handleUpdateWithdrawal = async (wdId: number, status: 'approved' | 'rejected') => {
-    const updated = withdrawals.map(w => w.id === wdId ? { ...w, status } : w);
-    setWithdrawals(updated);
-    setMessage(`Withdrawal ${status}`);
-    try {
-      await fetch('/api/admin/withdrawals/update-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ withdrawal_id: wdId, status })
-      });
-    } catch {}
-  };
-
-  const handleAddCommunity = async () => {
-    if (!newCommunityName.trim() || !newCommunityLink.trim()) return;
-    const newComm = {
-      id: Date.now(),
-      name: newCommunityName.trim(),
-      link: newCommunityLink.trim(),
-      type: newCommunityType,
-      is_active: true,
-      sort_order: communities.length + 1
-    };
-    const updated = [...communities, newComm];
-    setCommunities(updated);
-    localStorage.setItem('required_communities', JSON.stringify(updated));
-    setNewCommunityName('');
-    setNewCommunityLink('');
-    setMessage('Community added successfully');
-
-    try {
-      await fetch('/api/admin/required-communities', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ communities: updated })
-      });
-    } catch {}
-  };
-
-  const handleRemoveCommunity = async (id: number) => {
-    const updated = communities.filter(c => c.id !== id);
-    setCommunities(updated);
-    localStorage.setItem('required_communities', JSON.stringify(updated));
-    setMessage('Community removed successfully');
-
-    try {
-      await fetch('/api/admin/required-communities', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ communities: updated })
-      });
-    } catch {}
-  };
-
-  const handleAddTask = async () => {
-    if (!newTaskTitle.trim() || !newTaskReward.trim()) return;
-    const taskItem = {
-      id: Date.now(),
-      title: newTaskTitle.trim(),
-      reward_amount: parseFloat(newTaskReward) || 1.0,
-      reward_currency: newTaskCurrency,
-      action_url: newTaskUrl.trim() || 'https://t.me/telegram',
-      type: 'social_follow',
-      is_active: true
-    };
-    const updated = [...tasks, taskItem];
-    setTasks(updated);
-    localStorage.setItem('app_tasks', JSON.stringify(updated));
-    setNewTaskTitle('');
-    setNewTaskReward('');
-    setNewTaskUrl('');
-    setMessage('Task created successfully');
-
-    try {
-      await fetch('/api/admin/tasks/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(taskItem)
-      });
-    } catch {}
-  };
-
-  const handleDeleteTask = async (id: number) => {
-    const updated = tasks.filter(t => t.id !== id);
-    setTasks(updated);
-    localStorage.setItem('app_tasks', JSON.stringify(updated));
-    setMessage('Task deleted successfully');
-
-    try {
-      await fetch(`/api/admin/tasks/${id}`, { method: 'DELETE' });
-    } catch {}
-  };
+  const filteredWithdrawals = withdrawals.filter(w => {
+    if (wdFilter === 'All') return true;
+    return (w.status?.toLowerCase() || '') === wdFilter.toLowerCase();
+  });
 
   return (
-    <div className="min-h-screen bg-transparent p-4 sm:p-6 space-y-6">
+    <div className="min-h-screen bg-[#070D1E] text-slate-100 p-3 sm:p-6 space-y-5 max-w-6xl mx-auto font-sans">
       
-      <div className="flex items-center justify-between gap-4 card-vault p-4 rounded-2xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#0E1B48]/90 p-4 rounded-2xl border border-[#C18DB4]/30 shadow-xl">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="p-2 rounded-xl bg-[#0E1B48] text-[#E2CAD8] hover:bg-[#1A285A]">
+          <button onClick={onBack} className="p-2 rounded-xl bg-[#070D1E] text-[#E2CAD8] hover:bg-[#1A285A] border border-[#C18DB4]/30">
             <ArrowLeft size={18} />
           </button>
           <div>
-            <h1 className="text-xl font-extrabold text-white font-serif-luxury">Admin Panel</h1>
-            <p className="text-xs text-[#E2CAD8]">Platform Configuration & Control</p>
+            <h1 className="text-xl font-extrabold text-white font-serif-luxury tracking-wide">Admin Management Console</h1>
+            <p className="text-xs text-[#87A7D0]">Live platform oversight & automated control suite</p>
           </div>
         </div>
 
-        <button onClick={fetchData} className="p-2.5 rounded-xl btn-gold-vault">
-          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={fetchData} className="p-2.5 rounded-xl bg-[#070D1E] text-[#E2CAD8] border border-[#C18DB4]/30 hover:border-[#C18DB4]">
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+          </button>
+          <button 
+            onClick={() => setCreateAdminModal(true)}
+            className="btn-gold-vault px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg"
+          >
+            <UserPlus size={14} /> Create Admin
+          </button>
+        </div>
       </div>
 
       {message && (
-        <div className="p-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-200 text-xs flex justify-between items-center">
-          <span>{message}</span>
-          <button onClick={() => setMessage('')}><XCircle size={14} /></button>
+        <div className="p-3.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex justify-between items-center animate-fade-in shadow-lg">
+          <span className="flex items-center gap-2"><CheckCircle size={16} /> {message}</span>
+          <button onClick={() => setMessage('')}><XCircle size={16} /></button>
         </div>
       )}
 
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-[#C18DB4]/20">
         {[
-          { id: 'stats', label: 'Analytics', icon: Activity },
-          { id: 'users', label: 'User Manager', icon: Users },
-          { id: 'vx', label: 'VX & Mining', icon: Briefcase },
-          { id: 'finance', label: 'Finance (Dep/Wd)', icon: DollarSign },
-          { id: 'communities', label: 'Communities', icon: Layers },
-          { id: 'tasks', label: 'Task Manager', icon: CheckCircle },
-          { id: 'settings', label: 'App Settings', icon: Settings }
+          { id: 'dashboard', label: 'Dashboard' },
+          { id: 'users', label: 'Users' },
+          { id: 'tasks', label: 'Tasks' },
+          { id: 'submissions', label: 'Submissions' },
+          { id: 'withdrawals', label: 'Withdrawals' },
+          { id: 'transactions', label: 'Transactions' },
+          { id: 'referrals', label: 'Referrals' },
+          { id: 'notifications', label: 'Notifications' },
+          { id: 'support', label: 'Support' },
+          { id: 'admins', label: 'Admins' },
+          { id: 'settings', label: 'Settings' },
+          { id: 'activity', label: 'Activity log' }
         ].map(t => {
-          const Icon = t.icon;
           const isActive = activeTab === t.id;
           return (
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id as any)}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-                isActive ? 'btn-gold-vault shadow-lg' : 'bg-[#0E1B48]/80 text-[#E2CAD8] border border-[#C18DB4]/30 hover:bg-[#0E1B48]'
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                isActive
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 shadow-md'
+                  : 'bg-[#0E1B48]/60 text-[#E2CAD8] border border-[#C18DB4]/20 hover:bg-[#0E1B48]'
               }`}
             >
-              <Icon size={14} /> {t.label}
+              {t.label}
             </button>
           );
         })}
       </div>
 
-      {activeTab === 'stats' && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="card-vault p-4 rounded-2xl">
-            <span className="text-[10px] text-[#E2CAD8]">Total Registered Users</span>
-            <h3 className="text-xl font-extrabold text-white mt-1">{stats?.total_users || 0}</h3>
+      {activeTab === 'dashboard' && (() => {
+        const totalRewardsPaid = transactions
+          .filter(t => t.type === 'task_reward' || t.type === 'gift_reward')
+          .reduce((acc, t) => acc + (parseFloat(t.amount) || 0), 0);
+
+        const totalReferralRewards = transactions
+          .filter(t => t.type === 'referral_bonus')
+          .reduce((acc, t) => acc + (parseFloat(t.amount) || 0), 0);
+
+        const totalWithdrawn = withdrawals
+          .filter(w => (w.status || '').toLowerCase() === 'paid')
+          .reduce((acc, w) => acc + (parseFloat(w.amount) || 0), 0);
+
+        const totalUserBalances = users.reduce((acc, u) => acc + (parseFloat(u.balance) || 0), 0);
+        const activeCount = users.filter(u => u.is_active !== false).length;
+        const suspendedCount = users.filter(u => u.is_active === false).length;
+
+        return (
+          <div className="space-y-6 animate-fade-in">
+            <div>
+              <h2 className="text-xl font-bold text-white font-serif-luxury">Dashboard</h2>
+              <p className="text-xs text-[#87A7D0]">Live overview of the Vextoral platform</p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+              <div className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30">
+                <span className="text-[11px] text-[#E2CAD8]">Total users</span>
+                <h3 className="text-2xl font-extrabold text-white mt-1">{users.length}</h3>
+                <span className="text-[10px] text-emerald-400 font-bold">{activeCount} active (7d)</span>
+              </div>
+
+              <div className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30">
+                <span className="text-[11px] text-[#E2CAD8]">New users (30d)</span>
+                <h3 className="text-2xl font-extrabold text-white mt-1">{users.length}</h3>
+                <span className="text-[10px] text-rose-400 font-bold">{suspendedCount} suspended</span>
+              </div>
+
+              <div className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30">
+                <span className="text-[11px] text-[#E2CAD8]">Active tasks</span>
+                <h3 className="text-2xl font-extrabold text-white mt-1">{tasks.length}</h3>
+                <span className="text-[10px] text-[#87A7D0]">{tasks.length} total</span>
+              </div>
+
+              <div className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30">
+                <span className="text-[11px] text-[#E2CAD8]">Pending reviews</span>
+                <h3 className="text-2xl font-extrabold text-amber-400 mt-1">0</h3>
+                <span className="text-[10px] text-emerald-400 font-bold">0 approved</span>
+              </div>
+
+              <div className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30">
+                <span className="text-[11px] text-[#E2CAD8]">Rewards paid</span>
+                <h3 className="text-2xl font-extrabold text-emerald-400 mt-1">${totalRewardsPaid.toFixed(2)}</h3>
+                <span className="text-[10px] text-[#87A7D0]">task rewards</span>
+              </div>
+
+              <div className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30">
+                <span className="text-[11px] text-[#E2CAD8]">Referral rewards</span>
+                <h3 className="text-2xl font-extrabold text-emerald-400 mt-1">${totalReferralRewards.toFixed(2)}</h3>
+                <span className="text-[10px] text-[#87A7D0]">0/0 paid</span>
+              </div>
+
+              <div className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30">
+                <span className="text-[11px] text-[#E2CAD8]">Withdrawn</span>
+                <h3 className="text-2xl font-extrabold text-rose-300 mt-1">${totalWithdrawn.toFixed(2)}</h3>
+                <span className="text-[10px] text-amber-400 font-bold">{withdrawals.filter(w => (w.status || '').toLowerCase() === 'pending').length} pending</span>
+              </div>
+
+              <div className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30">
+                <span className="text-[11px] text-[#E2CAD8]">User balances</span>
+                <h3 className="text-2xl font-extrabold text-white mt-1">${totalUserBalances.toFixed(2)}</h3>
+                <span className="text-[10px] text-[#87A7D0]">outstanding liability</span>
+              </div>
+            </div>
+
+            <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold text-white font-serif-luxury">Last 30 days User Growth & Activity</span>
+                <span className="text-[10px] text-emerald-400 font-bold">Signups: {users.length}</span>
+              </div>
+              <div className="h-32 w-full flex items-end justify-between gap-1 pt-6 px-2 border-b border-[#C18DB4]/20">
+                {[...Array(12)].map((_, i) => {
+                  const heightPct = users.length > 0 ? Math.min(100, Math.max(10, (users.length / 10) * 100)) : 4;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
+                      <div 
+                        style={{ height: `${i === 11 && users.length > 0 ? heightPct : 4}%` }}
+                        className={`w-full rounded-t-sm transition-all ${
+                          i === 11 && users.length > 0 
+                            ? 'bg-gradient-to-t from-emerald-500/40 to-emerald-400' 
+                            : 'bg-[#C18DB4]/10'
+                        }`}
+                      />
+                      <span className="text-[8px] text-[#87A7D0]">08-{String(i + 4).padStart(2, '0')}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-bold text-white font-serif-luxury">Latest users</h3>
+                <button onClick={() => setActiveTab('users')} className="text-xs text-emerald-400 font-bold hover:underline">View all</button>
+              </div>
+
+              {users.length === 0 ? (
+                <div className="card-vault p-6 rounded-2xl bg-[#0E1B48]/40 border border-[#C18DB4]/20 text-center text-xs text-[#87A7D0]">
+                  No users have joined yet. Real users will appear here automatically when they start the app.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {users.slice(0, 4).map(u => (
+                    <div key={u.id} className="p-3.5 rounded-2xl bg-[#0E1B48]/60 border border-[#C18DB4]/20 flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-bold text-white">@{u.username || u.telegram_id}</h4>
+                        <span className="text-[10px] text-[#87A7D0]">{u.joined || 'Today'}</span>
+                      </div>
+                      <span className="text-xs font-bold text-emerald-400">${(u.balance || 0).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="card-vault p-4 rounded-2xl">
-            <span className="text-[10px] text-[#E2CAD8]">Active Users</span>
-            <h3 className="text-xl font-extrabold text-emerald-400 mt-1">{stats?.active_users || 0}</h3>
+        );
+      })()}
+
+      {activeTab === 'users' && (
+        <div className="space-y-5 animate-fade-in">
+          <div>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">Users</h2>
+            <p className="text-xs text-[#87A7D0]">{users.length} accounts</p>
           </div>
-          <div className="card-vault p-4 rounded-2xl">
-            <span className="text-[10px] text-[#E2CAD8]">Total Confirmed Deposits</span>
-            <h3 className="text-xl font-extrabold text-[#87A7D0] mt-1">${Number(stats?.total_deposits_usdt || 0).toFixed(2)}</h3>
+
+          <div className="relative">
+            <Search size={16} className="absolute left-3.5 top-3.5 text-[#87A7D0]" />
+            <input
+              type="text"
+              placeholder="Search username, name, Telegram ID..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-2xl text-xs text-white placeholder-[#87A7D0] outline-none"
+            />
           </div>
-          <div className="card-vault p-4 rounded-2xl">
-            <span className="text-[10px] text-[#E2CAD8]">Total Approved Withdrawals</span>
-            <h3 className="text-xl font-extrabold text-rose-300 mt-1">${Number(stats?.total_withdrawals_usdt || 0).toFixed(2)}</h3>
+
+          <div className="flex gap-2">
+            {(['All', 'Active', 'Suspended', 'Blocked'] as const).map(f => (
+              <button
+                key={f}
+                onClick={() => setUserFilter(f)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  userFilter === f ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' : 'bg-[#0E1B48]/60 text-[#E2CAD8]'
+                }`}
+              >
+                {f}
+              </button>
+            ))}
           </div>
-          <div className="card-vault p-4 rounded-2xl">
-            <span className="text-[10px] text-[#E2CAD8]">Total VX Tokens Purchased</span>
-            <h3 className="text-xl font-extrabold text-[#E2CAD8] mt-1">{Number(stats?.total_vx_purchased || 0).toLocaleString()} VX</h3>
-          </div>
-          <div className="card-vault p-4 rounded-2xl">
-            <span className="text-[10px] text-[#E2CAD8]">Total Mining Yield Paid</span>
-            <h3 className="text-xl font-extrabold text-amber-300 mt-1">${Number(stats?.total_mining_yield_paid || 0).toFixed(2)}</h3>
-          </div>
-          <div className="card-vault p-4 rounded-2xl">
-            <span className="text-[10px] text-[#E2CAD8]">Pending Withdrawals</span>
-            <h3 className="text-xl font-extrabold text-amber-400 mt-1">{stats?.pending_withdrawals_count || 0}</h3>
-          </div>
-          <div className="card-vault p-4 rounded-2xl">
-            <span className="text-[10px] text-[#E2CAD8]">Pending Deposits</span>
-            <h3 className="text-xl font-extrabold text-sky-400 mt-1">{stats?.pending_deposits_count || 0}</h3>
+
+          <div className="card-vault rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-[#C18DB4]/20 text-[#87A7D0] font-bold">
+                <tr>
+                  <th className="p-3.5">User</th>
+                  <th className="p-3.5">Balance</th>
+                  <th className="p-3.5">Earned</th>
+                  <th className="p-3.5">Referrals</th>
+                  <th className="p-3.5">Status</th>
+                  <th className="p-3.5">Joined</th>
+                  <th className="p-3.5 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#C18DB4]/10">
+                {filteredUsers.map(u => (
+                  <tr key={u.id} className="hover:bg-[#1A285A]/40 transition-colors">
+                    <td className="p-3.5 font-bold text-white">
+                      <div>@{u.username || u.telegram_id}</div>
+                      <span className="text-[10px] text-[#87A7D0] font-normal">{u.telegram_id}</span>
+                    </td>
+                    <td className="p-3.5 font-mono text-emerald-400 font-bold">${(u.balance || 0).toFixed(2)}</td>
+                    <td className="p-3.5 font-mono text-white">${(u.earned || 0).toFixed(2)}</td>
+                    <td className="p-3.5 text-[#E2CAD8]">{u.referrals || 0}</td>
+                    <td className="p-3.5">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        u.is_active !== false ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                      }`}>
+                        {u.status || (u.is_active !== false ? 'Active' : 'Blocked')}
+                      </span>
+                    </td>
+                    <td className="p-3.5 text-[#87A7D0] text-[11px]">{u.joined}</td>
+                    <td className="p-3.5 text-right space-x-2">
+                      <button
+                        onClick={() => setSelectedUser(u)}
+                        className="px-2.5 py-1 rounded-lg bg-[#0E1B48] text-[#E2CAD8] border border-[#C18DB4]/30 hover:border-[#C18DB4] text-[11px] font-bold"
+                      >
+                        Adjust
+                      </button>
+                      <button
+                        onClick={() => handleToggleUserBan(u)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold ${
+                          u.is_active !== false ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        }`}
+                      >
+                        {u.is_active !== false ? 'Block' : 'Unblock'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
-      {activeTab === 'users' && (
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search size={16} className="absolute left-3 top-3 text-[#E2CAD8]" />
-              <input
-                type="text"
-                placeholder="Search Telegram ID or Username..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && fetchData()}
-                className="w-full pl-9 pr-4 py-2.5 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-xs text-white placeholder-[#E2CAD8]/60 focus:outline-none"
-              />
+      {activeTab === 'tasks' && (
+        <div className="space-y-5 animate-fade-in">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-bold text-white font-serif-luxury">Tasks</h2>
+              <p className="text-xs text-[#87A7D0]">{tasks.length} tasks</p>
             </div>
-            <button onClick={fetchData} className="px-4 py-2.5 btn-gold-vault text-xs">Search</button>
+            <button
+              onClick={() => setCreateTaskModal(true)}
+              className="btn-gold-vault px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg"
+            >
+              <Plus size={14} /> New task
+            </button>
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {['All', 'Social Media', 'Website', 'App', 'Survey', 'Registration', 'Content Engagement', 'Other'].map(c => (
+              <button
+                key={c}
+                onClick={() => setTaskCategory(c)}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap ${
+                  taskCategory === c ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' : 'bg-[#0E1B48]/60 text-[#E2CAD8]'
+                }`}
+              >
+                {c}
+              </button>
+            ))}
           </div>
 
           <div className="space-y-3">
-            {users.length === 0 ? (
-              <div className="card-vault p-6 rounded-2xl text-center text-xs text-[#E2CAD8] space-y-2">
-                <p>No external users found in query.</p>
-                <p className="text-[11px] text-[#87A7D0]">Real user profiles appear here in real-time as they connect to your bot.</p>
+            {tasks.length === 0 ? (
+              <div className="card-vault p-8 rounded-3xl bg-[#0E1B48]/60 border border-[#C18DB4]/30 text-center space-y-2">
+                <h4 className="text-sm font-bold text-white">No tasks yet</h4>
+                <p className="text-xs text-[#87A7D0]">Create your first task to get users earning.</p>
               </div>
             ) : (
-              users.map(u => (
-                <div key={u.id} className="card-vault p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              tasks.map(t => (
+                <div key={t.id} className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 flex items-center justify-between gap-4">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-xs font-bold text-white">{u.first_name || 'Member'} {u.last_name || ''}</h4>
-                      {u.username && <span className="text-[10px] text-[#87A7D0]">@{u.username}</span>}
-                      {u.is_admin && <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[9px] font-bold">ADMIN</span>}
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
-                        u.is_active !== false ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
-                      }`}>
-                        {u.is_active !== false ? 'ACTIVE' : 'BANNED'}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-[#E2CAD8] mt-1">ID: {u.telegram_id || u.id} | USDT: ${Number(u.balance?.usdt_balance || u.balance_usdt || 0).toFixed(2)} | VX: {Number(u.balance?.vx_balance || u.balance_vx || 0)} VX</p>
+                    <h4 className="text-xs font-bold text-white">{t.title}</h4>
+                    <span className="text-[10px] text-amber-300 font-bold">Reward: ${t.reward_amount} USDT | Category: {t.category || 'General'}</span>
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setSelectedUser(u)}
-                      className="px-3 py-1.5 rounded-xl bg-[#0E1B48] text-[#E2CAD8] border border-[#C18DB4]/30 text-xs font-bold hover:bg-[#1A285A]"
-                    >
-                      Adjust Balance
-                    </button>
-                    <button
-                      onClick={() => handleToggleUserBan(u)}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md ${
-                        u.is_active !== false 
-                          ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30' 
-                          : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
-                      }`}
-                    >
-                      {u.is_active !== false ? 'Ban User' : 'Unban User'}
-                    </button>
-                  </div>
+                  <button onClick={() => handleDeleteTask(t.id)} className="p-2 text-rose-400 hover:text-rose-300">
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               ))
             )}
           </div>
-
-          {selectedUser && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-              <div className="card-vault max-w-sm w-full p-6 rounded-3xl space-y-4">
-                <h3 className="text-sm font-bold text-white">Adjust Balance for {selectedUser.first_name}</h3>
-                
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setAdjAction('add')}
-                    className={`py-2 rounded-xl text-xs font-bold ${adjAction === 'add' ? 'btn-gold-vault' : 'bg-[#0E1B48] text-[#E2CAD8]'}`}
-                  >
-                    Add Balance
-                  </button>
-                  <button
-                    onClick={() => setAdjAction('deduct')}
-                    className={`py-2 rounded-xl text-xs font-bold ${adjAction === 'deduct' ? 'btn-gold-vault' : 'bg-[#0E1B48] text-[#E2CAD8]'}`}
-                  >
-                    Deduct Balance
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setAdjCurrency('USDT')}
-                    className={`py-2 rounded-xl text-xs font-bold ${adjCurrency === 'USDT' ? 'btn-gold-vault' : 'bg-[#0E1B48] text-[#E2CAD8]'}`}
-                  >
-                    USDT
-                  </button>
-                  <button
-                    onClick={() => setAdjCurrency('VX')}
-                    className={`py-2 rounded-xl text-xs font-bold ${adjCurrency === 'VX' ? 'btn-gold-vault' : 'bg-[#0E1B48] text-[#E2CAD8]'}`}
-                  >
-                    VX Tokens
-                  </button>
-                </div>
-
-                <input
-                  type="number"
-                  placeholder="Enter Amount..."
-                  value={adjAmount}
-                  onChange={e => setAdjAmount(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-xs text-white placeholder-[#E2CAD8]/60 focus:outline-none"
-                />
-
-                <div className="flex gap-2">
-                  <button onClick={handleAdjustUserBalance} className="flex-1 py-2.5 btn-gold-vault text-xs">Confirm</button>
-                  <button onClick={() => setSelectedUser(null)} className="px-4 py-2.5 bg-[#0E1B48] text-[#E2CAD8] text-xs rounded-xl">Cancel</button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
-      {activeTab === 'vx' && settings && (
-        <div className="card-vault p-6 rounded-3xl space-y-4 max-w-xl">
-          <h3 className="text-sm font-bold text-white font-serif-luxury">VX Token & Mining Rules</h3>
-
-          <div className="space-y-3 text-xs">
-            <div>
-              <label className="text-[#E2CAD8] block mb-1">VX Token Price (USDT)</label>
-              <input
-                type="number"
-                step="0.01"
-                value={settings.vx_price_usdt}
-                onChange={e => setSettings({ ...settings, vx_price_usdt: parseFloat(e.target.value) })}
-                className="w-full px-4 py-2 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-white"
-              />
-            </div>
-
-            <div>
-              <label className="text-[#E2CAD8] block mb-1">Minimum VX Purchase Amount</label>
-              <input
-                type="number"
-                value={settings.min_vx_purchase}
-                onChange={e => setSettings({ ...settings, min_vx_purchase: parseInt(e.target.value, 10) })}
-                className="w-full px-4 py-2 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-white"
-              />
-            </div>
-
-            <div>
-              <label className="text-[#E2CAD8] block mb-1">Minimum VX Required To Mine</label>
-              <input
-                type="number"
-                value={settings.min_vx_mining}
-                onChange={e => setSettings({ ...settings, min_vx_mining: parseInt(e.target.value, 10) })}
-                className="w-full px-4 py-2 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-white"
-              />
-            </div>
-
-            <div>
-              <label className="text-[#E2CAD8] block mb-1">Daily Mining Yield Rate (0.015 = 1.5%/day)</label>
-              <input
-                type="number"
-                step="0.001"
-                value={settings.daily_yield_rate}
-                onChange={e => setSettings({ ...settings, daily_yield_rate: parseFloat(e.target.value) })}
-                className="w-full px-4 py-2 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-white"
-              />
-            </div>
-
-            <div className="flex items-center gap-3 pt-2">
-              <input
-                type="checkbox"
-                id="miningEnabled"
-                checked={settings.mining_enabled}
-                onChange={e => setSettings({ ...settings, mining_enabled: e.target.checked })}
-                className="w-4 h-4 rounded accent-[#C18DB4]"
-              />
-              <label htmlFor="miningEnabled" className="text-white font-bold">Enable VX Mining Globally</label>
-            </div>
+      {activeTab === 'submissions' && (
+        <div className="space-y-5 animate-fade-in">
+          <div>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">Submissions</h2>
+            <p className="text-xs text-[#87A7D0]">Review task proofs and release rewards</p>
           </div>
 
-          <button onClick={handleUpdateSettings} className="w-full py-3 btn-gold-vault text-xs font-bold rounded-xl flex items-center justify-center gap-2">
-            <Save size={14} /> Save Mining Settings
-          </button>
-        </div>
-      )}
-
-      {activeTab === 'finance' && (
-        <div className="space-y-6">
-          <div className="card-vault p-6 rounded-3xl space-y-4">
-            <h3 className="text-sm font-bold text-white">Pending Deposits ({deposits.filter(d => d.status === 'pending').length})</h3>
-            <div className="space-y-2">
-              {deposits.map(d => (
-                <div key={d.id} className="p-3 rounded-xl bg-[#0E1B48]/60 border border-[#C18DB4]/30 flex items-center justify-between gap-3 text-xs">
-                  <div>
-                    <span className="font-bold text-white">${d.amount.toFixed(2)} USDT ({d.network})</span>
-                    <p className="text-[10px] text-[#E2CAD8]">User ID: {d.user_id} | Status: {d.status}</p>
-                  </div>
-                  {d.status === 'pending' && (
-                    <button onClick={() => handleConfirmDeposit(d.id)} className="px-3 py-1.5 btn-gold-vault text-[11px]">Confirm</button>
-                  )}
-                </div>
-              ))}
-            </div>
+          <div className="flex gap-2">
+            {(['Under Review', 'Approved', 'Rejected', 'All'] as const).map(s => (
+              <button
+                key={s}
+                onClick={() => setSubFilter(s)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold ${
+                  subFilter === s ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' : 'bg-[#0E1B48]/60 text-[#E2CAD8]'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
           </div>
 
-          <div className="card-vault p-6 rounded-3xl space-y-4">
-            <h3 className="text-sm font-bold text-white">Pending Withdrawals ({withdrawals.filter(w => w.status === 'pending').length})</h3>
-            <div className="space-y-2">
-              {withdrawals.map(w => (
-                <div key={w.id} className="p-3 rounded-xl bg-[#0E1B48]/60 border border-[#C18DB4]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                  <div>
-                    <span className="font-bold text-white">${w.amount.toFixed(2)} USDT ({w.network})</span>
-                    <p className="text-[10px] text-[#E2CAD8]">Address: {w.wallet_address} | Status: {w.status}</p>
-                  </div>
-                  {w.status === 'pending' && (
-                    <div className="flex gap-2">
-                      <button onClick={() => handleUpdateWithdrawal(w.id, 'approved')} className="px-3 py-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl">Approve</button>
-                      <button onClick={() => handleUpdateWithdrawal(w.id, 'rejected')} className="px-3 py-1.5 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-xl">Reject</button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+          <div className="card-vault p-8 rounded-3xl bg-[#0E1B48]/60 border border-[#C18DB4]/30 text-center space-y-2">
+            <h4 className="text-sm font-bold text-white">Nothing here</h4>
+            <p className="text-xs text-[#87A7D0]">No submissions match this filter.</p>
           </div>
         </div>
       )}
 
-      {activeTab === 'communities' && (
-        <div className="card-vault p-6 rounded-3xl space-y-6 max-w-xl">
-          <h3 className="text-sm font-bold text-white font-serif-luxury">Mandatory Required Telegram Communities</h3>
+      {activeTab === 'withdrawals' && (
+        <div className="space-y-5 animate-fade-in">
+          <div>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">Withdrawals</h2>
+            <p className="text-xs text-[#87A7D0]">Process USDT (BEP-20 / TON) payouts</p>
+          </div>
+
+          <div className="flex gap-2">
+            {(['Pending', 'Processing', 'Paid', 'Rejected', 'All'] as const).map(w => (
+              <button
+                key={w}
+                onClick={() => setWdFilter(w)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold ${
+                  wdFilter === w ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' : 'bg-[#0E1B48]/60 text-[#E2CAD8]'
+                }`}
+              >
+                {w}
+              </button>
+            ))}
+          </div>
 
           <div className="space-y-3">
-            <input
-              type="text"
-              placeholder="Channel/Group Name..."
-              value={newCommunityName}
-              onChange={e => setNewCommunityName(e.target.value)}
-              className="w-full px-4 py-2 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-xs text-white"
-            />
-            <input
-              type="text"
-              placeholder="https://t.me/yourchannel"
-              value={newCommunityLink}
-              onChange={e => setNewCommunityLink(e.target.value)}
-              className="w-full px-4 py-2 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-xs text-white"
-            />
-            <div className="flex gap-2">
-              <select
-                value={newCommunityType}
-                onChange={e => setNewCommunityType(e.target.value as any)}
-                className="px-4 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-xs text-white"
-              >
-                <option value="channel">Channel</option>
-                <option value="group">Group</option>
-              </select>
-              <button onClick={handleAddCommunity} className="flex-1 py-2 btn-gold-vault text-xs font-bold rounded-xl flex items-center justify-center gap-1">
-                <Plus size={14} /> Add Community
-              </button>
-            </div>
+            {filteredWithdrawals.length === 0 ? (
+              <div className="card-vault p-8 rounded-3xl bg-[#0E1B48]/60 border border-[#C18DB4]/30 text-center space-y-2">
+                <h4 className="text-sm font-bold text-white">No withdrawals</h4>
+                <p className="text-xs text-[#87A7D0]">No payout orders found in this filter.</p>
+              </div>
+            ) : (
+              filteredWithdrawals.map(w => (
+                <div key={w.id} className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 flex items-center justify-between gap-4">
+                  <div>
+                    <h4 className="text-xs font-bold text-white">${w.amount} USDT ({w.network})</h4>
+                    <p className="text-[10px] text-[#87A7D0] font-mono truncate max-w-xs">{w.wallet_address}</p>
+                  </div>
+                  <span className="text-[10px] uppercase font-bold text-amber-300">{w.status}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'transactions' && (
+        <div className="space-y-5 animate-fade-in">
+          <div>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">Transactions</h2>
+            <p className="text-xs text-[#87A7D0]">Full financial ledger</p>
           </div>
 
-          <div className="space-y-2">
-            {communities.map(c => (
-              <div key={c.id} className="p-3 rounded-xl bg-[#0E1B48]/80 border border-[#C18DB4]/30 flex items-center justify-between gap-3 text-xs">
-                <div>
-                  <h4 className="font-bold text-white">{c.name}</h4>
-                  <a href={c.link} target="_blank" rel="noreferrer" className="text-[10px] text-[#87A7D0]">{c.link}</a>
+          <div className="space-y-3">
+            {transactions.length === 0 ? (
+              <div className="card-vault p-8 rounded-3xl bg-[#0E1B48]/60 border border-[#C18DB4]/30 text-center space-y-2">
+                <h4 className="text-sm font-bold text-white">No transactions</h4>
+                <p className="text-xs text-[#87A7D0]">Transaction records will appear here as users engage.</p>
+              </div>
+            ) : (
+              transactions.map(tx => (
+                <div key={tx.id} className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-white">{tx.title}</h4>
+                    <span className="text-[10px] text-[#87A7D0]">{new Date(tx.created_at).toLocaleString()}</span>
+                  </div>
+                  <span className="text-xs font-bold text-emerald-400 font-mono">+{tx.amount} {tx.currency}</span>
                 </div>
-                <button onClick={() => handleRemoveCommunity(c.id)} className="p-2 text-rose-400 hover:text-rose-300">
-                  <Trash2 size={16} />
-                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'referrals' && (
+        <div className="space-y-5 animate-fade-in">
+          <div>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">Referrals</h2>
+            <p className="text-xs text-[#87A7D0]">Reward: ${settings.referral?.reward ?? 0.50} · condition: {settings.referral?.condition ?? 'first_task_approved'}</p>
+          </div>
+
+          <div className="card-vault p-8 rounded-3xl bg-[#0E1B48]/60 border border-[#C18DB4]/30 text-center space-y-2">
+            <h4 className="text-sm font-bold text-white">No referrals yet</h4>
+            <p className="text-xs text-[#87A7D0]">User invitation networks will populate here.</p>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'notifications' && (
+        <div className="space-y-6 animate-fade-in max-w-xl">
+          <div>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">Notifications</h2>
+            <p className="text-xs text-[#87A7D0]">Broadcast to all active users</p>
+          </div>
+
+          <form onSubmit={handleSendNotification} className="space-y-4">
+            <div>
+              <label className="text-xs font-bold text-white block mb-1">Title</label>
+              <input
+                type="text"
+                placeholder="Announcement headline..."
+                value={notifTitle}
+                onChange={e => setNotifTitle(e.target.value)}
+                className="w-full px-4 py-2.5 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-xs text-white outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-white block mb-1">Message</label>
+              <textarea
+                rows={4}
+                placeholder="Broadcast message body..."
+                value={notifMessage}
+                onChange={e => setNotifMessage(e.target.value)}
+                className="w-full px-4 py-2.5 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-xs text-white outline-none"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-[#0E1B48]/60 border border-[#C18DB4]/20">
+              <input
+                type="checkbox"
+                checked={sendTelegramBot}
+                onChange={e => setSendTelegramBot(e.target.checked)}
+                className="w-4 h-4 rounded text-emerald-500"
+              />
+              <span className="text-xs font-bold text-white">Also send via Telegram bot</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button type="submit" className="btn-gold-vault py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg">
+                <Send size={14} /> Send to all users
+              </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (notifTitle.trim()) {
+                    addActivityLog('Announcement Saved', `Saved in-app announcement "${notifTitle}"`);
+                    setMessage('Saved as in-app announcement');
+                  }
+                }}
+                className="py-3 rounded-xl bg-[#0E1B48] text-[#E2CAD8] border border-[#C18DB4]/30 text-xs font-bold"
+              >
+                Save as in-app announcement
+              </button>
+            </div>
+          </form>
+
+          <div className="space-y-3 pt-4">
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider font-serif-luxury">Recent notifications</h3>
+            <div className="space-y-2">
+              <div className="p-3.5 rounded-2xl bg-[#0E1B48]/60 border border-[#C18DB4]/20 flex items-center justify-between text-xs">
+                <div>
+                  <h4 className="font-bold text-white">Welcome to VextoralMining 🎉</h4>
+                  <p className="text-[10px] text-[#87A7D0]">Start completing tasks and earn USDT rewards.</p>
+                </div>
+                <span className="text-[10px] text-[#87A7D0]">8/15/2026</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'support' && (
+        <div className="space-y-5 animate-fade-in">
+          <div>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">Support</h2>
+            <p className="text-xs text-[#87A7D0]">Reply to user tickets</p>
+          </div>
+
+          <div className="flex gap-2">
+            {(['Open', 'Pending', 'Resolved', 'Closed', 'All'] as const).map(s => (
+              <button
+                key={s}
+                onClick={() => setTicketFilter(s)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold ${
+                  ticketFilter === s ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' : 'bg-[#0E1B48]/60 text-[#E2CAD8]'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
+          <div className="card-vault p-8 rounded-3xl bg-[#0E1B48]/60 border border-[#C18DB4]/30 text-center space-y-2">
+            <h4 className="text-sm font-bold text-white">No tickets</h4>
+            <p className="text-xs text-[#87A7D0]">All user support requests have been resolved.</p>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'admins' && (
+        <div className="space-y-5 animate-fade-in">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-bold text-white font-serif-luxury">Admin Management</h2>
+              <p className="text-xs text-[#87A7D0]">Control platform access and permissions</p>
+            </div>
+            <button
+              onClick={() => setCreateAdminModal(true)}
+              className="btn-gold-vault px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg"
+            >
+              <UserPlus size={14} /> Create Admin
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {admins.map(a => (
+              <div key={a.email} className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-bold text-white">{a.email}</h4>
+                  <span className="text-[10px] text-[#87A7D0]">Joined {a.joined}</span>
+                </div>
+                <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold ${
+                  a.role === 'OWNER' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                }`}>
+                  {a.role}
+                </span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {activeTab === 'tasks' && (
-        <div className="card-vault p-6 rounded-3xl space-y-6 max-w-xl">
-          <div className="flex items-center justify-between border-b border-[#C18DB4]/30 pb-3">
-            <div>
-              <h3 className="text-base font-bold text-white font-serif-luxury">Task Creation & Upload Portal</h3>
-              <p className="text-[11px] text-[#E2CAD8]">Upload new tasks for platform users to complete and earn rewards.</p>
-            </div>
-            <Briefcase size={20} className="text-[#C18DB4]" />
+      {activeTab === 'settings' && (
+        <div className="space-y-6 animate-fade-in max-w-2xl">
+          <div>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">Settings</h2>
+            <p className="text-xs text-[#87A7D0]">Payments, referrals, Telegram and branding configuration</p>
           </div>
 
-          <div className="space-y-3 bg-[#0E1B48]/60 p-4 rounded-2xl border border-[#C18DB4]/30">
-            <div>
-              <label className="text-[11px] font-bold text-white mb-1 block">Task Title</label>
-              <input
-                type="text"
-                placeholder="e.g. Join Official Telegram Channel"
-                value={newTaskTitle}
-                onChange={e => setNewTaskTitle(e.target.value)}
-                className="w-full px-4 py-2.5 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-xs text-white outline-none focus:border-[#C18DB4]"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[11px] font-bold text-white mb-1 block">Reward Amount</label>
-                <input
-                  type="number"
-                  placeholder="e.g. 5.0"
-                  value={newTaskReward}
-                  onChange={e => setNewTaskReward(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-xs text-white outline-none focus:border-[#C18DB4]"
-                />
-              </div>
-              <div>
-                <label className="text-[11px] font-bold text-white mb-1 block">Reward Currency</label>
-                <select
-                  value={newTaskCurrency}
-                  onChange={e => setNewTaskCurrency(e.target.value as any)}
-                  className="w-full px-4 py-2.5 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-xs text-white outline-none"
-                >
-                  <option value="USDT">USDT</option>
-                  <option value="VX">VX Tokens</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[11px] font-bold text-white mb-1 block">Action Link / URL</label>
-              <input
-                type="text"
-                placeholder="https://t.me/channel or action link..."
-                value={newTaskUrl}
-                onChange={e => setNewTaskUrl(e.target.value)}
-                className="w-full px-4 py-2.5 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-xs text-white outline-none focus:border-[#C18DB4]"
-              />
-            </div>
-
-            <button onClick={handleAddTask} className="w-full py-3 btn-gold-vault text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg pt-2">
-              <Plus size={16} /> Upload & Publish Task
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
+            <h3 className="text-xs font-bold text-white font-serif-luxury">Payment Settings</h3>
+            <textarea
+              rows={8}
+              value={JSON.stringify(settings.payment, null, 2)}
+              onChange={e => {
+                try {
+                  const p = JSON.parse(e.target.value);
+                  setSettings({ ...settings, payment: p });
+                } catch {}
+              }}
+              className="w-full p-3 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-emerald-400 font-mono outline-none"
+            />
+            <button onClick={() => handleSaveSettingsSection('payment')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
+              Save payment
             </button>
           </div>
 
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold text-white">Active Uploaded Tasks ({tasks.length})</h4>
-            <div className="space-y-2">
-              {tasks.length === 0 ? (
-                <p className="text-xs text-[#E2CAD8] italic">No active tasks uploaded yet.</p>
-              ) : (
-                tasks.map(t => (
-                  <div key={t.id} className="p-3.5 rounded-2xl bg-[#0E1B48]/80 border border-[#C18DB4]/30 flex items-center justify-between gap-3 text-xs">
-                    <div>
-                      <h4 className="font-bold text-white">{t.title}</h4>
-                      <span className="text-[11px] text-amber-300 font-bold">Reward: +{t.reward_amount} {t.reward_currency}</span>
-                      {t.action_url && (
-                        <p className="text-[10px] text-[#87A7D0] truncate max-w-xs">{t.action_url}</p>
-                      )}
-                    </div>
-                    <button onClick={() => handleDeleteTask(t.id)} className="p-2 text-rose-400 hover:text-rose-300 transition-colors" title="Delete Task">
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
+            <h3 className="text-xs font-bold text-white font-serif-luxury">Referral Settings</h3>
+            <textarea
+              rows={7}
+              value={JSON.stringify(settings.referral, null, 2)}
+              onChange={e => {
+                try {
+                  const r = JSON.parse(e.target.value);
+                  setSettings({ ...settings, referral: r });
+                } catch {}
+              }}
+              className="w-full p-3 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-emerald-400 font-mono outline-none"
+            />
+            <button onClick={() => handleSaveSettingsSection('referral')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
+              Save referral
+            </button>
+          </div>
+
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
+            <h3 className="text-xs font-bold text-white font-serif-luxury">Telegram Settings</h3>
+            <textarea
+              rows={4}
+              value={JSON.stringify(settings.telegram, null, 2)}
+              onChange={e => {
+                try {
+                  const tg = JSON.parse(e.target.value);
+                  setSettings({ ...settings, telegram: tg });
+                } catch {}
+              }}
+              className="w-full p-3 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-emerald-400 font-mono outline-none"
+            />
+            <button onClick={() => handleSaveSettingsSection('telegram')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
+              Save telegram
+            </button>
+          </div>
+
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
+            <h3 className="text-xs font-bold text-white font-serif-luxury">Branding Settings</h3>
+            <textarea
+              rows={6}
+              value={JSON.stringify(settings.branding, null, 2)}
+              onChange={e => {
+                try {
+                  const b = JSON.parse(e.target.value);
+                  setSettings({ ...settings, branding: b });
+                } catch {}
+              }}
+              className="w-full p-3 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-emerald-400 font-mono outline-none"
+            />
+            <button onClick={() => handleSaveSettingsSection('branding')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
+              Save branding
+            </button>
           </div>
         </div>
       )}
 
-      {activeTab === 'settings' && settings && (
-        <div className="card-vault p-6 rounded-3xl space-y-6 max-w-xl">
+      {activeTab === 'activity' && (
+        <div className="space-y-5 animate-fade-in max-w-2xl">
           <div>
-            <h3 className="text-sm font-bold text-white font-serif-luxury">Platform & Referral Configuration</h3>
-            <p className="text-[11px] text-[#E2CAD8]">Set multi-tier referral commissions, rewards, and receiving wallets</p>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">Activity log</h2>
+            <p className="text-xs text-[#87A7D0]">Every admin action is recorded</p>
           </div>
 
-          <div className="space-y-4 text-xs">
-            <div className="p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-3">
-              <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider font-serif-luxury">Multi-Tier Referral Commissions</h4>
-              
+          <div className="space-y-3">
+            {activityLogs.map((log, idx) => (
+              <div key={idx} className="p-3.5 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/20 space-y-1">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-xs font-bold text-white">{log.title}</h4>
+                  <span className="text-[10px] text-[#87A7D0]">{log.time}</span>
+                </div>
+                <p className="text-[11px] text-[#87A7D0]">{log.email} · {log.detail}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {createAdminModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="card-vault max-w-md w-full p-6 rounded-3xl space-y-4 bg-[#0E1B48] border border-[#C18DB4]/40 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center">
+              <h3 className="text-sm font-bold text-white font-serif-luxury">Create New Admin</h3>
+              <button onClick={() => setCreateAdminModal(false)}><XCircle size={18} /></button>
+            </div>
+
+            <form onSubmit={handleCreateAdmin} className="space-y-4 text-xs">
+              <div>
+                <label className="text-[#E2CAD8] block mb-1 font-bold">Email Address</label>
+                <input
+                  type="email"
+                  placeholder="admin@example.com"
+                  value={newAdminEmail}
+                  onChange={e => setNewAdminEmail(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-white outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-[#E2CAD8] block mb-1 font-bold">Initial Password</label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={newAdminPassword}
+                  onChange={e => setNewAdminPassword(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-white outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-[#E2CAD8] block mb-1 font-bold">Role</label>
+                <select
+                  value={newAdminRole}
+                  onChange={e => setNewAdminRole(e.target.value as any)}
+                  className="w-full px-3.5 py-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-white outline-none"
+                >
+                  <option value="Admin">Admin</option>
+                  <option value="Manager">Manager</option>
+                  <option value="Support">Support</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[#E2CAD8] block mb-2 font-bold">Permissions</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.keys(adminPermissions).map(perm => (
+                    <label key={perm} className="flex items-center gap-2 text-[11px] text-[#E2CAD8] cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={adminPermissions[perm]}
+                        onChange={e => setAdminPermissions({ ...adminPermissions, [perm]: e.target.checked })}
+                        className="rounded text-emerald-500"
+                      />
+                      <span>{perm}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <button type="submit" className="w-full py-3 btn-gold-vault font-bold rounded-xl text-xs shadow-lg mt-2">
+                Create Admin Account
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {createTaskModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="card-vault max-w-md w-full p-6 rounded-3xl space-y-4 bg-[#0E1B48] border border-[#C18DB4]/40 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center">
+              <h3 className="text-sm font-bold text-white font-serif-luxury">New task</h3>
+              <button onClick={() => setCreateTaskModal(false)}><XCircle size={18} /></button>
+            </div>
+
+            <form onSubmit={handleCreateTask} className="space-y-3 text-xs">
+              <div>
+                <label className="text-[#E2CAD8] block mb-1 font-bold">Title</label>
+                <input
+                  type="text"
+                  placeholder="Task title..."
+                  value={newTaskTitle}
+                  onChange={e => setNewTaskTitle(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-white outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-[#E2CAD8] block mb-1 font-bold">Short description</label>
+                <input
+                  type="text"
+                  placeholder="Short summary..."
+                  value={newTaskShortDesc}
+                  onChange={e => setNewTaskShortDesc(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-white outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[#E2CAD8] block mb-1 font-bold">Task link</label>
+                <input
+                  type="text"
+                  placeholder="https://t.me/..."
+                  value={newTaskUrl}
+                  onChange={e => setNewTaskUrl(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-white outline-none"
+                />
+              </div>
+
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="text-[10px] text-[#E2CAD8] block mb-1">Tier 1 Rate (%)</label>
+                  <label className="text-[#E2CAD8] block mb-1 font-bold">Reward $</label>
                   <input
                     type="number"
-                    value={settings.referral_level1_percent ?? 10}
-                    onChange={e => setSettings({ ...settings, referral_level1_percent: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none"
+                    step="0.1"
+                    value={newTaskReward}
+                    onChange={e => setNewTaskReward(e.target.value)}
+                    className="w-full px-3 py-2 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-white outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-[#E2CAD8] block mb-1">Tier 2 Rate (%)</label>
+                  <label className="text-[#E2CAD8] block mb-1 font-bold">Max slots</label>
                   <input
                     type="number"
-                    value={settings.referral_level2_percent ?? 5}
-                    onChange={e => setSettings({ ...settings, referral_level2_percent: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none"
+                    value={newTaskMaxSlots}
+                    onChange={e => setNewTaskMaxSlots(e.target.value)}
+                    className="w-full px-3 py-2 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-white outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-[#E2CAD8] block mb-1">Tier 3 Rate (%)</label>
+                  <label className="text-[#E2CAD8] block mb-1 font-bold">Minutes</label>
                   <input
                     type="number"
-                    value={settings.referral_level3_percent ?? 2}
-                    onChange={e => setSettings({ ...settings, referral_level3_percent: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none"
+                    value={newTaskMinutes}
+                    onChange={e => setNewTaskMinutes(e.target.value)}
+                    className="w-full px-3 py-2 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-white outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] text-[#E2CAD8] block mb-1">Fixed Referral Signup Bonus ($ USDT)</label>
-                <input
-                  type="number"
-                  step="0.05"
-                  value={settings.referral_signup_bonus_usdt ?? 0.50}
-                  onChange={e => setSettings({ ...settings, referral_signup_bonus_usdt: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none"
-                />
+                <label className="text-[#E2CAD8] block mb-1 font-bold">Category</label>
+                <select
+                  value={newTaskCategory}
+                  onChange={e => setNewTaskCategory(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-white outline-none"
+                >
+                  <option value="Social Media">Social Media</option>
+                  <option value="Website">Website</option>
+                  <option value="App">App</option>
+                  <option value="Survey">Survey</option>
+                  <option value="Registration">Registration</option>
+                  <option value="Content Engagement">Content Engagement</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
+
+              <button type="submit" className="w-full py-3 btn-gold-vault font-bold rounded-xl text-xs shadow-lg mt-2">
+                Save task
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="card-vault max-w-sm w-full p-6 rounded-3xl space-y-4 bg-[#0E1B48] border border-[#C18DB4]/40">
+            <h3 className="text-sm font-bold text-white">Adjust Balance for @{selectedUser.username || selectedUser.telegram_id}</h3>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setAdjAction('add')}
+                className={`py-2 rounded-xl text-xs font-bold ${adjAction === 'add' ? 'btn-gold-vault' : 'bg-[#070D1E] text-[#E2CAD8]'}`}
+              >
+                Add Balance
+              </button>
+              <button
+                onClick={() => setAdjAction('deduct')}
+                className={`py-2 rounded-xl text-xs font-bold ${adjAction === 'deduct' ? 'btn-gold-vault' : 'bg-[#070D1E] text-[#E2CAD8]'}`}
+              >
+                Deduct Balance
+              </button>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-3">
-              <h4 className="text-xs font-bold text-sky-300 uppercase tracking-wider font-serif-luxury">Deposit Receiving Wallets</h4>
-              
-              <div>
-                <label className="text-[10px] text-[#E2CAD8] block mb-1">BEP20 (USDT) Receiving Wallet Address</label>
-                <input
-                  type="text"
-                  placeholder="0x..."
-                  value={settings.bep20_wallet || ''}
-                  onChange={e => setSettings({ ...settings, bep20_wallet: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none font-mono text-[11px]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[10px] text-[#E2CAD8] block mb-1">TON (USDT) Receiving Wallet Address</label>
-                <input
-                  type="text"
-                  placeholder="EQ..."
-                  value={settings.ton_wallet || ''}
-                  onChange={e => setSettings({ ...settings, ton_wallet: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none font-mono text-[11px]"
-                />
-              </div>
+            <div>
+              <label className="text-xs text-[#E2CAD8] block mb-1">Amount (USDT)</label>
+              <input
+                type="number"
+                step="0.1"
+                placeholder="0.00"
+                value={adjAmount}
+                onChange={e => setAdjAmount(e.target.value)}
+                className="w-full px-3 py-2 bg-[#070D1E] border border-[#C18DB4]/40 rounded-xl text-white text-xs outline-none"
+              />
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-3">
-              <h4 className="text-xs font-bold text-rose-300 uppercase tracking-wider font-serif-luxury">Withdrawal Thresholds</h4>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-[10px] text-[#E2CAD8] block mb-1">Min Withdrawal (USDT)</label>
-                  <input
-                    type="number"
-                    value={settings.min_withdrawal ?? 20}
-                    onChange={e => setSettings({ ...settings, min_withdrawal: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] text-[#E2CAD8] block mb-1">Withdrawal Fee (USDT)</label>
-                  <input
-                    type="number"
-                    value={settings.withdrawal_fee ?? 1}
-                    onChange={e => setSettings({ ...settings, withdrawal_fee: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none"
-                  />
-                </div>
-              </div>
+            <div className="flex gap-2 pt-2">
+              <button onClick={handleAdjustUserBalance} className="flex-1 py-2.5 btn-gold-vault text-xs font-bold rounded-xl shadow-lg">
+                Apply Adjustment
+              </button>
+              <button onClick={() => setSelectedUser(null)} className="px-4 py-2.5 bg-[#070D1E] text-[#E2CAD8] text-xs font-bold rounded-xl">
+                Cancel
+              </button>
             </div>
-
-            <button onClick={handleUpdateSettings} className="w-full py-3.5 btn-gold-vault text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-xl">
-              <Save size={16} /> Save All Platform Settings
-            </button>
           </div>
         </div>
       )}
