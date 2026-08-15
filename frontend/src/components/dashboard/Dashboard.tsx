@@ -214,6 +214,20 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         </div>
       </div>
 
+      <div 
+        onClick={() => setBuyVxModalOpen(true)}
+        className="p-3.5 rounded-2xl bg-gradient-to-r from-[#0E1B48] via-purple-900/60 to-[#C18DB4]/40 border border-[#C18DB4]/50 shadow-lg flex items-center justify-between cursor-pointer hover:border-[#C18DB4] transition-all"
+      >
+        <div className="flex items-center gap-3">
+          <span className="w-8 h-8 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center font-bold text-sm shrink-0 shadow-md">$</span>
+          <div>
+            <h4 className="text-xs font-bold text-white font-serif-luxury">Increase balance to 100+ VX</h4>
+            <p className="text-[10px] text-[#E2CAD8]">Your daily yield will speed up to 1.5% per day continuously.</p>
+          </div>
+        </div>
+        <ChevronRight size={16} className="text-[#C18DB4] shrink-0" />
+      </div>
+
       <div className="grid grid-cols-2 gap-3.5">
         <div className="card-vault rounded-2xl p-4 border border-[#C18DB4]/30 space-y-1">
           <div className="flex items-center gap-2">
@@ -266,6 +280,27 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
           </div>
           <ChevronRight size={16} className="text-[#C18DB4] group-hover:translate-x-1 transition-transform" />
         </button>
+      </div>
+
+      <div className="card-vault p-4 rounded-3xl border border-[#C18DB4]/40 bg-gradient-to-br from-[#0E1B48] via-indigo-950/60 to-[#0E1B48] space-y-3 shadow-xl">
+        <div className="flex items-center justify-between">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#0E1B48] border border-[#C18DB4]/30 text-[10px] font-bold text-[#87A7D0]">
+            <Sparkles size={10} className="text-[#C18DB4]" /> AI RECOMMENDATION
+          </div>
+          <span className="text-[10px] text-amber-300 font-bold">10% Yield Commission</span>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-extrabold text-white font-serif-luxury">Invite & Earn Multi-Tier Rewards</h3>
+            <p className="text-[10px] text-[#E2CAD8]">Get +$0.50 USDT instant bonus for each invited friend</p>
+          </div>
+          <button 
+            onClick={() => onNavigate?.('referrals')}
+            className="btn-gold-vault px-4 py-2 rounded-xl text-xs font-bold shrink-0 shadow-lg hover:scale-105 transition-transform"
+          >
+            Invite Friends
+          </button>
+        </div>
       </div>
 
       <div className="card-vault rounded-2xl p-2.5 border border-[#C18DB4]/30 flex items-center justify-between overflow-hidden text-xs text-[#E2CAD8] bg-gradient-to-r from-[#0E1B48] via-[#0E1B48]/80 to-[#C18DB4]/20 shadow-md">
