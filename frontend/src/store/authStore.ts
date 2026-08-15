@@ -22,6 +22,32 @@ export const useAuthStore = create<AuthState>((set) => ({
   setAuth: (token, user) => {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
+
+    try {
+      const rawUsers = localStorage.getItem('admin_users') || '[]';
+      const userList = JSON.parse(rawUsers);
+      const existingIndex = userList.findIndex((u: any) => u.id === user.id || (user.telegram_id && u.telegram_id === user.telegram_id));
+      if (existingIndex !== -1) {
+        userList[existingIndex] = {
+          ...userList[existingIndex],
+          ...user,
+          last_active: new Date().toISOString()
+        };
+      } else {
+        userList.unshift({
+          id: user.id || Date.now(),
+          telegram_id: user.telegram_id || user.id || 10001,
+          first_name: user.first_name || 'Member',
+          username: user.username || 'user',
+          balance_usdt: user.balance_usdt || 0,
+          balance_vx: user.balance_vx || 0,
+          joined: new Date().toLocaleDateString(),
+          is_active: true
+        });
+      }
+      localStorage.setItem('admin_users', JSON.stringify(userList));
+    } catch {}
+
     set({ token, user, error: null });
   },
 
@@ -41,6 +67,32 @@ export const useAuthStore = create<AuthState>((set) => ({
       };
 
       localStorage.setItem('user', JSON.stringify(updatedUser));
+
+      try {
+        const rawUsers = localStorage.getItem('admin_users') || '[]';
+        const userList = JSON.parse(rawUsers);
+        const existingIndex = userList.findIndex((u: any) => u.id === state.user?.id || (state.user?.telegram_id && u.telegram_id === state.user.telegram_id));
+        if (existingIndex !== -1) {
+          userList[existingIndex] = {
+            ...userList[existingIndex],
+            balance_usdt: newUsdt,
+            balance_vx: newVx,
+            last_active: new Date().toISOString()
+          };
+        } else {
+          userList.unshift({
+            id: updatedUser.id || Date.now(),
+            telegram_id: updatedUser.telegram_id || updatedUser.id || 10001,
+            first_name: updatedUser.first_name || 'Member',
+            username: updatedUser.username || 'user',
+            balance_usdt: newUsdt,
+            balance_vx: newVx,
+            joined: new Date().toLocaleDateString(),
+            is_active: true
+          });
+        }
+        localStorage.setItem('admin_users', JSON.stringify(userList));
+      } catch {}
 
       if (txMeta && (usdtDelta !== 0 || vxDelta !== 0)) {
         try {

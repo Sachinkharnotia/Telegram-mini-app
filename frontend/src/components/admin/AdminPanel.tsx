@@ -151,7 +151,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     setLoading(true);
     try {
       const storedUsers = localStorage.getItem('admin_users');
-      if (storedUsers) setUsers(JSON.parse(storedUsers));
+      let userList = storedUsers ? JSON.parse(storedUsers) : [];
+      
+      const currentUser = localStorage.getItem('user');
+      if (currentUser) {
+        try {
+          const u = JSON.parse(currentUser);
+          const existsIndex = userList.findIndex((existing: any) => existing.id === u.id || (u.telegram_id && existing.telegram_id === u.telegram_id));
+          if (existsIndex === -1) {
+            userList.unshift({
+              id: u.id || Date.now(),
+              telegram_id: u.telegram_id || u.id || 10001,
+              first_name: u.first_name || 'Member',
+              username: u.username || 'user',
+              balance_usdt: u.balance_usdt || 0,
+              balance_vx: u.balance_vx || 0,
+              joined: new Date().toLocaleDateString(),
+              is_active: true
+            });
+            localStorage.setItem('admin_users', JSON.stringify(userList));
+          } else {
+            userList[existsIndex] = {
+              ...userList[existsIndex],
+              balance_usdt: u.balance_usdt !== undefined ? u.balance_usdt : userList[existsIndex].balance_usdt,
+              balance_vx: u.balance_vx !== undefined ? u.balance_vx : userList[existsIndex].balance_vx
+            };
+            localStorage.setItem('admin_users', JSON.stringify(userList));
+          }
+        } catch {}
+      }
+      setUsers(userList);
 
       const storedSettings = localStorage.getItem('platform_settings');
       if (storedSettings) setSettings(JSON.parse(storedSettings));
