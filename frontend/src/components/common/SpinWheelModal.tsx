@@ -38,6 +38,18 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
     if (isOpen) {
       setWonPrize(null);
       setErrorMsg('');
+
+      try {
+        const stored = localStorage.getItem('platform_settings');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.wheel_sectors && Array.isArray(parsed.wheel_sectors) && parsed.wheel_sectors.length > 0) {
+            setSectors(parsed.wheel_sectors);
+            return;
+          }
+        }
+      } catch {}
+
       fetch('/api/spin/sectors')
         .then(res => res.json())
         .then(data => {

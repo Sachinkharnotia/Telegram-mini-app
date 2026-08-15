@@ -47,7 +47,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     general: {
       maintenance_mode: false,
       maintenance_message: 'VextoralMining is under maintenance. Please check back soon.'
-    }
+    },
+    gift_rewards: [
+      '0.50 USDT',
+      '1.25 USDT',
+      '2.50 USDT',
+      '3.75 USDT',
+      '5.00 USDT',
+      '10.00 USDT'
+    ],
+    wheel_sectors: [
+      { id: 1, label: '+0.10 USDT', reward_type: 'USDT', reward_amount: 0.10, color: '#C18DB4' },
+      { id: 2, label: '+50 VX', reward_type: 'VX', reward_amount: 50, color: '#87A7D0' },
+      { id: 3, label: '+0.50 USDT', reward_type: 'USDT', reward_amount: 0.50, color: '#E2CAD8' },
+      { id: 4, label: '+100 VX', reward_type: 'VX', reward_amount: 100, color: '#0E1B48' },
+      { id: 5, label: '+1.00 USDT', reward_type: 'USDT', reward_amount: 1.00, color: '#C18DB4' },
+      { id: 6, label: '+250 VX', reward_type: 'VX', reward_amount: 250, color: '#87A7D0' },
+      { id: 7, label: '+0.25 USDT', reward_type: 'USDT', reward_amount: 0.25, color: '#E2CAD8' },
+      { id: 8, label: '+500 VX', reward_type: 'VX', reward_amount: 500, color: '#0E1B48' }
+    ]
   };
 
   const defaultUsers: any[] = [];
@@ -935,6 +953,48 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             />
             <button onClick={() => handleSaveSettingsSection('branding')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
               Save branding
+            </button>
+          </div>
+
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
+            <div>
+              <h3 className="text-xs font-bold text-white font-serif-luxury">Daily Gift Box Rewards Configuration</h3>
+              <p className="text-[11px] text-[#87A7D0]">Configure unboxing prize pool tiers</p>
+            </div>
+            <textarea
+              rows={6}
+              value={JSON.stringify(settings.gift_rewards || defaultSettings.gift_rewards, null, 2)}
+              onChange={e => {
+                try {
+                  const gr = JSON.parse(e.target.value);
+                  setSettings({ ...settings, gift_rewards: gr });
+                } catch {}
+              }}
+              className="w-full p-3 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-emerald-400 font-mono outline-none"
+            />
+            <button onClick={() => handleSaveSettingsSection('gift_rewards')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
+              Save Gift Box Rewards
+            </button>
+          </div>
+
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
+            <div>
+              <h3 className="text-xs font-bold text-white font-serif-luxury">Lucky Wheel Draw Sectors & Prizes</h3>
+              <p className="text-[11px] text-[#87A7D0]">Configure all 8 wheel sector labels and prize amounts</p>
+            </div>
+            <textarea
+              rows={10}
+              value={JSON.stringify(settings.wheel_sectors || defaultSettings.wheel_sectors, null, 2)}
+              onChange={e => {
+                try {
+                  const ws = JSON.parse(e.target.value);
+                  setSettings({ ...settings, wheel_sectors: ws });
+                } catch {}
+              }}
+              className="w-full p-3 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-emerald-400 font-mono outline-none"
+            />
+            <button onClick={() => handleSaveSettingsSection('wheel_sectors')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
+              Save Lucky Wheel Sectors
             </button>
           </div>
         </div>

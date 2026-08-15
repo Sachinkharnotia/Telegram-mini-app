@@ -12,7 +12,7 @@ export const GiftBoxModal = ({ isOpen, onClose, onRewardWon }: GiftBoxModalProps
   const [isOpened, setIsOpened] = useState(false);
   const [wonPrize, setWonPrize] = useState<string | null>(null);
 
-  const rewards = [
+  const defaultRewards = [
     '0.50 USDT',
     '1.25 USDT',
     '2.50 USDT',
@@ -20,6 +20,21 @@ export const GiftBoxModal = ({ isOpen, onClose, onRewardWon }: GiftBoxModalProps
     '5.00 USDT',
     '10.00 USDT'
   ];
+
+  const getRewards = (): string[] => {
+    try {
+      const stored = localStorage.getItem('platform_settings');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.gift_rewards && Array.isArray(parsed.gift_rewards) && parsed.gift_rewards.length > 0) {
+          return parsed.gift_rewards;
+        }
+      }
+    } catch {}
+    return defaultRewards;
+  };
+
+  const rewards = getRewards();
 
   if (!isOpen) return null;
 
