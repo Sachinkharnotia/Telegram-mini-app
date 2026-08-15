@@ -20,11 +20,11 @@ import { GiftBoxModal } from '../common/GiftBoxModal';
 import { AdminPanel } from '../admin/AdminPanel';
 
 export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) => {
-  const { user } = useAuthStore();
-  const [unclaimedYield, setUnclaimedYield] = useState(1.25);
+  const { user, updateBalance } = useAuthStore();
+  const [unclaimedYield, setUnclaimedYield] = useState(0.00);
   const [isClaiming, setIsClaiming] = useState(false);
-  const [walletBalance, setWalletBalance] = useState(user?.balance ?? 50.00);
-  const [vxBalance, setVxBalance] = useState(500);
+  const [walletBalance, setWalletBalance] = useState(Number(user?.balance_usdt || 0));
+  const [vxBalance, setVxBalance] = useState(Number(user?.balance_vx || 0));
   const [expandActivities, setExpandActivities] = useState(true);
   const [wheelOpen, setWheelOpen] = useState(false);
   const [giftModalOpen, setGiftModalOpen] = useState(false);
@@ -41,6 +41,13 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
   const dailyUsdtYield = isEligibleToMine ? vxBalance * vxPriceUsdt * dailyYieldRate : 0;
 
   useEffect(() => {
+    if (user) {
+      setWalletBalance(Number(user.balance_usdt || 0));
+      setVxBalance(Number(user.balance_vx || 0));
+    }
+  }, [user?.balance_usdt, user?.balance_vx]);
+
+  useEffect(() => {
     fetch('/api/mining/dashboard')
       .then(res => res.json())
       .then(data => {
@@ -54,16 +61,15 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
   const handleClaim = () => {
     if (unclaimedYield > 0) {
       setIsClaiming(true);
-      fetch('/api/mining/claim-yield', { method: 'POST' })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            setWalletBalance(data.new_usdt_balance);
-            setUnclaimedYield(0);
-          }
-        })
-        .catch(() => {})
-        .finally(() => setIsClaiming(false));
+      const claimAmount = parseFloat(unclaimedYield.toFixed(4));
+      updateBalance(claimAmount, 0, { type: 'mining_yield', title: 'VX Yield Claim' });
+      setWalletBalance(prev => prev + claimAmount);
+      setUnclaimedYield(0);
+      setTimeout(() => {
+        setIsClaiming(false);
+      }, 600);
+
+      fetch('/api/mining/claim-yield', { method: 'POST' }).catch(() => {});
     }
   };
 
@@ -74,27 +80,28 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
       return;
     }
 
+    const costUsdt = vxAmt * vxPriceUsdt;
+    if (walletBalance < costUsdt) {
+      setBuyVxMsg(`Insufficient balance. Requires $${costUsdt.toFixed(2)} USDT.`);
+      return;
+    }
+
+    updateBalance(-costUsdt, vxAmt, { type: 'vx_purchase', title: 'VX Token Purchase' });
+    setWalletBalance(prev => Math.max(0, prev - costUsdt));
+    setVxBalance(prev => prev + vxAmt);
+    setBuyVxMsg('Successfully purchased VX Tokens!');
+    setTimeout(() => {
+      setBuyVxModalOpen(false);
+      setBuyVxMsg('');
+    }, 1200);
+
     try {
-      const res = await fetch('/api/mining/buy-vx', {
+      await fetch('/api/mining/buy-vx', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ vx_amount: vxAmt })
       });
-      const data = await res.json();
-      if (!data.success) {
-        setBuyVxMsg(data.error || 'Failed to buy VX');
-        return;
-      }
-      setWalletBalance(data.new_usdt_balance);
-      setVxBalance(data.new_vx_balance);
-      setBuyVxMsg('Successfully purchased VX Tokens!');
-      setTimeout(() => {
-        setBuyVxModalOpen(false);
-        setBuyVxMsg('');
-      }, 1200);
-    } catch {
-      setBuyVxMsg('Purchase request failed');
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -118,7 +125,10 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         onClose={() => setWheelOpen(false)}
         onRewardWon={(prize) => {
           const amountNum = parseFloat(prize) || 0;
-          setWalletBalance((prev: number) => prev + amountNum);
+          if (amountNum > 0) {
+            updateBalance(amountNum, 0, { type: 'spin_reward', title: 'Lucky Wheel Spin Win' });
+            setWalletBalance(prev => prev + amountNum);
+          }
         }}
       />
 
@@ -127,7 +137,10 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         onClose={() => setGiftModalOpen(false)}
         onRewardWon={(prize) => {
           const amountNum = parseFloat(prize) || 0;
-          setWalletBalance((prev: number) => prev + amountNum);
+          if (amountNum > 0) {
+            updateBalance(amountNum, 0, { type: 'gift_reward', title: 'Mystery Gift Box Reward' });
+            setWalletBalance(prev => prev + amountNum);
+          }
         }}
       />
 

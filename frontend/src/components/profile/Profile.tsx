@@ -298,7 +298,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#C18DB4] via-[#87A7D0] to-emerald-400 p-[2px] shadow-lg relative">
                 <div className="w-full h-full rounded-full bg-[#0E1B48] flex items-center justify-center text-white font-bold text-lg border border-[#C18DB4]/30">
-                  {user?.first_name ? user.first_name[0] : 'S'}
+                  {user?.first_name ? user.first_name[0].toUpperCase() : 'M'}
                 </div>
                 <div className="absolute -bottom-0.5 -right-0.5 bg-sky-500 text-white rounded-full p-0.5 shadow-md">
                   <CheckCircle2 size={14} className="fill-sky-500 text-white" />
@@ -308,19 +308,18 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
               <div>
                 <div className="flex items-center gap-1.5">
                   <h1 className="text-base font-extrabold text-white font-serif-luxury tracking-wide">
-                    {user?.first_name || 'Support'}
+                    {user?.first_name || 'Member'}
                   </h1>
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-300 text-[10px] font-bold">
                     <CheckCircle2 size={10} /> {t.verified}
                   </span>
                 </div>
-                <p className="text-[11px] text-[#87A7D0]">ID: {user?.telegram_id || '98765432'}</p>
+                <p className="text-[11px] text-[#87A7D0]">ID: {user?.telegram_id || user?.id || '8140274501'}</p>
               </div>
             </div>
 
             <div className="text-right">
-              <span className="text-[10px] text-[#E2CAD8] uppercase font-bold tracking-widest block">APP NAME</span>
-              <span className="text-xs font-extrabold text-[#C18DB4] font-serif-luxury">{t.appName}</span>
+              <span className="text-sm font-extrabold text-[#C18DB4] font-serif-luxury tracking-wide">VextoralMining</span>
             </div>
           </div>
 
@@ -334,12 +333,12 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
 
             <div className="py-2 px-3 rounded-2xl bg-[#0E1B48] border border-[#C18DB4]/30 text-center">
               <span className="text-[9px] text-[#87A7D0] uppercase font-bold block">USDT</span>
-              <span className="text-xs font-bold text-white">${(user?.balance ?? 50.00).toFixed(2)}</span>
+              <span className="text-xs font-bold text-white">${Number(user?.balance_usdt || 0).toFixed(2)}</span>
             </div>
 
             <div className="py-2 px-3 rounded-2xl bg-[#0E1B48] border border-[#C18DB4]/30 text-center">
               <span className="text-[9px] text-[#87A7D0] uppercase font-bold block">VX TOKENS</span>
-              <span className="text-xs font-bold text-amber-300">500 VX</span>
+              <span className="text-xs font-bold text-amber-300">{Number(user?.balance_vx || 0)} VX</span>
             </div>
 
             <button 

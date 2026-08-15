@@ -33,6 +33,12 @@ export interface User {
   token_balance?: number;
   unclaimed_profit?: number;
   balance?: number;
+  balance_usdt?: number;
+  balance_vx?: number;
+  mining_active?: boolean;
+  mining_rate?: number;
+  is_verified?: boolean;
+  referrer_id?: number | string;
   referral_count?: number;
   referral_earnings?: number;
 }

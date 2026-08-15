@@ -23,6 +23,16 @@ export const MandatoryJoin: React.FC<MandatoryJoinProps> = ({ onVerified }) => {
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
+    try {
+      const stored = localStorage.getItem('required_communities');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCommunities(parsed);
+        }
+      }
+    } catch {}
+
     fetch('/api/user/mandatory-join')
       .then(res => res.json())
       .then(data => {

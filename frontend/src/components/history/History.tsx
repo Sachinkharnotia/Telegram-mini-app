@@ -11,12 +11,24 @@ export const History: React.FC = () => {
 
   const fetchHistory = () => {
     setLoading(true);
+    let localTxs: any[] = [];
+    try {
+      const stored = localStorage.getItem('app_transactions');
+      if (stored) localTxs = JSON.parse(stored);
+    } catch {}
+
     fetch('/api/transactions/history')
       .then(res => res.json())
       .then(data => {
-        if (data.transactions) setTransactions(data.transactions);
+        if (data.transactions && Array.isArray(data.transactions) && data.transactions.length > 0) {
+          setTransactions(data.transactions);
+        } else {
+          setTransactions(localTxs);
+        }
       })
-      .catch(() => {})
+      .catch(() => {
+        setTransactions(localTxs);
+      })
       .finally(() => setLoading(false));
   };
 
