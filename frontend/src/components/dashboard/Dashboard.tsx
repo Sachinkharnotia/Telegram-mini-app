@@ -11,7 +11,6 @@ import {
   Gift,
   Compass,
   Award,
-  ShieldAlert,
   ShoppingCart,
   Zap
 } from 'lucide-react';
@@ -173,14 +172,6 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         </div>
 
         <div className="flex items-center gap-2">
-          {user?.isAdmin && (
-            <button
-              onClick={() => setShowAdminPanel(true)}
-              className="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1 hover:bg-amber-500/30"
-            >
-              <ShieldAlert size={14} /> Admin
-            </button>
-          )}
           <button 
             onClick={() => onNavigate?.('profile')}
             className="w-10 h-10 rounded-full bg-[#0E1B48] border border-[#C18DB4]/30 flex items-center justify-center text-slate-200 font-bold text-sm hover:border-[#C18DB4] transition-colors shadow-md"
