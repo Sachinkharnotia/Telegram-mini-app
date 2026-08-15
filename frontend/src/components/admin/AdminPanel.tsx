@@ -86,7 +86,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   const [userFilter, setUserFilter] = useState<'All' | 'Active' | 'Suspended' | 'Blocked'>('All');
   const [taskCategory, setTaskCategory] = useState<string>('All');
   const [wdFilter, setWdFilter] = useState<'All' | 'Pending' | 'Processing' | 'Paid' | 'Rejected'>('All');
-  const [subFilter, setSubFilter] = useState<'All' | 'Under Review' | 'Approved' | 'Rejected'>('All');
+  const [subFilter, setSubFilter] = useState<'All' | 'Pending' | 'Confirmed' | 'Rejected' | 'Under Review' | 'Approved'>('All');
   const [ticketFilter, setTicketFilter] = useState<'All' | 'Open' | 'Pending' | 'Resolved' | 'Closed'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -129,6 +129,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   const [notifMessage, setNotifMessage] = useState('');
   const [sendTelegramBot, setSendTelegramBot] = useState(true);
 
+  const [deposits, setDeposits] = useState<any[]>([]);
+
   useEffect(() => {
     fetchData();
   }, [activeTab]);
@@ -157,6 +159,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       const storedTasks = localStorage.getItem('app_tasks');
       if (storedTasks) setTasks(JSON.parse(storedTasks));
 
+      const storedDeps = localStorage.getItem('admin_deposits');
+      if (storedDeps) setDeposits(JSON.parse(storedDeps));
+
       const storedWds = localStorage.getItem('admin_withdrawals');
       if (storedWds) setWithdrawals(JSON.parse(storedWds));
 
@@ -170,6 +175,79 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       if (storedAdmins) setAdmins(JSON.parse(storedAdmins));
     } catch {}
     setLoading(false);
+  };
+
+  const handleApproveDeposit = (depositId: number) => {
+    const updated = deposits.map(d => {
+      if (d.id === depositId) {
+        return { ...d, status: 'confirmed', confirmed_at: new Date().toISOString() };
+      }
+      return d;
+    });
+    setDeposits(updated);
+    localStorage.setItem('admin_deposits', JSON.stringify(updated));
+
+    const dep = deposits.find(d => d.id === depositId);
+    if (dep) {
+      addActivityLog('Deposit Approved', `Approved $${dep.amount} USDT deposit (${dep.network})`);
+      setMessage(`Deposit of $${dep.amount} USDT approved and credited!`);
+      setTimeout(() => setMessage(''), 3500);
+
+      const txs = [
+        {
+          id: `DEP-${Date.now()}`,
+          title: `Deposit Credited (${dep.network})`,
+          amount: dep.amount,
+          currency: 'USDT',
+          created_at: new Date().toISOString()
+        },
+        ...transactions
+      ];
+      setTransactions(txs);
+      localStorage.setItem('app_transactions', JSON.stringify(txs));
+    }
+  };
+
+  const handleRejectDeposit = (depositId: number) => {
+    const updated = deposits.map(d => {
+      if (d.id === depositId) {
+        return { ...d, status: 'rejected' };
+      }
+      return d;
+    });
+    setDeposits(updated);
+    localStorage.setItem('admin_deposits', JSON.stringify(updated));
+    addActivityLog('Deposit Rejected', `Rejected deposit #${depositId}`);
+    setMessage(`Deposit #${depositId} rejected`);
+    setTimeout(() => setMessage(''), 3500);
+  };
+
+  const handleApproveWithdrawal = (withdrawalId: number) => {
+    const updated = withdrawals.map(w => {
+      if (w.id === withdrawalId) {
+        return { ...w, status: 'Paid', tx_hash: '0x' + Math.random().toString(16).substr(2, 40) };
+      }
+      return w;
+    });
+    setWithdrawals(updated);
+    localStorage.setItem('admin_withdrawals', JSON.stringify(updated));
+    addActivityLog('Withdrawal Paid', `Marked withdrawal #${withdrawalId} as Paid`);
+    setMessage(`Withdrawal #${withdrawalId} processed and paid!`);
+    setTimeout(() => setMessage(''), 3500);
+  };
+
+  const handleRejectWithdrawal = (withdrawalId: number) => {
+    const updated = withdrawals.map(w => {
+      if (w.id === withdrawalId) {
+        return { ...w, status: 'Rejected' };
+      }
+      return w;
+    });
+    setWithdrawals(updated);
+    localStorage.setItem('admin_withdrawals', JSON.stringify(updated));
+    addActivityLog('Withdrawal Rejected', `Rejected payout request #${withdrawalId}`);
+    setMessage(`Withdrawal #${withdrawalId} rejected`);
+    setTimeout(() => setMessage(''), 3500);
   };
 
   const handleSaveSettingsSection = (section: string) => {
@@ -633,17 +711,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       {activeTab === 'submissions' && (
         <div className="space-y-5 animate-fade-in">
           <div>
-            <h2 className="text-xl font-bold text-white font-serif-luxury">Submissions</h2>
-            <p className="text-xs text-[#87A7D0]">Review task proofs and release rewards</p>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">Deposits & Submissions</h2>
+            <p className="text-xs text-[#87A7D0]">Review incoming crypto deposits and proof submissions</p>
           </div>
 
           <div className="flex gap-2">
-            {(['Under Review', 'Approved', 'Rejected', 'All'] as const).map(s => (
+            {(['All', 'Pending', 'Confirmed', 'Rejected'] as const).map(s => (
               <button
                 key={s}
-                onClick={() => setSubFilter(s)}
+                onClick={() => setSubFilter(s as any)}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-bold ${
-                  subFilter === s ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' : 'bg-[#0E1B48]/60 text-[#E2CAD8]'
+                  subFilter === s || (s === 'All' && subFilter === 'All') ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' : 'bg-[#0E1B48]/60 text-[#E2CAD8]'
                 }`}
               >
                 {s}
@@ -651,9 +729,51 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             ))}
           </div>
 
-          <div className="card-vault p-8 rounded-3xl bg-[#0E1B48]/60 border border-[#C18DB4]/30 text-center space-y-2">
-            <h4 className="text-sm font-bold text-white">Nothing here</h4>
-            <p className="text-xs text-[#87A7D0]">No submissions match this filter.</p>
+          <div className="space-y-3">
+            {deposits.length === 0 ? (
+              <div className="card-vault p-8 rounded-3xl bg-[#0E1B48]/60 border border-[#C18DB4]/30 text-center space-y-2">
+                <h4 className="text-sm font-bold text-white">No deposit requests yet</h4>
+                <p className="text-xs text-[#87A7D0]">New user deposits will appear here for review and verification.</p>
+              </div>
+            ) : (
+              deposits
+                .filter(d => subFilter === 'All' || d.status?.toLowerCase() === subFilter.toLowerCase() || (subFilter === 'Pending' && (!d.status || d.status === 'pending')))
+                .map(d => (
+                  <div key={d.id} className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-white">${d.amount} USDT</h4>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#87A7D0]/20 text-[#87A7D0] border border-[#87A7D0]/30">{d.network}</span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          d.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
+                          d.status === 'rejected' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
+                          'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                        }`}>
+                          {d.status || 'Pending'}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-[#87A7D0] mt-1">Order #{d.id} · {new Date(d.created_at || Date.now()).toLocaleString()}</p>
+                    </div>
+
+                    {(!d.status || d.status === 'pending') && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleApproveDeposit(d.id)}
+                          className="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold hover:bg-emerald-500/30"
+                        >
+                          Approve & Credit
+                        </button>
+                        <button
+                          onClick={() => handleRejectDeposit(d.id)}
+                          className="px-3.5 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-bold hover:bg-rose-500/30"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
+            )}
           </div>
         </div>
       )}
@@ -666,10 +786,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
           </div>
 
           <div className="flex gap-2">
-            {(['Pending', 'Processing', 'Paid', 'Rejected', 'All'] as const).map(w => (
+            {(['Pending', 'Paid', 'Rejected', 'All'] as const).map(w => (
               <button
                 key={w}
-                onClick={() => setWdFilter(w)}
+                onClick={() => setWdFilter(w as any)}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-bold ${
                   wdFilter === w ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' : 'bg-[#0E1B48]/60 text-[#E2CAD8]'
                 }`}
@@ -687,14 +807,39 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               </div>
             ) : (
               filteredWithdrawals.map(w => (
-                <div key={w.id} className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 flex items-center justify-between gap-4">
-                  <div>
-                    <h4 className="text-xs font-bold text-white">${w.amount} USDT ({w.network})</h4>
-                    <p className="text-[10px] text-[#87A7D0] font-mono truncate max-w-xs">{w.wallet_address}</p>
+                  <div key={w.id} className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-xs font-bold text-white">${w.amount} USDT ({w.network})</h4>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          w.status === 'Paid' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
+                          w.status === 'Rejected' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
+                          'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                        }`}>
+                          {w.status}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-[#87A7D0] font-mono truncate max-w-xs">{w.wallet_address}</p>
+                    </div>
+
+                    {w.status === 'Pending' && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleApproveWithdrawal(w.id)}
+                          className="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold hover:bg-emerald-500/30"
+                        >
+                          Mark Paid
+                        </button>
+                        <button
+                          onClick={() => handleRejectWithdrawal(w.id)}
+                          className="px-3.5 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-bold hover:bg-rose-500/30"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <span className="text-[10px] uppercase font-bold text-amber-300">{w.status}</span>
-                </div>
-              ))
+                ))
             )}
           </div>
         </div>
