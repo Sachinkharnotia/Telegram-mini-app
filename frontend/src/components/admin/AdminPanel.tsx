@@ -30,8 +30,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     min_deposit_usdt: 10.00,
     min_withdrawal_usdt: 20.00,
     withdrawal_fee_percent: 2.00,
+    bep20_wallet: '',
+    ton_wallet: '',
     deposit_address_bep20: '',
     deposit_address_ton: '',
+    referral_level1_percent: 10.0,
+    referral_level2_percent: 5.0,
+    referral_level3_percent: 2.0,
+    referral_signup_bonus_usdt: 0.50,
     support_telegram: 'https://t.me/telegram',
     official_channel: 'https://t.me/telegram'
   };
@@ -760,53 +766,111 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       )}
 
       {activeTab === 'settings' && settings && (
-        <div className="card-vault p-6 rounded-3xl space-y-4 max-w-xl">
-          <h3 className="text-sm font-bold text-white font-serif-luxury">General App Customization</h3>
+        <div className="card-vault p-6 rounded-3xl space-y-6 max-w-xl">
+          <div>
+            <h3 className="text-sm font-bold text-white font-serif-luxury">Platform & Referral Configuration</h3>
+            <p className="text-[11px] text-[#E2CAD8]">Set multi-tier referral commissions, rewards, and receiving wallets</p>
+          </div>
 
-          <div className="space-y-3 text-xs">
-            <div>
-              <label className="text-[#E2CAD8] block mb-1">BEP20 Receiving Wallet Address</label>
-              <input
-                type="text"
-                value={settings.bep20_wallet}
-                onChange={e => setSettings({ ...settings, bep20_wallet: e.target.value })}
-                className="w-full px-4 py-2 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-white"
-              />
-            </div>
+          <div className="space-y-4 text-xs">
+            <div className="p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-3">
+              <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider font-serif-luxury">Multi-Tier Referral Commissions</h4>
+              
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-[10px] text-[#E2CAD8] block mb-1">Tier 1 Rate (%)</label>
+                  <input
+                    type="number"
+                    value={settings.referral_level1_percent ?? 10}
+                    onChange={e => setSettings({ ...settings, referral_level1_percent: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-[#E2CAD8] block mb-1">Tier 2 Rate (%)</label>
+                  <input
+                    type="number"
+                    value={settings.referral_level2_percent ?? 5}
+                    onChange={e => setSettings({ ...settings, referral_level2_percent: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-[#E2CAD8] block mb-1">Tier 3 Rate (%)</label>
+                  <input
+                    type="number"
+                    value={settings.referral_level3_percent ?? 2}
+                    onChange={e => setSettings({ ...settings, referral_level3_percent: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none"
+                  />
+                </div>
+              </div>
 
-            <div>
-              <label className="text-[#E2CAD8] block mb-1">TON Receiving Wallet Address</label>
-              <input
-                type="text"
-                value={settings.ton_wallet}
-                onChange={e => setSettings({ ...settings, ton_wallet: e.target.value })}
-                className="w-full px-4 py-2 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-white"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[#E2CAD8] block mb-1">Min Withdrawal (USDT)</label>
+                <label className="text-[10px] text-[#E2CAD8] block mb-1">Fixed Referral Signup Bonus ($ USDT)</label>
                 <input
                   type="number"
-                  value={settings.min_withdrawal}
-                  onChange={e => setSettings({ ...settings, min_withdrawal: parseFloat(e.target.value) })}
-                  className="w-full px-4 py-2 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-white"
-                />
-              </div>
-              <div>
-                <label className="text-[#E2CAD8] block mb-1">Withdrawal Fee (USDT)</label>
-                <input
-                  type="number"
-                  value={settings.withdrawal_fee}
-                  onChange={e => setSettings({ ...settings, withdrawal_fee: parseFloat(e.target.value) })}
-                  className="w-full px-4 py-2 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-white"
+                  step="0.05"
+                  value={settings.referral_signup_bonus_usdt ?? 0.50}
+                  onChange={e => setSettings({ ...settings, referral_signup_bonus_usdt: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none"
                 />
               </div>
             </div>
 
-            <button onClick={handleUpdateSettings} className="w-full py-3 btn-gold-vault text-xs font-bold rounded-xl flex items-center justify-center gap-2 mt-4">
-              <Save size={14} /> Save App Settings
+            <div className="p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-3">
+              <h4 className="text-xs font-bold text-sky-300 uppercase tracking-wider font-serif-luxury">Deposit Receiving Wallets</h4>
+              
+              <div>
+                <label className="text-[10px] text-[#E2CAD8] block mb-1">BEP20 (USDT) Receiving Wallet Address</label>
+                <input
+                  type="text"
+                  placeholder="0x..."
+                  value={settings.bep20_wallet || ''}
+                  onChange={e => setSettings({ ...settings, bep20_wallet: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none font-mono text-[11px]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] text-[#E2CAD8] block mb-1">TON (USDT) Receiving Wallet Address</label>
+                <input
+                  type="text"
+                  placeholder="EQ..."
+                  value={settings.ton_wallet || ''}
+                  onChange={e => setSettings({ ...settings, ton_wallet: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none font-mono text-[11px]"
+                />
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-3">
+              <h4 className="text-xs font-bold text-rose-300 uppercase tracking-wider font-serif-luxury">Withdrawal Thresholds</h4>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] text-[#E2CAD8] block mb-1">Min Withdrawal (USDT)</label>
+                  <input
+                    type="number"
+                    value={settings.min_withdrawal ?? 20}
+                    onChange={e => setSettings({ ...settings, min_withdrawal: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-[#E2CAD8] block mb-1">Withdrawal Fee (USDT)</label>
+                  <input
+                    type="number"
+                    value={settings.withdrawal_fee ?? 1}
+                    onChange={e => setSettings({ ...settings, withdrawal_fee: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-xl text-white outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button onClick={handleUpdateSettings} className="w-full py-3.5 btn-gold-vault text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-xl">
+              <Save size={16} /> Save All Platform Settings
             </button>
           </div>
         </div>

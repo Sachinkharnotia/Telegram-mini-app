@@ -7,11 +7,31 @@ export const Referral: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [refStats, setRefStats] = useState<any>(null);
 
-  const tgId = user?.telegram_id || 98765432;
+  const [commSettings, setCommSettings] = useState({
+    tier1: 10,
+    tier2: 5,
+    tier3: 2,
+    bonus: 0.50
+  });
+
+  const tgId = user?.telegram_id || user?.id || 10001;
   const botUsername = 'VXMiningBot';
   const referralLink = `https://t.me/${botUsername}?start=ref_${tgId}`;
 
   useEffect(() => {
+    try {
+      const stored = localStorage.getItem('platform_settings');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setCommSettings({
+          tier1: parsed.referral_level1_percent ?? 10,
+          tier2: parsed.referral_level2_percent ?? 5,
+          tier3: parsed.referral_level3_percent ?? 2,
+          bonus: parsed.referral_signup_bonus_usdt ?? 0.50
+        });
+      }
+    } catch {}
+
     fetch('/api/referral/stats')
       .then(res => res.json())
       .then(data => {
@@ -89,15 +109,19 @@ export const Referral: React.FC = () => {
         <div className="space-y-2.5 text-xs">
           <div className="flex justify-between items-center p-3 bg-[#0E1B48] rounded-xl border border-[#C18DB4]/20">
             <span className="text-[#E2CAD8] font-medium">Tier 1 (Direct Invites)</span>
-            <span className="text-emerald-400 font-bold">10% Commission</span>
+            <span className="text-emerald-400 font-bold">{commSettings.tier1}% Commission</span>
           </div>
           <div className="flex justify-between items-center p-3 bg-[#0E1B48] rounded-xl border border-[#C18DB4]/20">
             <span className="text-[#E2CAD8] font-medium">Tier 2 (Secondary Invites)</span>
-            <span className="text-[#87A7D0] font-bold">5% Commission</span>
+            <span className="text-[#87A7D0] font-bold">{commSettings.tier2}% Commission</span>
+          </div>
+          <div className="flex justify-between items-center p-3 bg-[#0E1B48] rounded-xl border border-[#C18DB4]/20">
+            <span className="text-[#E2CAD8] font-medium">Tier 3 (Sub-network)</span>
+            <span className="text-purple-300 font-bold">{commSettings.tier3}% Commission</span>
           </div>
           <div className="flex justify-between items-center p-3 bg-[#0E1B48] rounded-xl border border-[#C18DB4]/20">
             <span className="text-[#E2CAD8] font-medium">Fixed Signup Bonus</span>
-            <span className="text-amber-300 font-bold">$0.50 USDT / invite</span>
+            <span className="text-amber-300 font-bold">${commSettings.bonus.toFixed(2)} USDT / invite</span>
           </div>
         </div>
       </div>

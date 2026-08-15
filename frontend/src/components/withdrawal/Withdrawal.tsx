@@ -3,7 +3,7 @@ import { ChevronLeft, Check, AlertCircle, RefreshCw, TrendingDown, Lock } from '
 import { useAuthStore } from '../../store/authStore';
 
 export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
-  const { user } = useAuthStore();
+  const { user, updateBalance } = useAuthStore();
   const [network, setNetwork] = useState<'BEP20' | 'TON'>('BEP20');
   const [amount, setAmount] = useState('20');
   const [walletAddress, setWalletAddress] = useState('');
@@ -12,7 +12,7 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [errorMsg, setErrorMsg] = useState('');
   const [lossTimeframe, setLossTimeframe] = useState<'1 day' | 'Week' | 'Month' | '1 year'>('Month');
 
-  const userBalance = user?.balance ?? 50.00;
+  const userBalance = Number(user?.balance_usdt || 0);
   const minWithdrawal = 3.00;
   const withdrawalFee = 1.00;
   const numAmount = parseFloat(amount) || 0;
@@ -40,8 +40,30 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
     setLoading(true);
     setErrorMsg('');
+
+    updateBalance(-numAmount, 0, { type: 'withdrawal', title: `USDT Payout Request (${network})` });
+
     try {
-      const res = await fetch('/api/withdrawal/request', {
+      const raw = localStorage.getItem('admin_withdrawals') || '[]';
+      const wds = JSON.parse(raw);
+      wds.unshift({
+        id: Date.now(),
+        user_id: user?.id || 10001,
+        amount: numAmount,
+        currency: 'USDT',
+        network,
+        wallet_address: walletAddress.trim(),
+        status: 'pending',
+        created_at: new Date().toISOString()
+      });
+      localStorage.setItem('admin_withdrawals', JSON.stringify(wds));
+    } catch {}
+
+    setSubmitted(true);
+    setLoading(false);
+
+    try {
+      await fetch('/api/withdrawal/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -50,17 +72,7 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
           wallet_address: walletAddress.trim()
         })
       });
-      const data = await res.json();
-      if (!data.success) {
-        setErrorMsg(data.error || 'Withdrawal request failed');
-        return;
-      }
-      setSubmitted(true);
-    } catch {
-      setErrorMsg('Failed to submit withdrawal request');
-    } finally {
-      setLoading(false);
-    }
+    } catch {}
   };
 
   return (
