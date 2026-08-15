@@ -1,4 +1,4 @@
-import { User, UserBalance, AppSettings, RequiredCommunity, VXPurchase, Deposit, Withdrawal, Referral, Task, UserTask, Transaction, SpinSector } from '../../../shared/types/models';
+import { User, UserBalance, AppSettings, RequiredCommunity, VXPurchase, Deposit, Withdrawal, Referral, Task, UserTask, Transaction, SpinSector } from '../types/models';
 
 class DataStoreService {
   private users: Map<number, User> = new Map();
