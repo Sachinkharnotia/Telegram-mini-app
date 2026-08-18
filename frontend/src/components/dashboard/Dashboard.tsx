@@ -12,7 +12,9 @@ import {
   Compass,
   Award,
   ShoppingCart,
-  Zap
+  Zap,
+  Clock,
+  Activity
 } from 'lucide-react';
 import { SpinWheelModal } from '../common/SpinWheelModal';
 import { GiftBoxModal } from '../common/GiftBoxModal';
@@ -20,19 +22,14 @@ import { AdminPanel } from '../admin/AdminPanel';
 
 export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) => {
   const { user, updateBalance } = useAuthStore();
-  const [unclaimedYield, setUnclaimedYield] = useState<number>(() => {
-    const lastClaimTs = localStorage.getItem('vx_last_claim_ts') 
-      ? parseInt(localStorage.getItem('vx_last_claim_ts') as string, 10) 
-      : (Date.now() - 7200000); // 2 hours initial simulation if fresh
-    const vxAmt = Number(user?.balance_vx || 0);
-    if (vxAmt >= 100) {
-      const dailyYield = vxAmt * 0.10 * 0.015;
-      const elapsedSec = Math.max(0, (Date.now() - lastClaimTs) / 1000);
-      return parseFloat((elapsedSec * (dailyYield / 86400)).toFixed(4));
-    }
-    return 0.00;
+  const [engineSettings, setEngineSettings] = useState({
+    vxPriceUsdt: 0.10,
+    dailyYieldRate: 0.015,
+    minVxMining: 100
   });
 
+  const [unclaimedYield, setUnclaimedYield] = useState<number>(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [isClaiming, setIsClaiming] = useState(false);
   const walletBalance = Number(user?.balance_usdt || 0);
   const vxBalance = Number(user?.balance_vx || 0);
@@ -44,12 +41,34 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
   const [buyVxMsg, setBuyVxMsg] = useState('');
   const [showAdminPanel, setShowAdminPanel] = useState(false);
 
-  const vxPriceUsdt = 0.10;
-  const minVxMining = 100;
-  const dailyYieldRate = 0.015;
+  // Load live dynamic settings from Admin Panel
+  useEffect(() => {
+    const loadSettings = () => {
+      try {
+        const stored = localStorage.getItem('platform_settings');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const p = parsed.mining?.vx_price_usdt || parsed.vx_price_usdt || 0.10;
+          const y = parsed.mining?.daily_yield_rate || parsed.daily_yield_rate || 1.5;
+          const minVx = parsed.mining?.min_mining_power || 100;
+          const numY = Number(y) < 1 ? Number(y) : Number(y) / 100;
+          setEngineSettings({
+            vxPriceUsdt: Number(p),
+            dailyYieldRate: numY,
+            minVxMining: Number(minVx)
+          });
+        }
+      } catch {}
+    };
+    loadSettings();
+    window.addEventListener('storage', loadSettings);
+    return () => window.removeEventListener('storage', loadSettings);
+  }, []);
 
-  const isEligibleToMine = vxBalance >= minVxMining;
-  const dailyUsdtYield = isEligibleToMine ? vxBalance * vxPriceUsdt * dailyYieldRate : 0;
+  const isEligibleToMine = vxBalance >= engineSettings.minVxMining;
+  const capitalValue = vxBalance * engineSettings.vxPriceUsdt;
+  const dailyUsdtYield = isEligibleToMine ? capitalValue * engineSettings.dailyYieldRate : 0;
+  const hourlyUsdtYield = dailyUsdtYield / 24;
 
   useEffect(() => {
     if (!localStorage.getItem('vx_last_claim_ts')) {
@@ -57,23 +76,38 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
     }
   }, []);
 
+  // Live real-time continuous ticker (Updates every 100ms for smooth live growth)
   useEffect(() => {
     if (!isEligibleToMine) {
       setUnclaimedYield(0);
+      setElapsedSeconds(0);
       return;
     }
 
-    const interval = setInterval(() => {
+    const updateAccrual = () => {
       const lastClaimTs = localStorage.getItem('vx_last_claim_ts') 
         ? parseInt(localStorage.getItem('vx_last_claim_ts') as string, 10) 
         : Date.now();
-      const elapsedSec = Math.max(0, (Date.now() - lastClaimTs) / 1000);
-      const exactAccrued = elapsedSec * (dailyUsdtYield / 86400);
+      const elapsed = Math.max(0, (Date.now() - lastClaimTs) / 1000);
+      const exactAccrued = elapsed * (dailyUsdtYield / 86400);
+      setElapsedSeconds(elapsed);
       setUnclaimedYield(exactAccrued);
-    }, 1000);
+    };
 
+    updateAccrual();
+    const interval = setInterval(updateAccrual, 100);
     return () => clearInterval(interval);
   }, [isEligibleToMine, dailyUsdtYield]);
+
+  const formatElapsedTime = (totalSeconds: number): string => {
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = Math.floor(totalSeconds % 60);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${pad(hrs)}h ${pad(mins)}m ${pad(secs)}s`;
+  };
+
+  const cycleProgress = Math.min(100, (elapsedSeconds / 86400) * 100);
 
   const handleClaim = () => {
     if (unclaimedYield > 0) {
@@ -82,6 +116,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
       updateBalance(claimAmount, 0, { type: 'mining_yield', title: 'VX Yield Claim' });
       localStorage.setItem('vx_last_claim_ts', Date.now().toString());
       setUnclaimedYield(0);
+      setElapsedSeconds(0);
       setTimeout(() => {
         setIsClaiming(false);
       }, 600);
@@ -97,7 +132,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
       return;
     }
 
-    const costUsdt = vxAmt * vxPriceUsdt;
+    const costUsdt = vxAmt * engineSettings.vxPriceUsdt;
     if (walletBalance < costUsdt) {
       setBuyVxMsg(`Insufficient balance. Requires $${costUsdt.toFixed(2)} USDT.`);
       return;
@@ -145,37 +180,47 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
       <GiftBoxModal 
         isOpen={giftModalOpen}
         onClose={() => setGiftModalOpen(false)}
-        onRewardWon={(prize) => {
+        onRewardWon={(prize: string) => {
           const isVx = prize.toUpperCase().includes('VX');
           const amountNum = parseFloat(prize.replace(/[^0-9.]/g, '')) || 0;
           if (amountNum > 0) {
             if (isVx) {
-              updateBalance(0, amountNum, { type: 'gift_reward', title: `Mystery Gift Chest: +${amountNum} VX` });
+              updateBalance(0, amountNum, { type: 'gift_reward', title: `Daily Gift Box: +${amountNum} VX` });
             } else {
-              updateBalance(amountNum, 0, { type: 'gift_reward', title: `Mystery Gift Chest: +$${amountNum.toFixed(2)} USDT` });
+              updateBalance(amountNum, 0, { type: 'gift_reward', title: `Daily Gift Box: +$${amountNum.toFixed(2)} USDT` });
             }
           }
         }}
       />
 
-      <header className="flex justify-between items-center">
+      <header className="flex justify-between items-center py-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#C18DB4] via-[#E2CAD8] to-[#87A7D0] flex items-center justify-center text-[#0E1B48] font-bold shadow-lg">
-            <Pickaxe size={20} />
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#0E1B48] via-[#C18DB4]/30 to-[#87A7D0]/30 border border-[#C18DB4]/40 flex items-center justify-center text-[#C18DB4] shadow-lg shadow-black/40">
+            <Pickaxe size={20} className="animate-pulse" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-slate-100 font-serif-luxury tracking-wide">
-              {user?.first_name || 'Valued Member'}
-            </h1>
-            <p className="text-xs text-[#87A7D0] font-medium flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              {isEligibleToMine ? 'VX Mining Active' : 'Hold 100+ VX to Mine'}
-            </p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-extrabold text-white font-serif-luxury tracking-wide">
+                ⛏️ {user?.first_name || 'Member'}
+              </h1>
+              {user?.isAdmin && (
+                <span 
+                  onClick={() => onNavigate?.('admin')}
+                  className="px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-bold border border-amber-500/30 uppercase cursor-pointer hover:bg-amber-500/30"
+                >
+                  Admin
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 text-[11px] text-[#87A7D0]">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>VX Mining Active</span>
+            </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={() => onNavigate?.('profile')}
             className="w-10 h-10 rounded-full bg-[#0E1B48] border border-[#C18DB4]/30 flex items-center justify-center text-slate-200 font-bold text-sm hover:border-[#C18DB4] transition-colors shadow-md"
           >
@@ -184,38 +229,80 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         </div>
       </header>
 
-      <div className="card-vault rounded-3xl p-6 relative overflow-hidden space-y-4 text-center border border-[#C18DB4]/30 shadow-2xl">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0E1B48]/80 border border-[#C18DB4]/40 text-[#E2CAD8] text-[10px] font-bold uppercase tracking-widest font-serif-luxury">
-          <Sparkles size={12} className="text-[#C18DB4]" /> Dynamic USDT Yield Accrual
-        </div>
-
-        <div>
-          <div className="text-3xl sm:text-4xl font-extrabold font-serif-luxury text-white tracking-tight">
-            + ${unclaimedYield.toFixed(4)} USDT
+      {/* 🚀 Dynamic Mining Accrual Engine Card with 4 Clarity Features */}
+      <div className="card-vault rounded-3xl p-5 sm:p-6 relative overflow-hidden space-y-4 text-center border border-[#C18DB4]/40 shadow-2xl bg-gradient-to-b from-[#0E1B48]/90 via-[#0A1435]/95 to-[#0E1B48]/90">
+        
+        {/* Top Header & Live Elapsed Timer Badge */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#0E1B48] border border-[#C18DB4]/40 text-[#E2CAD8] text-[9px] font-bold uppercase tracking-wider font-serif-luxury">
+            <Sparkles size={11} className="text-[#C18DB4]" /> Dynamic USDT Yield
           </div>
-          <p className="text-xs text-[#E2CAD8] mt-1 font-medium">
-            {isEligibleToMine ? `Earning ~$${dailyUsdtYield.toFixed(2)} USDT / day (${vxBalance} VX)` : 'Hold min 100 VX to start mining yield'}
-          </p>
+
+          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold">
+            <Clock size={11} className="text-emerald-400 animate-spin" style={{ animationDuration: '8s' }} />
+            <span>⏱️ {formatElapsedTime(elapsedSeconds)}</span>
+          </div>
         </div>
 
-        <div className="flex gap-2">
+        {/* Feature 4: Live Real-Time Ticking Counter */}
+        <div className="py-1">
+          <div className="text-3xl sm:text-4xl font-extrabold font-serif-luxury text-white tracking-tight drop-shadow-md">
+            + ${unclaimedYield.toFixed(4)} <span className="text-lg font-bold text-[#C18DB4]">USDT</span>
+          </div>
+          
+          {/* Feature 2: Live Mining Speed Breakdown (Hourly & Daily Rate) */}
+          <div className="mt-2 flex items-center justify-center gap-2 flex-wrap text-[11px] font-medium text-[#E2CAD8]">
+            <span className="inline-flex items-center gap-1 bg-[#0E1B48] px-2.5 py-0.5 rounded-lg border border-[#C18DB4]/20 text-amber-300 font-bold">
+              ⚡ +${hourlyUsdtYield.toFixed(3)} / hr
+            </span>
+            <span className="text-[#87A7D0]">•</span>
+            <span className="inline-flex items-center gap-1 bg-[#0E1B48] px-2.5 py-0.5 rounded-lg border border-[#C18DB4]/20 text-emerald-300 font-bold">
+              +${dailyUsdtYield.toFixed(2)} / 24 hrs
+            </span>
+          </div>
+        </div>
+
+        {/* Feature 3: 24-Hour Cycle Progress Bar */}
+        <div className="space-y-1.5 text-left bg-[#08102B]/80 p-3 rounded-2xl border border-[#C18DB4]/20">
+          <div className="flex justify-between items-center text-[10px] font-bold">
+            <span className="text-[#87A7D0] flex items-center gap-1">
+              <Activity size={11} className="text-[#C18DB4]" /> 24-Hour Yield Cycle
+            </span>
+            <span className="text-white font-mono">{cycleProgress.toFixed(1)}% ({formatElapsedTime(elapsedSeconds)} / 24h)</span>
+          </div>
+
+          <div className="w-full h-2 rounded-full bg-[#0E1B48] overflow-hidden p-[1px] border border-[#C18DB4]/30">
+            <div 
+              className="h-full rounded-full bg-gradient-to-r from-[#C18DB4] via-[#87A7D0] to-emerald-400 transition-all duration-300 shadow-[0_0_10px_rgba(193,141,180,0.5)]"
+              style={{ width: `${Math.max(2, cycleProgress)}%` }}
+            />
+          </div>
+
+          <div className="flex justify-between items-center text-[9px] text-[#E2CAD8]/70 pt-0.5">
+            <span>Accumulating live from {vxBalance.toLocaleString()} VX</span>
+            <span className="text-amber-300 font-semibold">Max Daily: ${dailyUsdtYield.toFixed(2)} USDT</span>
+          </div>
+        </div>
+
+        {/* Claim & Buy VX Buttons */}
+        <div className="flex gap-2 pt-1">
           <button
             onClick={handleClaim}
             disabled={isClaiming || unclaimedYield <= 0}
             className={`flex-1 py-3.5 rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-xl transition-all ${
               isClaiming || unclaimedYield <= 0
-                ? 'bg-[#0E1B48]/60 text-slate-500 border border-[#C18DB4]/20'
-                : 'btn-gold-vault'
+                ? 'bg-[#0E1B48]/60 text-slate-500 border border-[#C18DB4]/20 cursor-not-allowed'
+                : 'btn-gold-vault hover:scale-[1.02] active:scale-[0.98]'
             }`}
           >
-            {isClaiming ? 'Claiming...' : 'Claim Yield'}
+            {isClaiming ? 'Claiming to Wallet...' : 'Claim Yield'}
           </button>
 
           <button
             onClick={() => setBuyVxModalOpen(true)}
-            className="px-4 py-3.5 rounded-2xl text-xs font-extrabold bg-[#0E1B48] text-[#E2CAD8] border border-[#C18DB4]/40 hover:bg-[#1A285A] flex items-center gap-1"
+            className="px-4 py-3.5 rounded-2xl text-xs font-extrabold bg-[#0E1B48] text-[#E2CAD8] border border-[#C18DB4]/40 hover:bg-[#1A285A] hover:border-[#C18DB4] flex items-center gap-1.5 transition-all shadow-md active:scale-98"
           >
-            <ShoppingCart size={14} /> Buy VX
+            <ShoppingCart size={14} className="text-[#C18DB4]" /> Buy VX
           </button>
         </div>
       </div>
@@ -241,7 +328,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
             <span className="text-xs text-[#E2CAD8] font-medium">VX Token Balance</span>
           </div>
           <p className="text-lg font-extrabold text-white font-serif-luxury">{vxBalance.toLocaleString()} VX</p>
-          <span className="text-[10px] text-[#87A7D0]">Valued at ${(vxBalance * vxPriceUsdt).toFixed(2)} USDT</span>
+          <span className="text-[10px] text-[#87A7D0]">Valued at ${(vxBalance * engineSettings.vxPriceUsdt).toFixed(2)} USDT</span>
         </div>
 
         <div className="card-vault rounded-2xl p-4 border border-[#C18DB4]/30 space-y-1">
@@ -405,7 +492,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
             <div className="p-3 rounded-xl bg-[#0E1B48]/80 border border-[#C18DB4]/30 text-xs space-y-1">
               <div className="flex justify-between text-[#E2CAD8]">
                 <span>Required USDT:</span>
-                <span className="font-bold text-white">${((parseFloat(buyVxInput) || 0) * vxPriceUsdt).toFixed(2)} USDT</span>
+                <span className="font-bold text-white">${((parseFloat(buyVxInput) || 0) * engineSettings.vxPriceUsdt).toFixed(2)} USDT</span>
               </div>
               <div className="flex justify-between text-[#E2CAD8]">
                 <span>Available Balance:</span>
