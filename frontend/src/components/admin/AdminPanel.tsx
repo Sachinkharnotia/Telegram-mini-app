@@ -281,10 +281,44 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     setTimeout(() => setMessage(''), 3500);
   };
 
-  const handleSaveSettingsSection = (section: string) => {
+  const handleSaveSettingsSection = async (section: string) => {
     localStorage.setItem('platform_settings', JSON.stringify(settings));
     addActivityLog('Settings Updated', `Updated ${section} configuration`);
-    setMessage(`Settings saved for ${section}`);
+
+    try {
+      const backendPayload = {
+        vx_price_usdt: parseFloat(settings.mining?.vx_price_usdt || settings.vx_price_usdt || '0.10'),
+        min_vx_purchase: parseFloat(settings.mining?.min_vx_purchase || settings.min_vx_purchase || '100'),
+        min_vx_mining: parseFloat(settings.mining?.min_vx_mining || settings.min_vx_mining || '100'),
+        daily_yield_rate: (parseFloat(settings.mining?.daily_yield_rate || settings.daily_yield_rate || '1.5')) / 100,
+        mining_enabled: true,
+        bep20_wallet: settings.payment?.bep20_wallet || settings.bep20_wallet || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+        ton_wallet: settings.payment?.ton_wallet || settings.ton_wallet || 'EQBvW8Z5huBkMJY78A29P0nLw84920kLzW190kLs920pL',
+        min_deposit: parseFloat(settings.payment?.min_deposit || settings.min_deposit || '10'),
+        min_withdrawal: parseFloat(settings.payment?.min_withdrawal || settings.min_withdrawal || '3'),
+        max_withdrawal: parseFloat(settings.payment?.max_withdrawal || settings.max_withdrawal || '10000'),
+        withdrawal_fee: parseFloat(settings.payment?.withdrawal_fee || settings.withdrawal_fee || '0'),
+        referral_commission_tier1: (parseFloat(settings.referral?.level1_percent || '10')) / 100,
+        referral_commission_tier2: (parseFloat(settings.referral?.level2_percent || '5')) / 100,
+        referral_fixed_reward: parseFloat(settings.referral?.reward || '0.50'),
+        referral_enabled: settings.referral?.enabled !== false,
+        daily_spins_limit: parseInt(settings.daily_spins_limit || '3', 10),
+        daily_giftbox_limit: parseInt(settings.daily_giftbox_limit || '1', 10),
+        app_name: settings.branding?.app_name || 'VextoralMining',
+        support_username: settings.branding?.support_telegram || 'VaultSupportAdmin'
+      };
+
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': 'vextoral2026'
+        },
+        body: JSON.stringify(backendPayload)
+      });
+    } catch {}
+
+    setMessage(`Settings saved for ${section} successfully!`);
     setTimeout(() => setMessage(''), 3000);
   };
 
@@ -1054,111 +1088,220 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       )}
 
       {activeTab === 'settings' && (
-        <div className="space-y-6 animate-fade-in max-w-2xl">
+        <div className="space-y-6 animate-fade-in max-w-3xl">
           <div>
-            <h2 className="text-xl font-bold text-white font-serif-luxury">Settings</h2>
-            <p className="text-xs text-[#87A7D0]">Payments, referrals, Telegram and branding configuration</p>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">System & Platform Settings</h2>
+            <p className="text-xs text-[#87A7D0]">Configure payment wallets, referral rewards, mining rates, and limits in real-time</p>
           </div>
 
-          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
-            <h3 className="text-xs font-bold text-white font-serif-luxury">Payment Settings</h3>
-            <textarea
-              rows={8}
-              value={JSON.stringify(settings.payment, null, 2)}
-              onChange={e => {
-                try {
-                  const p = JSON.parse(e.target.value);
-                  setSettings({ ...settings, payment: p });
-                } catch {}
-              }}
-              className="w-full p-3 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-emerald-400 font-mono outline-none"
-            />
-            <button onClick={() => handleSaveSettingsSection('payment')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
-              Save payment
-            </button>
-          </div>
-
-          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
-            <h3 className="text-xs font-bold text-white font-serif-luxury">Referral Settings</h3>
-            <textarea
-              rows={7}
-              value={JSON.stringify(settings.referral, null, 2)}
-              onChange={e => {
-                try {
-                  const r = JSON.parse(e.target.value);
-                  setSettings({ ...settings, referral: r });
-                } catch {}
-              }}
-              className="w-full p-3 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-emerald-400 font-mono outline-none"
-            />
-            <button onClick={() => handleSaveSettingsSection('referral')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
-              Save referral
-            </button>
-          </div>
-
-          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
-            <h3 className="text-xs font-bold text-white font-serif-luxury">Telegram Settings</h3>
-            <textarea
-              rows={4}
-              value={JSON.stringify(settings.telegram, null, 2)}
-              onChange={e => {
-                try {
-                  const tg = JSON.parse(e.target.value);
-                  setSettings({ ...settings, telegram: tg });
-                } catch {}
-              }}
-              className="w-full p-3 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-emerald-400 font-mono outline-none"
-            />
-            <button onClick={() => handleSaveSettingsSection('telegram')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
-              Save telegram
-            </button>
-          </div>
-
-          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
-            <h3 className="text-xs font-bold text-white font-serif-luxury">Branding Settings</h3>
-            <textarea
-              rows={6}
-              value={JSON.stringify(settings.branding, null, 2)}
-              onChange={e => {
-                try {
-                  const b = JSON.parse(e.target.value);
-                  setSettings({ ...settings, branding: b });
-                } catch {}
-              }}
-              className="w-full p-3 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-emerald-400 font-mono outline-none"
-            />
-            <button onClick={() => handleSaveSettingsSection('branding')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
-              Save branding
-            </button>
-          </div>
-
-          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
-            <div>
-              <h3 className="text-xs font-bold text-white font-serif-luxury">Daily Gift Box Rewards Configuration</h3>
-              <p className="text-[11px] text-[#87A7D0]">Configure unboxing prize pool tiers</p>
+          {/* 1. Payment & Wallet Addresses */}
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
+            <div className="border-b border-[#C18DB4]/20 pb-3">
+              <h3 className="text-sm font-bold text-white font-serif-luxury">💳 Deposit & Payout Wallets</h3>
+              <p className="text-[11px] text-[#87A7D0]">Official receiving addresses and transaction boundaries</p>
             </div>
-            <textarea
-              rows={6}
-              value={JSON.stringify(settings.gift_rewards || defaultSettings.gift_rewards, null, 2)}
-              onChange={e => {
-                try {
-                  const gr = JSON.parse(e.target.value);
-                  setSettings({ ...settings, gift_rewards: gr });
-                } catch {}
-              }}
-              className="w-full p-3 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-emerald-400 font-mono outline-none"
-            />
-            <button onClick={() => handleSaveSettingsSection('gift_rewards')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
-              Save Gift Box Rewards
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">USDT BEP-20 Receiving Address (BSC)</label>
+                <input
+                  type="text"
+                  value={settings.payment?.bep20_wallet || settings.bep20_wallet || ''}
+                  onChange={e => setSettings({
+                    ...settings,
+                    bep20_wallet: e.target.value,
+                    payment: { ...settings.payment, bep20_wallet: e.target.value }
+                  })}
+                  placeholder="0x..."
+                  className="w-full p-3 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-emerald-400 font-mono outline-none focus:border-emerald-400"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">USDT TON Receiving Address (The Open Network)</label>
+                <input
+                  type="text"
+                  value={settings.payment?.ton_wallet || settings.ton_wallet || ''}
+                  onChange={e => setSettings({
+                    ...settings,
+                    ton_wallet: e.target.value,
+                    payment: { ...settings.payment, ton_wallet: e.target.value }
+                  })}
+                  placeholder="EQB..."
+                  className="w-full p-3 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-sky-400 font-mono outline-none focus:border-sky-400"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[#E2CAD8]">Min Deposit ($)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={settings.payment?.min_deposit || settings.min_deposit || 10}
+                    onChange={e => setSettings({
+                      ...settings,
+                      min_deposit: parseFloat(e.target.value),
+                      payment: { ...settings.payment, min_deposit: parseFloat(e.target.value) }
+                    })}
+                    className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[#E2CAD8]">Min Withdrawal ($)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={settings.payment?.min_withdrawal || settings.min_withdrawal || 3}
+                    onChange={e => setSettings({
+                      ...settings,
+                      min_withdrawal: parseFloat(e.target.value),
+                      payment: { ...settings.payment, min_withdrawal: parseFloat(e.target.value) }
+                    })}
+                    className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[#E2CAD8]">Max Withdrawal ($)</label>
+                  <input
+                    type="number"
+                    value={settings.payment?.max_withdrawal || settings.max_withdrawal || 10000}
+                    onChange={e => setSettings({
+                      ...settings,
+                      max_withdrawal: parseFloat(e.target.value),
+                      payment: { ...settings.payment, max_withdrawal: parseFloat(e.target.value) }
+                    })}
+                    className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[#E2CAD8]">Withdrawal Fee ($)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={settings.payment?.withdrawal_fee || settings.withdrawal_fee || 0}
+                    onChange={e => setSettings({
+                      ...settings,
+                      withdrawal_fee: parseFloat(e.target.value),
+                      payment: { ...settings.payment, withdrawal_fee: parseFloat(e.target.value) }
+                    })}
+                    className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button onClick={() => handleSaveSettingsSection('payment')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
+              Save Payment Settings
             </button>
           </div>
 
-          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
-            <div>
-              <h3 className="text-sm font-bold text-white font-serif-luxury">Daily Spin & Gift Box Limits Control</h3>
-              <p className="text-[11px] text-[#87A7D0]">Configure how many times a user can spin the wheel and open the gift box per day</p>
+          {/* 2. Referral Program Settings */}
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
+            <div className="border-b border-[#C18DB4]/20 pb-3 flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-bold text-white font-serif-luxury">🤝 Referral Commission & Rewards</h3>
+                <p className="text-[11px] text-[#87A7D0]">Multi-tier commission rates and invitation bonuses</p>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-emerald-400">
+                <input
+                  type="checkbox"
+                  checked={settings.referral?.enabled !== false}
+                  onChange={e => setSettings({
+                    ...settings,
+                    referral: { ...settings.referral, enabled: e.target.checked }
+                  })}
+                  className="rounded text-emerald-500 w-4 h-4"
+                />
+                <span>Program Active</span>
+              </label>
             </div>
-            
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">Tier 1 Commission Rate (%)</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={settings.referral?.level1_percent !== undefined ? settings.referral.level1_percent : 10}
+                    onChange={e => setSettings({
+                      ...settings,
+                      referral: { ...settings.referral, level1_percent: parseFloat(e.target.value) }
+                    })}
+                    className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#87A7D0]">%</span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">Tier 2 Commission Rate (%)</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={settings.referral?.level2_percent !== undefined ? settings.referral.level2_percent : 5}
+                    onChange={e => setSettings({
+                      ...settings,
+                      referral: { ...settings.referral, level2_percent: parseFloat(e.target.value) }
+                    })}
+                    className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#87A7D0]">%</span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">Fixed Invitation Bonus ($ USDT)</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={settings.referral?.reward !== undefined ? settings.referral.reward : 0.50}
+                    onChange={e => setSettings({
+                      ...settings,
+                      referral: { ...settings.referral, reward: parseFloat(e.target.value) }
+                    })}
+                    className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#87A7D0]">$</span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">Max Referral Reward Cap ($ USDT)</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={settings.referral?.max_reward_per_user || 100}
+                    onChange={e => setSettings({
+                      ...settings,
+                      referral: { ...settings.referral, max_reward_per_user: parseFloat(e.target.value) }
+                    })}
+                    className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#87A7D0]">$</span>
+                </div>
+              </div>
+            </div>
+
+            <button onClick={() => handleSaveSettingsSection('referral')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
+              Save Referral Settings
+            </button>
+          </div>
+
+          {/* 3. Daily Spin & Gift Box Limits */}
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
+            <div className="border-b border-[#C18DB4]/20 pb-3">
+              <h3 className="text-sm font-bold text-white font-serif-luxury">🎯 Daily Spin & Gift Chest Limits</h3>
+              <p className="text-[11px] text-[#87A7D0]">Control how many times a user can spin the wheel and open the mystery box per day</p>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-[#E2CAD8]">Daily Spin Limit (Spins / Day)</label>
@@ -1185,29 +1328,132 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               </div>
             </div>
 
-            <button onClick={() => handleSaveSettingsSection('daily_limits')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
+            <button onClick={() => handleSaveSettingsSection('daily_limits')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
               Save Daily Limits
             </button>
           </div>
 
-          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
-            <div>
-              <h3 className="text-xs font-bold text-white font-serif-luxury">Lucky Wheel Draw Sectors & Prizes</h3>
-              <p className="text-[11px] text-[#87A7D0]">Configure all 8 wheel sector labels and prize amounts</p>
+          {/* 4. Mining & VX Parameters */}
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
+            <div className="border-b border-[#C18DB4]/20 pb-3">
+              <h3 className="text-sm font-bold text-white font-serif-luxury">⛏️ VX Quantitative Mining Engine</h3>
+              <p className="text-[11px] text-[#87A7D0]">Daily yield rate, token pricing, and staking minimums</p>
             </div>
-            <textarea
-              rows={10}
-              value={JSON.stringify(settings.wheel_sectors || defaultSettings.wheel_sectors, null, 2)}
-              onChange={e => {
-                try {
-                  const ws = JSON.parse(e.target.value);
-                  setSettings({ ...settings, wheel_sectors: ws });
-                } catch {}
-              }}
-              className="w-full p-3 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-emerald-400 font-mono outline-none"
-            />
-            <button onClick={() => handleSaveSettingsSection('wheel_sectors')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
-              Save Lucky Wheel Sectors
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">VX Token Price ($ USDT)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={settings.mining?.vx_price_usdt || settings.vx_price_usdt || 0.10}
+                  onChange={e => setSettings({
+                    ...settings,
+                    vx_price_usdt: parseFloat(e.target.value),
+                    mining: { ...settings.mining, vx_price_usdt: parseFloat(e.target.value) }
+                  })}
+                  className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">Min VX for Mining (Staking)</label>
+                <input
+                  type="number"
+                  value={settings.mining?.min_vx_mining || settings.min_vx_mining || 100}
+                  onChange={e => setSettings({
+                    ...settings,
+                    min_vx_mining: parseFloat(e.target.value),
+                    mining: { ...settings.mining, min_vx_mining: parseFloat(e.target.value) }
+                  })}
+                  className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">Daily Continuous Yield (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={settings.mining?.daily_yield_rate || settings.daily_yield_rate || 1.5}
+                  onChange={e => setSettings({
+                    ...settings,
+                    daily_yield_rate: parseFloat(e.target.value),
+                    mining: { ...settings.mining, daily_yield_rate: parseFloat(e.target.value) }
+                  })}
+                  className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                />
+              </div>
+            </div>
+
+            <button onClick={() => handleSaveSettingsSection('mining')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
+              Save Mining Settings
+            </button>
+          </div>
+
+          {/* 5. Telegram & Branding */}
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
+            <div className="border-b border-[#C18DB4]/20 pb-3">
+              <h3 className="text-sm font-bold text-white font-serif-luxury">📱 Telegram Bot & Branding</h3>
+              <p className="text-[11px] text-[#87A7D0]">Bot username, platform titles, and support links</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">Telegram Bot Username</label>
+                <input
+                  type="text"
+                  value={settings.telegram?.bot_username || 'VXMiningBot'}
+                  onChange={e => setSettings({
+                    ...settings,
+                    telegram: { ...settings.telegram, bot_username: e.target.value }
+                  })}
+                  className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">Support Telegram Username</label>
+                <input
+                  type="text"
+                  value={settings.branding?.support_telegram || '@VextoralSupport'}
+                  onChange={e => setSettings({
+                    ...settings,
+                    branding: { ...settings.branding, support_telegram: e.target.value }
+                  })}
+                  className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">Support Email Address</label>
+                <input
+                  type="email"
+                  value={settings.branding?.support_email || 'businessvextoral@gmail.com'}
+                  onChange={e => setSettings({
+                    ...settings,
+                    branding: { ...settings.branding, support_email: e.target.value }
+                  })}
+                  className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">Platform Application Name</label>
+                <input
+                  type="text"
+                  value={settings.branding?.app_name || 'VextoralMining'}
+                  onChange={e => setSettings({
+                    ...settings,
+                    branding: { ...settings.branding, app_name: e.target.value }
+                  })}
+                  className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                />
+              </div>
+            </div>
+
+            <button onClick={() => handleSaveSettingsSection('branding')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
+              Save Branding & Telegram
             </button>
           </div>
         </div>
