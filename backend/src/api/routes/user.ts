@@ -4,10 +4,16 @@ import { dataStore } from '../../services/store';
 const router = Router();
 
 router.get('/profile', (req: any, res) => {
-  const userId = req.user?.id || 1001;
-  const user = dataStore.findUserById(userId);
+  const userId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : 1001);
+  let user = dataStore.findUserById(userId);
+  if (!user && req.query.telegram_id) {
+    user = dataStore.findUserByTelegramId(parseInt(req.query.telegram_id as string, 10));
+  }
+  if (!user) {
+    user = dataStore.findUserById(1001);
+  }
   if (!user) return res.status(404).json({ error: 'User not found' });
-  const balance = dataStore.getUserBalance(userId);
+  const balance = dataStore.getUserBalance(user.id);
   const settings = dataStore.getSettings();
   res.json({ user, balance, settings });
 });

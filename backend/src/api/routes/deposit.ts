@@ -14,29 +14,30 @@ router.get('/wallets', (req, res) => {
 
 router.post('/create', (req: any, res) => {
   try {
-    const userId = req.user?.id || 1001;
-    const { amount, network } = req.body;
-
+    const userId = req.body.user_id || req.user?.id || 1001;
+    const { amount, network, wallet_address } = req.body;
+    
     const numAmount = parseFloat(amount);
     const settings = dataStore.getSettings();
+
     if (isNaN(numAmount) || numAmount < settings.min_deposit) {
       return res.status(400).json({ error: `Minimum deposit is $${settings.min_deposit} USDT` });
     }
 
-    if (network !== 'BEP20' && network !== 'TON' && network !== 'TRC20') {
-      return res.status(400).json({ error: 'Invalid deposit network. Supported: BEP20, TON' });
+    if (network !== 'BEP20' && network !== 'TON') {
+      return res.status(400).json({ error: 'Supported networks: BEP20, TON' });
     }
 
-    const deposit = dataStore.createDeposit(userId, numAmount, network);
-    const walletAddress = network === 'TON' ? settings.ton_wallet : settings.bep20_wallet;
+    const deposit = dataStore.createDeposit(userId, numAmount, network, wallet_address);
+    const activeWallet = network === 'TON' ? settings.ton_wallet : settings.bep20_wallet;
 
     res.json({
       success: true,
       deposit_id: deposit.id,
-      wallet_address: walletAddress,
-      amount: numAmount,
+      amount: deposit.amount,
       network: deposit.network,
       status: deposit.status,
+      deposit_address: activeWallet,
       created_at: deposit.created_at
     });
   } catch (err: any) {
@@ -46,42 +47,42 @@ router.post('/create', (req: any, res) => {
 
 router.post('/auto-deposit', (req: any, res) => {
   try {
-    const configuredKey = process.env.DEPOSIT_API_KEY || process.env.AUTO_DEPOSIT_API_KEY || 'vx_autodeposit_sec_2026';
-    const providedKey = req.headers['x-api-key'] || req.query.api_key || req.body.api_key;
+    const apiKey = req.headers['x-api-key'] || req.query.api_key || req.body.api_key;
+    const expectedKey = process.env.DEPOSIT_API_KEY || process.env.AUTO_DEPOSIT_API_KEY || 'vx_autodeposit_sec_2026';
 
-    if (!providedKey || (providedKey !== configuredKey && providedKey !== 'vx_autodeposit_sec_2026')) {
-      return res.status(401).json({ error: 'Unauthorized: Invalid Auto-Deposit API Key' });
+    if (!apiKey || apiKey !== expectedKey) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid Deposit API Key' });
     }
 
     const { user_id, amount, network, tx_hash } = req.body;
     const numAmount = parseFloat(amount);
-    const numUserId = parseInt(user_id, 10) || 1001;
 
     if (isNaN(numAmount) || numAmount <= 0) {
       return res.status(400).json({ error: 'Invalid deposit amount' });
     }
 
-    const net = (network === 'TON' ? 'TON' : 'BEP20') as 'BEP20' | 'TON';
-    const deposit = dataStore.createDeposit(numUserId, numAmount, net);
-    const confirmed = dataStore.confirmDeposit(deposit.id, tx_hash || `0xauto_${Date.now()}`);
+    const userId = parseInt(user_id, 10) || 1001;
+    const selectedNetwork = network === 'TON' ? 'TON' : 'BEP20';
 
-    const balance = dataStore.getUserBalance(numUserId);
+    const deposit = dataStore.createDeposit(userId, numAmount, selectedNetwork);
+    const confirmedDeposit = dataStore.confirmDeposit(deposit.id, tx_hash || `auto_tx_${Date.now()}`);
+    const updatedBalance = dataStore.getUserBalance(userId);
 
     res.json({
       success: true,
       message: `Auto-deposit of $${numAmount.toFixed(2)} USDT credited successfully`,
-      deposit: confirmed,
-      user_id: numUserId,
-      current_balance: balance.usdt_balance,
+      deposit: confirmedDeposit,
+      user_id: userId,
+      current_balance: updatedBalance.usdt_balance,
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Auto deposit execution failed' });
+    res.status(500).json({ error: err.message || 'Failed to process auto-deposit' });
   }
 });
 
-router.get('/my-deposits', (req: any, res) => {
-  const userId = req.user?.id || 1001;
+router.get('/history', (req: any, res) => {
+  const userId = req.query.user_id ? parseInt(req.query.user_id as string, 10) : req.user?.id;
   const deposits = dataStore.getDeposits(userId);
   res.json({ deposits });
 });

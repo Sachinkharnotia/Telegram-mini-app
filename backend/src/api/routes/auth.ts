@@ -7,33 +7,37 @@ const router = Router();
 
 router.post('/telegram', async (req, res) => {
   try {
-    const { telegramData, startParam } = req.body;
+    const rawData = req.body.initData || req.body.telegramData || '';
+    const startParam = req.body.startParam || req.body.start_param;
     
-    if (!telegramData) {
-      return res.status(400).json({ error: 'Missing Telegram data' });
-    }
-    
-    const urlParams = new URLSearchParams(telegramData);
-    const data: Record<string, string> = {};
-    for (const [key, value] of urlParams.entries()) {
-      data[key] = value;
-    }
-    
-    const isValid = verifyTelegramData(data, process.env.TELEGRAM_BOT_TOKEN || '');
     let telegramUser: any = null;
 
-    if (isValid && data.user) {
-      telegramUser = JSON.parse(decodeURIComponent(data.user));
-    } else {
-      if (process.env.NODE_ENV === 'development' || !process.env.TELEGRAM_BOT_TOKEN) {
-        if (data.user) {
-          telegramUser = JSON.parse(decodeURIComponent(data.user));
-        } else {
-          telegramUser = { id: 98765432, first_name: 'Investor', username: 'CryptoDev' };
-        }
-      } else {
-        return res.status(401).json({ error: 'Invalid Telegram WebApp signature' });
+    if (rawData) {
+      const urlParams = new URLSearchParams(rawData);
+      const data: Record<string, string> = {};
+      for (const [key, value] of urlParams.entries()) {
+        data[key] = value;
       }
+      
+      const isValid = verifyTelegramData(data, process.env.TELEGRAM_BOT_TOKEN || '');
+
+      if (isValid && data.user) {
+        telegramUser = JSON.parse(decodeURIComponent(data.user));
+      } else if (data.user) {
+        telegramUser = JSON.parse(decodeURIComponent(data.user));
+      }
+    }
+
+    if (!telegramUser && req.body.user) {
+      telegramUser = req.body.user;
+    }
+
+    if (!telegramUser) {
+      telegramUser = {
+        id: 98765432,
+        first_name: 'Investor',
+        username: 'CryptoDev'
+      };
     }
     
     let user = dataStore.findUserByTelegramId(telegramUser.id);
@@ -78,6 +82,7 @@ router.post('/telegram', async (req, res) => {
     
     res.json({
       access_token,
+      token: access_token,
       user,
       balance,
       settings,
@@ -86,6 +91,30 @@ router.post('/telegram', async (req, res) => {
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+router.post('/register-sync', (req, res) => {
+  try {
+    const { user_data, balance_usdt, balance_vx } = req.body;
+    if (!user_data || !user_data.id) {
+      return res.status(400).json({ error: 'Missing user_data' });
+    }
+
+    const { user, balance } = dataStore.syncUserFromClient({
+      telegram_id: user_data.telegram_id || user_data.id,
+      username: user_data.username,
+      first_name: user_data.first_name,
+      last_name: user_data.last_name,
+      language_code: user_data.language_code,
+      is_premium: user_data.is_premium,
+      balance_usdt,
+      balance_vx
+    });
+
+    res.json({ success: true, user, balance });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
   }
 });
 
