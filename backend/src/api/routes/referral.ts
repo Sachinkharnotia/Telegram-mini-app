@@ -13,8 +13,8 @@ const getReferralInfo = (req: any, res: any) => {
   const referralCode = user ? `ref_${user.telegram_id}` : `ref_98765432`;
   const referralLink = `https://t.me/${botUsername}?start=${referralCode}`;
 
-  const t1 = settings.referral_commission_tier1 > 1 ? settings.referral_commission_tier1 : settings.referral_commission_tier1 * 100;
-  const t2 = settings.referral_commission_tier2 > 1 ? settings.referral_commission_tier2 : settings.referral_commission_tier2 * 100;
+  const t1 = settings.referral_commission_tier1 < 1 ? Math.round(settings.referral_commission_tier1 * 100) : Number(settings.referral_commission_tier1);
+  const t2 = settings.referral_commission_tier2 < 1 ? Math.round(settings.referral_commission_tier2 * 100) : Number(settings.referral_commission_tier2);
 
   res.json({
     referral_code: referralCode,

@@ -18,6 +18,14 @@ export const Referral: React.FC = () => {
   const tgId = user?.telegram_id || user?.id || 10001;
   const referralLink = `https://t.me/${botUsername}?start=ref_${tgId}`;
 
+  const normalizePercent = (val: any, defaultVal: number): number => {
+    if (val === undefined || val === null || isNaN(Number(val))) return defaultVal;
+    const num = Number(val);
+    if (num <= 0) return 0;
+    if (num < 1) return Math.round(num * 100);
+    return num;
+  };
+
   const loadSettingsFromStorage = () => {
     try {
       const stored = localStorage.getItem('platform_settings');
@@ -29,16 +37,16 @@ export const Referral: React.FC = () => {
           setBotUsername(parsed.bot_username.replace('@', ''));
         }
 
-        const t1 = parsed.referral?.level1_percent ?? parsed.referral_commission_tier1 ?? parsed.referral_level1_percent ?? 10;
-        const t2 = parsed.referral?.level2_percent ?? parsed.referral_commission_tier2 ?? parsed.referral_level2_percent ?? 5;
-        const t3 = parsed.referral?.level3_percent ?? parsed.referral_commission_tier3 ?? parsed.referral_level3_percent ?? 2;
-        const b = parsed.referral?.reward ?? parsed.referral_fixed_reward ?? parsed.referral_signup_bonus_usdt ?? 0.50;
+        const t1 = normalizePercent(parsed.referral?.level1_percent ?? parsed.referral_commission_tier1 ?? parsed.referral_level1_percent, 10);
+        const t2 = normalizePercent(parsed.referral?.level2_percent ?? parsed.referral_commission_tier2 ?? parsed.referral_level2_percent, 5);
+        const t3 = normalizePercent(parsed.referral?.level3_percent ?? parsed.referral_commission_tier3 ?? parsed.referral_level3_percent, 2);
+        const b = Number(parsed.referral?.reward ?? parsed.referral_fixed_reward ?? parsed.referral_signup_bonus_usdt ?? 0.50);
 
         setCommSettings({
-          tier1: Number(t1),
-          tier2: Number(t2),
-          tier3: Number(t3),
-          bonus: Number(b)
+          tier1: t1,
+          tier2: t2,
+          tier3: t3,
+          bonus: b
         });
       }
     } catch {}
@@ -54,8 +62,8 @@ export const Referral: React.FC = () => {
         if (data.tier1_commission_rate !== undefined || data.fixed_reward !== undefined) {
           setCommSettings(prev => ({
             ...prev,
-            tier1: data.tier1_commission_rate !== undefined ? Number(data.tier1_commission_rate) : prev.tier1,
-            tier2: data.tier2_commission_rate !== undefined ? Number(data.tier2_commission_rate) : prev.tier2,
+            tier1: data.tier1_commission_rate !== undefined ? normalizePercent(data.tier1_commission_rate, prev.tier1) : prev.tier1,
+            tier2: data.tier2_commission_rate !== undefined ? normalizePercent(data.tier2_commission_rate, prev.tier2) : prev.tier2,
             bonus: data.fixed_reward !== undefined ? Number(data.fixed_reward) : prev.bonus
           }));
         }

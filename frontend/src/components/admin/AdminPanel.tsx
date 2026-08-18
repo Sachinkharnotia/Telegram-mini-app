@@ -93,6 +93,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [savingSection, setSavingSection] = useState<string | null>(null);
 
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [adjAmount, setAdjAmount] = useState('');
@@ -282,23 +283,40 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   };
 
   const handleSaveSettingsSection = async (section: string) => {
+    setSavingSection(section);
+
+    const t1 = parseFloat(String(settings.referral?.level1_percent ?? settings.referral_level1_percent ?? 10));
+    const t2 = parseFloat(String(settings.referral?.level2_percent ?? settings.referral_level2_percent ?? 5));
+    const t3 = parseFloat(String(settings.referral?.level3_percent ?? settings.referral_level3_percent ?? 2));
+    const rewardBonus = parseFloat(String(settings.referral?.reward ?? settings.referral_fixed_reward ?? 0.50));
+
     const updatedSettings = {
       ...settings,
       bep20_wallet: settings.payment?.bep20_wallet || settings.bep20_wallet || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
       ton_wallet: settings.payment?.ton_wallet || settings.ton_wallet || 'EQBvW8Z5huBkMJY78A29P0nLw84920kLzW190kLs920pL',
-      min_deposit: settings.payment?.min_deposit || settings.min_deposit || 10,
-      min_withdrawal: settings.payment?.min_withdrawal || settings.min_withdrawal || 3,
-      max_withdrawal: settings.payment?.max_withdrawal || settings.max_withdrawal || 10000,
-      withdrawal_fee: settings.payment?.withdrawal_fee || settings.withdrawal_fee || 0,
-      referral_level1_percent: settings.referral?.level1_percent !== undefined ? settings.referral.level1_percent : 10,
-      referral_level2_percent: settings.referral?.level2_percent !== undefined ? settings.referral.level2_percent : 5,
-      referral_level3_percent: settings.referral?.level3_percent !== undefined ? settings.referral.level3_percent : 2,
-      referral_signup_bonus_usdt: settings.referral?.reward !== undefined ? settings.referral.reward : 0.50,
-      referral_commission_tier1: settings.referral?.level1_percent !== undefined ? settings.referral.level1_percent : 10,
-      referral_commission_tier2: settings.referral?.level2_percent !== undefined ? settings.referral.level2_percent : 5,
-      referral_fixed_reward: settings.referral?.reward !== undefined ? settings.referral.reward : 0.50,
-      daily_spins_limit: parseInt(settings.daily_spins_limit || '3', 10),
-      daily_giftbox_limit: parseInt(settings.daily_giftbox_limit || '1', 10),
+      min_deposit: parseFloat(String(settings.payment?.min_deposit || settings.min_deposit || 10)),
+      min_withdrawal: parseFloat(String(settings.payment?.min_withdrawal || settings.min_withdrawal || 3)),
+      max_withdrawal: parseFloat(String(settings.payment?.max_withdrawal || settings.max_withdrawal || 10000)),
+      withdrawal_fee: parseFloat(String(settings.payment?.withdrawal_fee || settings.withdrawal_fee || 0)),
+      referral: {
+        ...settings.referral,
+        level1_percent: t1,
+        level2_percent: t2,
+        level3_percent: t3,
+        reward: rewardBonus,
+        enabled: settings.referral?.enabled !== false
+      },
+      referral_level1_percent: t1,
+      referral_level2_percent: t2,
+      referral_level3_percent: t3,
+      referral_signup_bonus_usdt: rewardBonus,
+      referral_commission_tier1: t1,
+      referral_commission_tier2: t2,
+      referral_fixed_reward: rewardBonus,
+      daily_spins_limit: parseInt(String(settings.daily_spins_limit || 3), 10),
+      daily_giftbox_limit: parseInt(String(settings.daily_giftbox_limit || 1), 10),
+      wheel_sectors: settings.wheel_sectors || defaultSettings.wheel_sectors,
+      gift_rewards: settings.gift_rewards || defaultSettings.gift_rewards,
     };
 
     setSettings(updatedSettings);
@@ -308,20 +326,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
 
     try {
       const backendPayload = {
-        vx_price_usdt: parseFloat(settings.mining?.vx_price_usdt || settings.vx_price_usdt || '0.10'),
-        min_vx_purchase: parseFloat(settings.mining?.min_vx_purchase || settings.min_vx_purchase || '100'),
-        min_vx_mining: parseFloat(settings.mining?.min_vx_mining || settings.min_vx_mining || '100'),
-        daily_yield_rate: (parseFloat(settings.mining?.daily_yield_rate || settings.daily_yield_rate || '1.5')) / 100,
+        vx_price_usdt: parseFloat(String(settings.mining?.vx_price_usdt || settings.vx_price_usdt || 0.10)),
+        min_vx_purchase: parseFloat(String(settings.mining?.min_vx_purchase || settings.min_vx_purchase || 100)),
+        min_vx_mining: parseFloat(String(settings.mining?.min_vx_mining || settings.min_vx_mining || 100)),
+        daily_yield_rate: (parseFloat(String(settings.mining?.daily_yield_rate || settings.daily_yield_rate || 1.5))) / 100,
         mining_enabled: true,
         bep20_wallet: updatedSettings.bep20_wallet,
         ton_wallet: updatedSettings.ton_wallet,
-        min_deposit: parseFloat(String(updatedSettings.min_deposit)),
-        min_withdrawal: parseFloat(String(updatedSettings.min_withdrawal)),
-        max_withdrawal: parseFloat(String(updatedSettings.max_withdrawal)),
-        withdrawal_fee: parseFloat(String(updatedSettings.withdrawal_fee)),
-        referral_commission_tier1: (parseFloat(String(updatedSettings.referral_level1_percent))) / 100,
-        referral_commission_tier2: (parseFloat(String(updatedSettings.referral_level2_percent))) / 100,
-        referral_fixed_reward: parseFloat(String(updatedSettings.referral_fixed_reward)),
+        min_deposit: updatedSettings.min_deposit,
+        min_withdrawal: updatedSettings.min_withdrawal,
+        max_withdrawal: updatedSettings.max_withdrawal,
+        withdrawal_fee: updatedSettings.withdrawal_fee,
+        referral_commission_tier1: t1,
+        referral_commission_tier2: t2,
+        referral_fixed_reward: rewardBonus,
         referral_enabled: settings.referral?.enabled !== false,
         daily_spins_limit: updatedSettings.daily_spins_limit,
         daily_giftbox_limit: updatedSettings.daily_giftbox_limit,
@@ -340,7 +358,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     } catch {}
 
     setMessage(`Settings saved for ${section} successfully!`);
-    setTimeout(() => setMessage(''), 3000);
+    setTimeout(() => setMessage(''), 3500);
+    setTimeout(() => setSavingSection(null), 2500);
   };
 
   const handleUpdateWheelSector = (index: number, field: string, value: any) => {
@@ -1249,8 +1268,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               </div>
             </div>
 
-            <button onClick={() => handleSaveSettingsSection('payment')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
-              Save Payment Settings
+            <button
+              onClick={() => handleSaveSettingsSection('payment')}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all flex items-center gap-1.5 ${
+                savingSection === 'payment' ? 'bg-emerald-500 text-white font-extrabold' : 'btn-gold-vault'
+              }`}
+            >
+              {savingSection === 'payment' ? <><CheckCircle size={14} className="animate-bounce" /> Saved Successfully!</> : 'Save Payment Settings'}
             </button>
           </div>
 
@@ -1344,8 +1368,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               </div>
             </div>
 
-            <button onClick={() => handleSaveSettingsSection('referral')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
-              Save Referral Settings
+            <button
+              onClick={() => handleSaveSettingsSection('referral')}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all flex items-center gap-1.5 ${
+                savingSection === 'referral' ? 'bg-emerald-500 text-white font-extrabold' : 'btn-gold-vault'
+              }`}
+            >
+              {savingSection === 'referral' ? <><CheckCircle size={14} className="animate-bounce" /> Saved Successfully!</> : 'Save Referral Settings'}
             </button>
           </div>
 
@@ -1382,8 +1411,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               </div>
             </div>
 
-            <button onClick={() => handleSaveSettingsSection('daily_limits')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
-              Save Daily Limits
+            <button
+              onClick={() => handleSaveSettingsSection('daily_limits')}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all flex items-center gap-1.5 ${
+                savingSection === 'daily_limits' ? 'bg-emerald-500 text-white font-extrabold' : 'btn-gold-vault'
+              }`}
+            >
+              {savingSection === 'daily_limits' ? <><CheckCircle size={14} className="animate-bounce" /> Saved Successfully!</> : 'Save Daily Limits'}
             </button>
           </div>
 
@@ -1440,8 +1474,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               </div>
             </div>
 
-            <button onClick={() => handleSaveSettingsSection('mining')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
-              Save Mining Settings
+            <button
+              onClick={() => handleSaveSettingsSection('mining')}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all flex items-center gap-1.5 ${
+                savingSection === 'mining' ? 'bg-emerald-500 text-white font-extrabold' : 'btn-gold-vault'
+              }`}
+            >
+              {savingSection === 'mining' ? <><CheckCircle size={14} className="animate-bounce" /> Saved Successfully!</> : 'Save Mining Settings'}
             </button>
           </div>
 
@@ -1547,8 +1586,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               </div>
             </div>
 
-            <button onClick={() => handleSaveSettingsSection('branding')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
-              Save Branding & Telegram
+            <button
+              onClick={() => handleSaveSettingsSection('branding')}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all flex items-center gap-1.5 ${
+                savingSection === 'branding' ? 'bg-emerald-500 text-white font-extrabold' : 'btn-gold-vault'
+              }`}
+            >
+              {savingSection === 'branding' ? <><CheckCircle size={14} className="animate-bounce" /> Saved Successfully!</> : 'Save Branding & Telegram'}
             </button>
           </div>
 
@@ -1586,8 +1630,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               />
             </div>
 
-            <button onClick={() => handleSaveSettingsSection('general')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
-              Save General Settings
+            <button
+              onClick={() => handleSaveSettingsSection('general')}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all flex items-center gap-1.5 ${
+                savingSection === 'general' ? 'bg-emerald-500 text-white font-extrabold' : 'btn-gold-vault'
+              }`}
+            >
+              {savingSection === 'general' ? <><CheckCircle size={14} className="animate-bounce" /> Saved Successfully!</> : 'Save General Settings'}
             </button>
           </div>
 
@@ -1649,8 +1698,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               ))}
             </div>
 
-            <button onClick={() => handleSaveSettingsSection('wheel_sectors')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
-              Save Lucky Wheel Sectors & Values
+            <button
+              onClick={() => handleSaveSettingsSection('wheel_sectors')}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all flex items-center gap-1.5 ${
+                savingSection === 'wheel_sectors' ? 'bg-emerald-500 text-white font-extrabold' : 'btn-gold-vault'
+              }`}
+            >
+              {savingSection === 'wheel_sectors' ? <><CheckCircle size={14} className="animate-bounce" /> Saved Successfully!</> : 'Save Lucky Wheel Sectors & Values'}
             </button>
           </div>
 
@@ -1692,8 +1746,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               ))}
             </div>
 
-            <button onClick={() => handleSaveSettingsSection('gift_rewards')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
-              Save Gift Box Rewards Pool
+            <button
+              onClick={() => handleSaveSettingsSection('gift_rewards')}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all flex items-center gap-1.5 ${
+                savingSection === 'gift_rewards' ? 'bg-emerald-500 text-white font-extrabold' : 'btn-gold-vault'
+              }`}
+            >
+              {savingSection === 'gift_rewards' ? <><CheckCircle size={14} className="animate-bounce" /> Saved Successfully!</> : 'Save Gift Box Rewards Pool'}
             </button>
           </div>
         </div>
