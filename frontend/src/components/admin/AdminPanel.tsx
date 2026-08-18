@@ -287,34 +287,45 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     let localDepositList: any[] = [];
     try {
       const storedDeps = localStorage.getItem('admin_deposits');
-      localDepositList = storedDeps ? JSON.parse(storedDeps) : [];
+      const rawList = storedDeps ? JSON.parse(storedDeps) : [];
 
-      const rawTxs = localStorage.getItem('app_transactions');
-      if (rawTxs) {
-        const txs = JSON.parse(rawTxs);
-        for (const t of txs) {
-          if (t.type === 'deposit' || String(t.title || '').toLowerCase().includes('deposit')) {
-            const numAmount = parseFloat(String(t.amount || 0).replace(/[^0-9.]/g, '')) || 50;
-            const isTon = String(t.title || '').includes('TON');
-            const exists = localDepositList.some((d: any) => 
-              d.id === t.id || d.order_id === t.id || 
-              (Math.abs(Number(d.amount) - numAmount) < 0.001 && d.network === (isTon ? 'TON' : 'BEP-20'))
-            );
-            if (!exists) {
-              localDepositList.push({
-                id: t.id || Date.now(),
-                order_id: t.id || `DEP-${Date.now()}`,
-                user_id: 1001,
-                amount: numAmount,
-                currency: 'USDT',
-                network: isTon ? 'TON' : 'BEP-20',
-                status: t.status || 'pending',
-                created_at: t.created_at || new Date().toISOString()
-              });
-            }
-          }
+      // Clean and deduplicate deposits
+      const confirmedMap = new Map<string, any>();
+      const pendingList: any[] = [];
+
+      for (const d of rawList) {
+        if (!d) continue;
+        const dTime = new Date(d.created_at || Date.now()).getTime();
+        const minBucket = Math.floor(dTime / 60000);
+        const amountNum = parseFloat(String(d.amount || 0));
+        const fuzzyKey = `${amountNum.toFixed(2)}_${d.network}_${minBucket}`;
+
+        if (d.status === 'confirmed' || d.status === 'completed' || d.status === 'approved') {
+          confirmedMap.set(fuzzyKey, d);
+          confirmedMap.set(String(d.order_id || d.id), d);
+        } else {
+          pendingList.push(d);
         }
       }
+
+      const finalMap = new Map<string, any>();
+      for (const v of confirmedMap.values()) {
+        finalMap.set(String(v.order_id || v.id), v);
+      }
+
+      for (const p of pendingList) {
+        const pTime = new Date(p.created_at || Date.now()).getTime();
+        const minBucket = Math.floor(pTime / 60000);
+        const amountNum = parseFloat(String(p.amount || 0));
+        const fuzzyKey = `${amountNum.toFixed(2)}_${p.network}_${minBucket}`;
+
+        if (!confirmedMap.has(fuzzyKey) && !finalMap.has(String(p.order_id || p.id))) {
+          finalMap.set(String(p.order_id || p.id), p);
+        }
+      }
+
+      localDepositList = Array.from(finalMap.values());
+      localDepositList.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
       setDeposits(localDepositList);
       localStorage.setItem('admin_deposits', JSON.stringify(localDepositList));
     } catch {}
@@ -325,17 +336,44 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       .then(res => res.json())
       .then(data => {
         const apiDeps = data.deposits && Array.isArray(data.deposits) ? data.deposits : [];
-        const depMap = new Map();
-        for (const d of localDepositList) {
-          const key = String(d.id || d.order_id);
-          depMap.set(key, d);
+        const combined = [...localDepositList, ...apiDeps];
+
+        const confirmedMap = new Map<string, any>();
+        const pendingList: any[] = [];
+
+        for (const d of combined) {
+          if (!d) continue;
+          const dTime = new Date(d.created_at || Date.now()).getTime();
+          const minBucket = Math.floor(dTime / 60000);
+          const amountNum = parseFloat(String(d.amount || 0));
+          const fuzzyKey = `${amountNum.toFixed(2)}_${d.network}_${minBucket}`;
+
+          if (d.status === 'confirmed' || d.status === 'completed' || d.status === 'approved') {
+            confirmedMap.set(fuzzyKey, d);
+            confirmedMap.set(String(d.order_id || d.id), d);
+          } else {
+            pendingList.push(d);
+          }
         }
-        for (const d of apiDeps) {
-          const key = String(d.id || d.order_id);
-          const existing = depMap.get(key);
-          depMap.set(key, { ...existing, ...d });
+
+        const finalMap = new Map<string, any>();
+        for (const v of confirmedMap.values()) {
+          finalMap.set(String(v.order_id || v.id), v);
         }
-        const mergedDeps = Array.from(depMap.values());
+
+        for (const p of pendingList) {
+          const pTime = new Date(p.created_at || Date.now()).getTime();
+          const minBucket = Math.floor(pTime / 60000);
+          const amountNum = parseFloat(String(p.amount || 0));
+          const fuzzyKey = `${amountNum.toFixed(2)}_${p.network}_${minBucket}`;
+
+          if (!confirmedMap.has(fuzzyKey) && !finalMap.has(String(p.order_id || p.id))) {
+            finalMap.set(String(p.order_id || p.id), p);
+          }
+        }
+
+        const mergedDeps = Array.from(finalMap.values());
+        mergedDeps.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
         if (mergedDeps.length > 0) {
           setDeposits(mergedDeps);
           localStorage.setItem('admin_deposits', JSON.stringify(mergedDeps));
@@ -346,30 +384,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     let localWdList: any[] = [];
     try {
       const storedWds = localStorage.getItem('admin_withdrawals');
-      localWdList = storedWds ? JSON.parse(storedWds) : [];
+      const rawWds = storedWds ? JSON.parse(storedWds) : [];
 
-      const rawTxs = localStorage.getItem('app_transactions');
-      if (rawTxs) {
-        const txs = JSON.parse(rawTxs);
-        for (const t of txs) {
-          if (t.type === 'withdrawal' || String(t.title || '').toLowerCase().includes('payout') || String(t.title || '').toLowerCase().includes('withdrawal')) {
-            const numAmount = parseFloat(String(t.amount || 0).replace(/[^0-9.]/g, '')) || 20;
-            const exists = localWdList.some((w: any) => w.id === t.id);
-            if (!exists) {
-              localWdList.push({
-                id: t.id || Date.now(),
-                user_id: 1001,
-                amount: numAmount,
-                currency: 'USDT',
-                network: 'BEP-20',
-                wallet_address: '0x000...UserWallet',
-                status: t.status || 'pending',
-                created_at: t.created_at || new Date().toISOString()
-              });
-            }
-          }
-        }
+      const wdMap = new Map<string, any>();
+      for (const w of rawWds) {
+        if (!w) continue;
+        wdMap.set(String(w.id), w);
       }
+      localWdList = Array.from(wdMap.values());
+      localWdList.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
       setWithdrawals(localWdList);
       localStorage.setItem('admin_withdrawals', JSON.stringify(localWdList));
     } catch {}
@@ -390,6 +413,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
           wdMap.set(key, { ...existing, ...w });
         }
         const mergedWds = Array.from(wdMap.values());
+        mergedWds.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
         if (mergedWds.length > 0) {
           setWithdrawals(mergedWds);
           localStorage.setItem('admin_withdrawals', JSON.stringify(mergedWds));
@@ -514,16 +538,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       });
     } catch {}
 
-    const updated = deposits.map(d => {
+    const dep = deposits.find(d => d.id === depositId || d.order_id === depositId);
+    let updated = deposits.map(d => {
       if (d.id === depositId || d.order_id === depositId) {
         return { ...d, status: 'confirmed', confirmed_at: new Date().toISOString() };
       }
       return d;
     });
+
+    if (dep) {
+      const depTime = new Date(dep.created_at || Date.now()).getTime();
+      const depBucket = Math.floor(depTime / 60000);
+      updated = updated.filter(d => {
+        if (d.id === depositId || d.order_id === depositId || d.status === 'confirmed') return true;
+        const dTime = new Date(d.created_at || Date.now()).getTime();
+        const dBucket = Math.floor(dTime / 60000);
+        const isGhost = Math.abs(d.amount - dep.amount) < 0.01 && d.network === dep.network && Math.abs(dBucket - depBucket) <= 1 && d.status === 'pending';
+        return !isGhost;
+      });
+    }
+
     setDeposits(updated);
     localStorage.setItem('admin_deposits', JSON.stringify(updated));
 
-    const dep = deposits.find(d => d.id === depositId || d.order_id === depositId);
     if (dep) {
       addActivityLog('Deposit Approved', `Approved $${dep.amount} USDT deposit (${dep.network})`);
       setMessage(`Deposit of $${dep.amount} USDT approved and credited!`);
@@ -619,12 +656,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   };
 
   const handleRejectDeposit = (depositId: number) => {
-    const updated = deposits.map(d => {
-      if (d.id === depositId) {
+    const dep = deposits.find(d => d.id === depositId || d.order_id === depositId);
+    let updated = deposits.map(d => {
+      if (d.id === depositId || d.order_id === depositId) {
         return { ...d, status: 'rejected' };
       }
       return d;
     });
+    if (dep) {
+      const depTime = new Date(dep.created_at || Date.now()).getTime();
+      const depBucket = Math.floor(depTime / 60000);
+      updated = updated.filter(d => {
+        if (d.id === depositId || d.order_id === depositId || d.status === 'rejected') return true;
+        const dTime = new Date(d.created_at || Date.now()).getTime();
+        const dBucket = Math.floor(dTime / 60000);
+        const isGhost = Math.abs(d.amount - dep.amount) < 0.01 && d.network === dep.network && Math.abs(dBucket - depBucket) <= 1 && d.status === 'pending';
+        return !isGhost;
+      });
+    }
     setDeposits(updated);
     localStorage.setItem('admin_deposits', JSON.stringify(updated));
     addActivityLog('Deposit Rejected', `Rejected deposit #${depositId}`);
