@@ -203,14 +203,6 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
               <h1 className="text-lg font-extrabold text-white font-serif-luxury tracking-wide">
                 ⛏️ {user?.first_name || 'Member'}
               </h1>
-              {user?.isAdmin && (
-                <span 
-                  onClick={() => onNavigate?.('admin')}
-                  className="px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-bold border border-amber-500/30 uppercase cursor-pointer hover:bg-amber-500/30"
-                >
-                  Admin
-                </span>
-              )}
             </div>
             <div className="flex items-center gap-1.5 text-[11px] text-[#87A7D0]">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />

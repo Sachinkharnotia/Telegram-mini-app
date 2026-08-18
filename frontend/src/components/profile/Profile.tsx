@@ -463,26 +463,6 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
               </div>
               <ChevronRight size={16} className="text-[#E2CAD8]" />
             </div>
-
-            {user?.isAdmin && (
-              <div 
-                onClick={() => {
-                  const pin = prompt('Enter Admin Master PIN:');
-                  if (pin === 'vextoral2026' || pin === 'admin123') {
-                    if (onNavigate) onNavigate('admin');
-                  } else if (pin) {
-                    alert('Access Denied: Invalid Master PIN');
-                  }
-                }}
-                className="flex items-center justify-between p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl cursor-pointer hover:bg-amber-500/20 transition-all"
-              >
-                <div className="flex items-center gap-3">
-                  <ShieldCheck size={18} className="text-amber-400" />
-                  <span className="text-xs font-bold text-amber-300">Admin Control Portal</span>
-                </div>
-                <ChevronRight size={16} className="text-amber-400" />
-              </div>
-            )}
           </div>
 
           <div 
