@@ -9,8 +9,21 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true
+        target: 'https://backend-ten-amber-99.vercel.app',
+        changeOrigin: true,
+        secure: true
+      }
+    }
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 5173,
+    allowedHosts: true,
+    proxy: {
+      '/api': {
+        target: 'https://backend-ten-amber-99.vercel.app',
+        changeOrigin: true,
+        secure: true
       }
     }
   }
