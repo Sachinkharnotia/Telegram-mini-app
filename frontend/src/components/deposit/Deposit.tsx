@@ -102,12 +102,21 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     setLoading(false);
 
     try {
-      await fetch('/api/deposit/create', {
+      const API_URL = 'https://backend-ten-amber-99.vercel.app';
+      await fetch(`${API_URL}/api/deposit/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: numAmt, network, user_id: userId })
       });
-    } catch {}
+    } catch {
+      try {
+        await fetch('/api/deposit/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: numAmt, network, user_id: userId })
+        });
+      } catch {}
+    }
   };
 
   return (

@@ -10,7 +10,7 @@ interface AdminPanelProps {
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'users' | 'tasks' | 'submissions' | 'withdrawals' | 'transactions' | 'referrals' | 'notifications' | 'support' | 'admins' | 'settings' | 'activity'
+    'dashboard' | 'users' | 'deposits' | 'tasks' | 'submissions' | 'withdrawals' | 'transactions' | 'referrals' | 'notifications' | 'support' | 'admins' | 'settings' | 'activity'
   >('dashboard');
 
   const defaultSettings = {
@@ -381,7 +381,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     return () => clearTimeout(timer);
   }, [settings]);
 
-  const handleApproveDeposit = (depositId: number) => {
+  const handleApproveDeposit = async (depositId: number) => {
+    try {
+      await fetch(`${API_BASE}/api/admin/deposits/confirm`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': ADMIN_PIN
+        },
+        body: JSON.stringify({ deposit_id: depositId, tx_hash: 'ADMIN_MANUAL_CREDIT' })
+      });
+    } catch {}
+
     const updated = deposits.map(d => {
       if (d.id === depositId) {
         return { ...d, status: 'confirmed', confirmed_at: new Date().toISOString() };
@@ -410,6 +421,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       setTransactions(txs);
       localStorage.setItem('app_transactions', JSON.stringify(txs));
     }
+    fetchData();
   };
 
   const handleRejectDeposit = (depositId: number) => {
@@ -423,7 +435,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     localStorage.setItem('admin_deposits', JSON.stringify(updated));
     addActivityLog('Deposit Rejected', `Rejected deposit #${depositId}`);
     setMessage(`Deposit #${depositId} rejected`);
-    setTimeout(() => setMessage(''), 3500);
+    setTimeout(() => setMessage(''), 3000);
+    fetchData();
   };
 
   const handleApproveWithdrawal = (withdrawalId: number) => {
@@ -660,6 +673,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     setTimeout(() => setMessage(''), 3000);
   };
 
+
+
   const handleSendNotification = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!notifTitle.trim() || !notifMessage.trim()) return;
@@ -753,9 +768,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         {[
           { id: 'dashboard', label: 'Dashboard' },
           { id: 'users', label: 'Users' },
-          { id: 'tasks', label: 'Tasks' },
-          { id: 'submissions', label: 'Submissions' },
+          { id: 'deposits', label: 'Deposits' },
           { id: 'withdrawals', label: 'Withdrawals' },
+          { id: 'tasks', label: 'Tasks' },
           { id: 'transactions', label: 'Transactions' },
           { id: 'referrals', label: 'Referrals' },
           { id: 'notifications', label: 'Notifications' },
@@ -1047,11 +1062,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         </div>
       )}
 
-      {activeTab === 'submissions' && (
+      {(activeTab === 'deposits' || activeTab === 'submissions') && (
         <div className="space-y-5 animate-fade-in">
           <div>
-            <h2 className="text-xl font-bold text-white font-serif-luxury">Deposits & Submissions</h2>
-            <p className="text-xs text-[#87A7D0]">Review incoming crypto deposits and proof submissions</p>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">Deposits Management</h2>
+            <p className="text-xs text-[#87A7D0]">Review incoming crypto deposits, verify blockchain hashes & credit member accounts</p>
           </div>
 
           <div className="flex gap-2">
