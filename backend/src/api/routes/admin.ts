@@ -136,6 +136,13 @@ router.post('/deposits/confirm', (req, res) => {
   res.json({ success: true, deposit: dep });
 });
 
+router.post('/deposits/reject', (req, res) => {
+  const { deposit_id, reason } = req.body;
+  const dep = dataStore.rejectDeposit(parseInt(deposit_id, 10), reason);
+  if (!dep) return res.status(400).json({ error: 'Deposit not found' });
+  res.json({ success: true, deposit: dep });
+});
+
 router.get('/withdrawals', (req, res) => {
   const withdrawals = dataStore.getWithdrawals();
   res.json({ withdrawals });

@@ -289,7 +289,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       const storedDeps = localStorage.getItem('admin_deposits');
       const rawList = storedDeps ? JSON.parse(storedDeps) : [];
 
-      const confirmedMap = new Map<string, any>();
+      const finalizedMap = new Map<string, any>();
       const seenFuzzyKeys = new Set<string>();
       const pendingMap = new Map<string, any>();
 
@@ -300,16 +300,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         const amountNum = parseFloat(String(d.amount || 0));
         const fuzzyKey = `${amountNum.toFixed(2)}_${d.network}_${bucket}`;
 
-        if (d.status === 'confirmed' || d.status === 'completed' || d.status === 'approved') {
-          confirmedMap.set(fuzzyKey, d);
-          confirmedMap.set(String(d.order_id || d.id), d);
+        if (d.status === 'confirmed' || d.status === 'completed' || d.status === 'approved' || d.status === 'rejected') {
+          finalizedMap.set(fuzzyKey, d);
+          finalizedMap.set(String(d.order_id || d.id), d);
           seenFuzzyKeys.add(fuzzyKey);
         }
       }
 
       for (const d of rawList) {
         if (!d) continue;
-        if (d.status !== 'confirmed' && d.status !== 'completed' && d.status !== 'approved') {
+        if (d.status !== 'confirmed' && d.status !== 'completed' && d.status !== 'approved' && d.status !== 'rejected') {
           const dTime = new Date(d.created_at || Date.now()).getTime();
           const bucket = Math.floor(dTime / 120000);
           const amountNum = parseFloat(String(d.amount || 0));
@@ -323,7 +323,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       }
 
       const finalMap = new Map<string, any>();
-      for (const v of confirmedMap.values()) {
+      for (const v of finalizedMap.values()) {
         finalMap.set(String(v.order_id || v.id), v);
       }
       for (const [k, v] of pendingMap.entries()) {
@@ -344,7 +344,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         const apiDeps = data.deposits && Array.isArray(data.deposits) ? data.deposits : [];
         const combined = [...localDepositList, ...apiDeps];
 
-        const confirmedMap = new Map<string, any>();
+        const finalizedMap = new Map<string, any>();
         const seenFuzzyKeys = new Set<string>();
         const pendingMap = new Map<string, any>();
 
@@ -355,16 +355,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
           const amountNum = parseFloat(String(d.amount || 0));
           const fuzzyKey = `${amountNum.toFixed(2)}_${d.network}_${bucket}`;
 
-          if (d.status === 'confirmed' || d.status === 'completed' || d.status === 'approved') {
-            confirmedMap.set(fuzzyKey, d);
-            confirmedMap.set(String(d.order_id || d.id), d);
+          if (d.status === 'confirmed' || d.status === 'completed' || d.status === 'approved' || d.status === 'rejected') {
+            finalizedMap.set(fuzzyKey, d);
+            finalizedMap.set(String(d.order_id || d.id), d);
             seenFuzzyKeys.add(fuzzyKey);
           }
         }
 
         for (const d of combined) {
           if (!d) continue;
-          if (d.status !== 'confirmed' && d.status !== 'completed' && d.status !== 'approved') {
+          if (d.status !== 'confirmed' && d.status !== 'completed' && d.status !== 'approved' && d.status !== 'rejected') {
             const dTime = new Date(d.created_at || Date.now()).getTime();
             const bucket = Math.floor(dTime / 120000);
             const amountNum = parseFloat(String(d.amount || 0));
@@ -378,7 +378,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         }
 
         const finalMap = new Map<string, any>();
-        for (const v of confirmedMap.values()) {
+        for (const v of finalizedMap.values()) {
           finalMap.set(String(v.order_id || v.id), v);
         }
         for (const [k, v] of pendingMap.entries()) {
@@ -668,7 +668,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     window.dispatchEvent(new Event('storage'));
   };
 
-  const handleRejectDeposit = (depositId: number) => {
+  const handleRejectDeposit = async (depositId: number) => {
+    try {
+      await fetch(`${API_BASE}/api/admin/deposits/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': ADMIN_PIN
+        },
+        body: JSON.stringify({ deposit_id: depositId })
+      });
+    } catch {}
+
     const dep = deposits.find(d => d.id === depositId || d.order_id === depositId);
     let updated = deposits.map(d => {
       if (d.id === depositId || d.order_id === depositId) {
@@ -678,17 +689,30 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     });
     if (dep) {
       const depTime = new Date(dep.created_at || Date.now()).getTime();
-      const depBucket = Math.floor(depTime / 60000);
+      const depBucket = Math.floor(depTime / 120000);
       updated = updated.filter(d => {
         if (d.id === depositId || d.order_id === depositId || d.status === 'rejected') return true;
         const dTime = new Date(d.created_at || Date.now()).getTime();
-        const dBucket = Math.floor(dTime / 60000);
+        const dBucket = Math.floor(dTime / 120000);
         const isGhost = Math.abs(d.amount - dep.amount) < 0.01 && d.network === dep.network && Math.abs(dBucket - depBucket) <= 1 && d.status === 'pending';
         return !isGhost;
       });
     }
     setDeposits(updated);
     localStorage.setItem('admin_deposits', JSON.stringify(updated));
+
+    try {
+      const curTxs = JSON.parse(localStorage.getItem('app_transactions') || '[]');
+      const updatedTxs = curTxs.map((t: any) => {
+        if (t.id === depositId || (dep && (t.id === dep.id || t.id === dep.order_id))) {
+          return { ...t, status: 'rejected' };
+        }
+        return t;
+      });
+      setTransactions(updatedTxs);
+      localStorage.setItem('app_transactions', JSON.stringify(updatedTxs));
+    } catch {}
+
     addActivityLog('Deposit Rejected', `Rejected deposit #${depositId}`);
     setMessage(`Deposit #${depositId} rejected`);
     setTimeout(() => setMessage(''), 3000);

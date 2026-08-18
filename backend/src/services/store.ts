@@ -600,7 +600,7 @@ export class DataStoreService {
   public getDeposits(userId?: number): Deposit[] {
     const list = userId ? this.deposits.filter(d => d.user_id === userId) : this.deposits;
     
-    const confirmedMap = new Map<string, Deposit>();
+    const finalizedMap = new Map<string, Deposit>();
     const seenFuzzy = new Set<string>();
     const pendingMap = new Map<string, Deposit>();
 
@@ -610,16 +610,16 @@ export class DataStoreService {
       const bucket = Math.floor(dTime / 120000);
       const fuzzyKey = `${d.user_id}_${Number(d.amount).toFixed(2)}_${d.network}_${bucket}`;
 
-      if (d.status === 'confirmed') {
-        confirmedMap.set(fuzzyKey, d);
-        confirmedMap.set(String(d.id), d);
+      if (d.status === 'confirmed' || d.status === 'rejected') {
+        finalizedMap.set(fuzzyKey, d);
+        finalizedMap.set(String(d.id), d);
         seenFuzzy.add(fuzzyKey);
       }
     }
 
     for (const d of list) {
       if (!d) continue;
-      if (d.status !== 'confirmed') {
+      if (d.status !== 'confirmed' && d.status !== 'rejected') {
         const dTime = new Date(d.created_at).getTime();
         const bucket = Math.floor(dTime / 120000);
         const fuzzyKey = `${d.user_id}_${Number(d.amount).toFixed(2)}_${d.network}_${bucket}`;
@@ -632,7 +632,7 @@ export class DataStoreService {
     }
 
     const finalMap = new Map<string, Deposit>();
-    for (const v of confirmedMap.values()) {
+    for (const v of finalizedMap.values()) {
       finalMap.set(String(v.id), v);
     }
     for (const [k, v] of pendingMap.entries()) {
@@ -658,7 +658,7 @@ export class DataStoreService {
 
     // Purge any ghost duplicates matching the same user, amount, network, and time window
     this.deposits = this.deposits.filter(d => {
-      if (d.id === dep.id || d.status === 'confirmed') return true;
+      if (d.id === dep.id || d.status === 'confirmed' || d.status === 'rejected') return true;
       const otherTime = new Date(d.created_at).getTime();
       const otherBucket = Math.floor(otherTime / 120000);
       const isGhost = d.user_id === dep.user_id && Math.abs(d.amount - dep.amount) < 0.01 && d.network === dep.network && Math.abs(otherBucket - bucket) <= 1;
@@ -679,6 +679,32 @@ export class DataStoreService {
       status: 'completed',
       created_at: new Date()
     });
+
+    this.saveToDisk();
+    return dep;
+  }
+
+  public rejectDeposit(depositId: number, reason?: string): Deposit | null {
+    const dep = this.deposits.find(d => d.id === depositId || (d.order_id && d.order_id === `DEP-${depositId}`));
+    if (!dep) return null;
+
+    dep.status = 'rejected';
+    dep.updated_at = new Date();
+
+    const dTime = new Date(dep.created_at).getTime();
+    const bucket = Math.floor(dTime / 120000);
+
+    // Purge or update any matching pending ghost duplicates
+    for (const d of this.deposits) {
+      if (d.status === 'pending') {
+        const otherTime = new Date(d.created_at).getTime();
+        const otherBucket = Math.floor(otherTime / 120000);
+        if (d.user_id === dep.user_id && Math.abs(d.amount - dep.amount) < 0.01 && d.network === dep.network && Math.abs(otherBucket - bucket) <= 1) {
+          d.status = 'rejected';
+          d.updated_at = new Date();
+        }
+      }
+    }
 
     this.saveToDisk();
     return dep;
