@@ -4,7 +4,7 @@ import { useThemeStore } from '../../store/themeStore';
 import { useI18nStore, type LanguageCode } from '../../store/i18nStore';
 import { 
   Globe, ChevronRight, ArrowLeft, CheckCircle2, Send, HelpCircle, LifeBuoy, 
-  ShieldCheck, Moon, Sun, Bell, Lock, QrCode, ArrowDownLeft, ArrowUpRight, Pickaxe, Copy, Check, KeyRound
+  Moon, Sun, Bell, Lock, ArrowDownLeft, ArrowUpRight, Pickaxe
 } from 'lucide-react';
 
 interface ProfileProps {
@@ -20,15 +20,6 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [ticketMessage, setTicketMessage] = useState('');
   const [ticketSent, setTicketSent] = useState(false);
-
-  const [is2FAEnabled, setIs2FAEnabled] = useState<boolean>(() => {
-    return localStorage.getItem('2fa_enabled') === 'true';
-  });
-  const [totpSecret] = useState<string>('VXTR-88A1-99C2-44X7');
-  const [totpCode, setTotpCode] = useState('');
-  const [totpError, setTotpError] = useState('');
-  const [totpCopied, setTotpCopied] = useState(false);
-  const [isVerifying2FA, setIsVerifying2FA] = useState(false);
 
   const languages = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
@@ -56,35 +47,6 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
         setTicketMessage('');
       }, 3000);
     }
-  };
-
-  const handleCopySecret = () => {
-    navigator.clipboard.writeText(totpSecret);
-    setTotpCopied(true);
-    setTimeout(() => setTotpCopied(false), 2000);
-  };
-
-  const handleEnable2FA = () => {
-    if (totpCode.trim().length < 6) {
-      setTotpError('Please enter a valid 6-digit authenticator code');
-      return;
-    }
-    setIsVerifying2FA(true);
-    setTotpError('');
-
-    setTimeout(() => {
-      setIsVerifying2FA(false);
-      setIs2FAEnabled(true);
-      localStorage.setItem('2fa_enabled', 'true');
-      setTotpCode('');
-    }, 1000);
-  };
-
-  const handleDisable2FA = () => {
-    setIs2FAEnabled(false);
-    localStorage.setItem('2fa_enabled', 'false');
-    setTotpCode('');
-    setTotpError('');
   };
 
   return (
@@ -147,85 +109,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
         </div>
       )}
 
-      {activeSubView === 'authenticator' && (
-        <div className="space-y-6 animate-slide-up">
-          <button 
-            onClick={() => setActiveSubView(null)}
-            className="flex items-center gap-2 text-xs font-bold text-[#87A7D0]"
-          >
-            <ArrowLeft size={16} /> Back to Profile
-          </button>
 
-          <div className="card-vault rounded-3xl p-6 space-y-5 border border-[#C18DB4]/30 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-[#0E1B48] border border-[#C18DB4]/40 flex items-center justify-center mx-auto text-emerald-400 shadow-xl">
-              <ShieldCheck size={32} />
-            </div>
-
-            <div className="space-y-1">
-              <h2 className="text-xl font-extrabold text-white font-serif-luxury">{t.authenticator} Security</h2>
-              <p className="text-xs text-[#E2CAD8]">Protect payouts and account actions with 2FA Authenticator (Google Authenticator / Authy).</p>
-            </div>
-
-            {is2FAEnabled ? (
-              <div className="space-y-4 pt-2">
-                <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-center space-y-2">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold">
-                    <CheckCircle2 size={14} /> 2FA Protection Active
-                  </div>
-                  <p className="text-xs text-emerald-100">Your account payouts are protected with 2FA verification.</p>
-                </div>
-
-                <button 
-                  onClick={handleDisable2FA}
-                  className="w-full py-3.5 rounded-2xl bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-bold hover:bg-rose-500/30 transition-colors"
-                >
-                  Disable 2FA Protection
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4 pt-1 text-left">
-                <div className="p-3.5 bg-[#0E1B48] border border-[#C18DB4]/30 rounded-2xl space-y-2">
-                  <label className="text-[11px] font-bold text-[#87A7D0] uppercase tracking-wider block">1. 2FA Secret Key</label>
-                  <div className="flex items-center justify-between bg-[#0E1B48]/80 p-2.5 rounded-xl border border-[#C18DB4]/20">
-                    <span className="text-xs font-mono font-bold text-amber-300">{totpSecret}</span>
-                    <button 
-                      onClick={handleCopySecret}
-                      className="p-1.5 rounded-lg bg-[#0E1B48] text-[#E2CAD8] hover:text-white border border-[#C18DB4]/30"
-                    >
-                      {totpCopied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-[#0E1B48] border border-[#C18DB4]/30 rounded-2xl space-y-2">
-                  <label className="text-[11px] font-bold text-[#87A7D0] uppercase tracking-wider block">2. Enter 6-Digit Code</label>
-                  <div className="relative">
-                    <input 
-                      type="text"
-                      maxLength={6}
-                      placeholder="123456"
-                      value={totpCode}
-                      onChange={e => setTotpCode(e.target.value.replace(/\D/g, ''))}
-                      className="w-full px-4 py-3 bg-[#0E1B48]/80 border border-[#C18DB4]/40 rounded-xl text-white font-mono text-center font-bold tracking-widest text-lg focus:outline-none"
-                    />
-                    <KeyRound size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#87A7D0]" />
-                  </div>
-                  {totpError && <p className="text-[11px] text-rose-300 font-bold">{totpError}</p>}
-                </div>
-
-                <button 
-                  onClick={handleEnable2FA}
-                  disabled={isVerifying2FA}
-                  className="w-full py-3.5 btn-gold-vault text-xs font-extrabold rounded-2xl uppercase tracking-wider shadow-xl flex items-center justify-center gap-2"
-                >
-                  {isVerifying2FA ? 'Verifying Code...' : 'Enable 2FA Protection'}
-                </button>
-              </div>
-            )}
-
-          </div>
-        </div>
-      )}
 
       {activeSubView === 'faq' && (
         <div className="space-y-6 animate-slide-up">
@@ -374,21 +258,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
           </div>
 
           <div className="card-vault rounded-3xl p-3 border border-[#C18DB4]/30 space-y-2">
-            <div 
-              onClick={() => setActiveSubView('authenticator')}
-              className="flex items-center justify-between p-3.5 bg-[#0E1B48] border border-[#C18DB4]/30 rounded-2xl cursor-pointer hover:border-[#C18DB4]"
-            >
-              <div className="flex items-center gap-3">
-                <ShieldCheck size={18} className="text-emerald-400" />
-                <span className="text-xs font-bold text-white">{t.authenticator}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${is2FAEnabled ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'}`}>
-                  {is2FAEnabled ? '2FA Enabled' : 'Setup 2FA'}
-                </span>
-                <QrCode size={16} className="text-[#87A7D0]" />
-              </div>
-            </div>
+
 
             <div 
               onClick={() => setActiveSubView('lang')}
