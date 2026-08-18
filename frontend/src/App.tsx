@@ -182,10 +182,10 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-transparent font-sans text-slate-100 overflow-hidden relative">
       <div className="h-full overflow-y-auto overflow-x-hidden pb-20">
         <main className="relative">
-          {activeTab === 'home' && <Dashboard onNavigate={(tab: string) => setActiveTab(tab)} />}
-          {activeTab === 'statistics' && <Mining />}
+          {(activeTab === 'home' || activeTab === 'dashboard') && <Dashboard onNavigate={(tab: string) => setActiveTab(tab)} />}
+          {(activeTab === 'mining' || activeTab === 'statistics' || activeTab === 'calculator') && <Mining />}
           {activeTab === 'history' && <History />}
-          {activeTab === 'referrals' && <Referral />}
+          {(activeTab === 'referrals' || activeTab === 'referral') && <Referral />}
           {activeTab === 'profile' && <Profile onNavigate={(tab: string) => setActiveTab(tab)} />}
           {activeTab === 'withdrawal' && <Withdrawal onBack={() => setActiveTab('home')} />}
           {activeTab === 'deposit' && <Deposit onBack={() => setActiveTab('home')} />}
@@ -197,14 +197,14 @@ const App: React.FC = () => {
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0E1B48]/95 backdrop-blur-2xl border-t border-[#C18DB4]/30 pb-safe shadow-[0_-15px_40px_rgba(0,0,0,0.8)]">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto px-2">
           {[
-            { id: 'home', icon: Home, label: t.navHome },
-            { id: 'statistics', icon: TrendingUp, label: t.navCalc },
-            { id: 'history', icon: FileText, label: t.navHistory },
-            { id: 'referrals', icon: Users, label: t.navRef },
-            { id: 'profile', icon: User, label: t.navProfile }
+            { id: 'home', icon: Home, label: t.navHome, match: ['home', 'dashboard'] },
+            { id: 'mining', icon: TrendingUp, label: 'Mining', match: ['mining', 'statistics', 'calculator'] },
+            { id: 'history', icon: FileText, label: t.navHistory, match: ['history'] },
+            { id: 'referrals', icon: Users, label: t.navRef, match: ['referrals', 'referral'] },
+            { id: 'profile', icon: User, label: t.navProfile, match: ['profile'] }
           ].map((item) => {
             const Icon = item.icon;
-            const isActive = activeTab === item.id;
+            const isActive = item.match.includes(activeTab);
             return (
               <button
                 key={item.id}
