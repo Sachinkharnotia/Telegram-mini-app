@@ -20,14 +20,25 @@ const App: React.FC = () => {
   const { t } = useI18nStore();
 
   const [activeTab, setActiveTab] = useState<string>(() => {
-    if (typeof window !== 'undefined' && (window.location.search.includes('admin=true') || window.location.hash === '#admin')) {
-      return 'admin';
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tab = urlParams.get('tab');
+      if (tab) return tab;
+      if (window.location.search.includes('admin=true') || window.location.hash === '#admin') return 'admin';
+      if (window.location.hash.startsWith('#')) {
+        const hashTab = window.location.hash.replace('#', '');
+        if (['home', 'mining', 'tasks', 'referral', 'deposit', 'withdrawal', 'history', 'profile', 'admin'].includes(hashTab)) {
+          return hashTab;
+        }
+      }
     }
     return 'home';
   });
   const [viewMode, setViewMode] = useState<'app' | 'website'>(() => {
-    if (typeof window !== 'undefined' && (window.location.search.includes('admin=true') || window.location.hash === '#admin')) {
-      return 'app';
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('tab') || urlParams.get('app') === 'true') return 'app';
+      if (window.location.search.includes('admin=true') || window.location.hash === '#admin') return 'app';
     }
     return isTelegramEnvironment() ? 'app' : 'website';
   });
@@ -38,7 +49,12 @@ const App: React.FC = () => {
   useEffect(() => {
     initTelegramApp();
 
-    if (window.location.search.includes('admin=true') || window.location.hash === '#admin') {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+      setViewMode('app');
+    } else if (window.location.search.includes('admin=true') || window.location.hash === '#admin') {
       setActiveTab('admin');
       setViewMode('app');
     }
@@ -50,6 +66,9 @@ const App: React.FC = () => {
         setViewMode('app');
       } else if (param.startsWith('ref_') || param === 'referral') {
         setActiveTab('referral');
+        setViewMode('app');
+      } else if (param === 'mining') {
+        setActiveTab('mining');
         setViewMode('app');
       } else if (param === 'tasks' || param === 'wheel') {
         setActiveTab('tasks');
