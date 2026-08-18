@@ -18,7 +18,7 @@ export const Referral: React.FC = () => {
   const tgId = user?.telegram_id || user?.id || 10001;
   const referralLink = `https://t.me/${botUsername}?start=ref_${tgId}`;
 
-  useEffect(() => {
+  const loadSettingsFromStorage = () => {
     try {
       const stored = localStorage.getItem('platform_settings');
       if (stored) {
@@ -28,21 +28,42 @@ export const Referral: React.FC = () => {
         } else if (parsed.bot_username) {
           setBotUsername(parsed.bot_username.replace('@', ''));
         }
+
+        const t1 = parsed.referral?.level1_percent ?? parsed.referral_commission_tier1 ?? parsed.referral_level1_percent ?? 10;
+        const t2 = parsed.referral?.level2_percent ?? parsed.referral_commission_tier2 ?? parsed.referral_level2_percent ?? 5;
+        const t3 = parsed.referral?.level3_percent ?? parsed.referral_commission_tier3 ?? parsed.referral_level3_percent ?? 2;
+        const b = parsed.referral?.reward ?? parsed.referral_fixed_reward ?? parsed.referral_signup_bonus_usdt ?? 0.50;
+
         setCommSettings({
-          tier1: parsed.referral_level1_percent ?? 10,
-          tier2: parsed.referral_level2_percent ?? 5,
-          tier3: parsed.referral_level3_percent ?? 2,
-          bonus: parsed.referral_signup_bonus_usdt ?? 0.50
+          tier1: Number(t1),
+          tier2: Number(t2),
+          tier3: Number(t3),
+          bonus: Number(b)
         });
       }
     } catch {}
+  };
+
+  useEffect(() => {
+    loadSettingsFromStorage();
 
     fetch('/api/referral/stats')
       .then(res => res.json())
       .then(data => {
         setRefStats(data);
+        if (data.tier1_commission_rate !== undefined || data.fixed_reward !== undefined) {
+          setCommSettings(prev => ({
+            ...prev,
+            tier1: data.tier1_commission_rate !== undefined ? Number(data.tier1_commission_rate) : prev.tier1,
+            tier2: data.tier2_commission_rate !== undefined ? Number(data.tier2_commission_rate) : prev.tier2,
+            bonus: data.fixed_reward !== undefined ? Number(data.fixed_reward) : prev.bonus
+          }));
+        }
       })
       .catch(() => {});
+
+    window.addEventListener('storage', loadSettingsFromStorage);
+    return () => window.removeEventListener('storage', loadSettingsFromStorage);
   }, []);
 
   const handleCopy = () => {

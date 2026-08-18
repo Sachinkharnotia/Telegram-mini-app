@@ -13,6 +13,9 @@ const getReferralInfo = (req: any, res: any) => {
   const referralCode = user ? `ref_${user.telegram_id}` : `ref_98765432`;
   const referralLink = `https://t.me/${botUsername}?start=${referralCode}`;
 
+  const t1 = settings.referral_commission_tier1 > 1 ? settings.referral_commission_tier1 : settings.referral_commission_tier1 * 100;
+  const t2 = settings.referral_commission_tier2 > 1 ? settings.referral_commission_tier2 : settings.referral_commission_tier2 * 100;
+
   res.json({
     referral_code: referralCode,
     referral_link: referralLink,
@@ -20,8 +23,9 @@ const getReferralInfo = (req: any, res: any) => {
     referralLink,
     total_earned: bal.referral_earnings,
     totalEarnings: bal.referral_earnings.toString(),
-    tier1_commission_rate: settings.referral_commission_tier1 * 100,
-    tier2_commission_rate: settings.referral_commission_tier2 * 100,
+    tier1_commission_rate: t1,
+    tier2_commission_rate: t2,
+    tier3_commission_rate: 2,
     fixed_reward: settings.referral_fixed_reward,
     tier1Referrals: [],
     tier2Referrals: [],

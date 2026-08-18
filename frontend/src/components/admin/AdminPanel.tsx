@@ -282,7 +282,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   };
 
   const handleSaveSettingsSection = async (section: string) => {
-    localStorage.setItem('platform_settings', JSON.stringify(settings));
+    const updatedSettings = {
+      ...settings,
+      bep20_wallet: settings.payment?.bep20_wallet || settings.bep20_wallet || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+      ton_wallet: settings.payment?.ton_wallet || settings.ton_wallet || 'EQBvW8Z5huBkMJY78A29P0nLw84920kLzW190kLs920pL',
+      min_deposit: settings.payment?.min_deposit || settings.min_deposit || 10,
+      min_withdrawal: settings.payment?.min_withdrawal || settings.min_withdrawal || 3,
+      max_withdrawal: settings.payment?.max_withdrawal || settings.max_withdrawal || 10000,
+      withdrawal_fee: settings.payment?.withdrawal_fee || settings.withdrawal_fee || 0,
+      referral_level1_percent: settings.referral?.level1_percent !== undefined ? settings.referral.level1_percent : 10,
+      referral_level2_percent: settings.referral?.level2_percent !== undefined ? settings.referral.level2_percent : 5,
+      referral_level3_percent: settings.referral?.level3_percent !== undefined ? settings.referral.level3_percent : 2,
+      referral_signup_bonus_usdt: settings.referral?.reward !== undefined ? settings.referral.reward : 0.50,
+      referral_commission_tier1: settings.referral?.level1_percent !== undefined ? settings.referral.level1_percent : 10,
+      referral_commission_tier2: settings.referral?.level2_percent !== undefined ? settings.referral.level2_percent : 5,
+      referral_fixed_reward: settings.referral?.reward !== undefined ? settings.referral.reward : 0.50,
+      daily_spins_limit: parseInt(settings.daily_spins_limit || '3', 10),
+      daily_giftbox_limit: parseInt(settings.daily_giftbox_limit || '1', 10),
+    };
+
+    setSettings(updatedSettings);
+    localStorage.setItem('platform_settings', JSON.stringify(updatedSettings));
+    window.dispatchEvent(new Event('storage'));
     addActivityLog('Settings Updated', `Updated ${section} configuration`);
 
     try {
@@ -292,18 +313,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         min_vx_mining: parseFloat(settings.mining?.min_vx_mining || settings.min_vx_mining || '100'),
         daily_yield_rate: (parseFloat(settings.mining?.daily_yield_rate || settings.daily_yield_rate || '1.5')) / 100,
         mining_enabled: true,
-        bep20_wallet: settings.payment?.bep20_wallet || settings.bep20_wallet || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
-        ton_wallet: settings.payment?.ton_wallet || settings.ton_wallet || 'EQBvW8Z5huBkMJY78A29P0nLw84920kLzW190kLs920pL',
-        min_deposit: parseFloat(settings.payment?.min_deposit || settings.min_deposit || '10'),
-        min_withdrawal: parseFloat(settings.payment?.min_withdrawal || settings.min_withdrawal || '3'),
-        max_withdrawal: parseFloat(settings.payment?.max_withdrawal || settings.max_withdrawal || '10000'),
-        withdrawal_fee: parseFloat(settings.payment?.withdrawal_fee || settings.withdrawal_fee || '0'),
-        referral_commission_tier1: (parseFloat(settings.referral?.level1_percent || '10')) / 100,
-        referral_commission_tier2: (parseFloat(settings.referral?.level2_percent || '5')) / 100,
-        referral_fixed_reward: parseFloat(settings.referral?.reward || '0.50'),
+        bep20_wallet: updatedSettings.bep20_wallet,
+        ton_wallet: updatedSettings.ton_wallet,
+        min_deposit: parseFloat(String(updatedSettings.min_deposit)),
+        min_withdrawal: parseFloat(String(updatedSettings.min_withdrawal)),
+        max_withdrawal: parseFloat(String(updatedSettings.max_withdrawal)),
+        withdrawal_fee: parseFloat(String(updatedSettings.withdrawal_fee)),
+        referral_commission_tier1: (parseFloat(String(updatedSettings.referral_level1_percent))) / 100,
+        referral_commission_tier2: (parseFloat(String(updatedSettings.referral_level2_percent))) / 100,
+        referral_fixed_reward: parseFloat(String(updatedSettings.referral_fixed_reward)),
         referral_enabled: settings.referral?.enabled !== false,
-        daily_spins_limit: parseInt(settings.daily_spins_limit || '3', 10),
-        daily_giftbox_limit: parseInt(settings.daily_giftbox_limit || '1', 10),
+        daily_spins_limit: updatedSettings.daily_spins_limit,
+        daily_giftbox_limit: updatedSettings.daily_giftbox_limit,
         app_name: settings.branding?.app_name || 'VextoralMining',
         support_username: settings.branding?.support_telegram || 'VaultSupportAdmin'
       };
