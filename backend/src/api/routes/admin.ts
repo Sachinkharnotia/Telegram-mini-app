@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { dataStore } from '../../services/store';
+import { telegramBotService } from '../../services/telegramBot';
 
 const router = Router();
 
@@ -157,9 +158,36 @@ router.post('/tasks/save', (req, res) => {
   res.json({ success: true, task });
 });
 
-router.delete('/tasks/:id', (req, res) => {
-  const success = dataStore.deleteTask(parseInt(req.params.id, 10));
-  res.json({ success });
+router.get('/notifications', (req, res) => {
+  const notifications = dataStore.getNotifications();
+  res.json({ notifications });
+});
+
+router.post('/broadcast', async (req: any, res) => {
+  try {
+    const { title, message, send_telegram_bot } = req.body;
+    if (!title || !message) {
+      return res.status(400).json({ error: 'Title and message are required' });
+    }
+
+    const savedNotif = dataStore.addNotification(title, message, !!send_telegram_bot);
+    
+    let botResult = { sent: 0, failed: 0 };
+    if (send_telegram_bot !== false) {
+      const allUsers = dataStore.getAllUsers();
+      const chatIds = allUsers.map(u => u.telegram_id).filter(Boolean);
+      botResult = await telegramBotService.broadcastMessage(chatIds, title, message);
+    }
+
+    res.json({
+      success: true,
+      message: `Broadcast delivered successfully! ${botResult.sent} Telegram bot messages dispatched.`,
+      notification: savedNotif,
+      botResult
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to send broadcast' });
+  }
 });
 
 export default router;

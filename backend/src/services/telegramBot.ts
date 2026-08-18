@@ -1,7 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 
 const DEFAULT_BOT_TOKEN = '8921722561:AAGbrA4p6acTznLKZV5Ad1M1j8G5eq4psGw';
-const DEFAULT_WEB_APP_URL = 'https://vextoral.com';
+const DEFAULT_WEB_APP_URL = 'https://frontend-sooty-theta-89.vercel.app';
 
 export class TelegramBotService {
   private bot: TelegramBot | null = null;
@@ -61,6 +61,31 @@ export class TelegramBotService {
         });
       }
     }
+  }
+
+  async broadcastMessage(chatIds: (string | number)[], title: string, body: string): Promise<{ sent: number; failed: number }> {
+    if (!this.bot) return { sent: 0, failed: 0 };
+    let sent = 0;
+    let failed = 0;
+    const formatted = `📢 <b>${title}</b>\n\n${body}\n\n👉 <a href="https://frontend-sooty-theta-89.vercel.app">Open Vextoral Mining App</a>`;
+
+    for (const chatId of chatIds) {
+      if (!chatId) continue;
+      try {
+        await this.bot.sendMessage(chatId, formatted, { 
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🚀 Open App', web_app: { url: 'https://frontend-sooty-theta-89.vercel.app' } }]
+            ]
+          }
+        });
+        sent++;
+      } catch (err) {
+        failed++;
+      }
+    }
+    return { sent, failed };
   }
 }
 

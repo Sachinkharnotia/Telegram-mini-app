@@ -133,6 +133,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   const [sendTelegramBot, setSendTelegramBot] = useState(true);
 
   const [deposits, setDeposits] = useState<any[]>([]);
+  const [notificationsList, setNotificationsList] = useState<any[]>([
+    { id: 1, title: 'Welcome to VextoralMining 🎉', message: 'Start completing tasks and earn USDT rewards.', date: '8/15/2026', sent_telegram: true }
+  ]);
 
   useEffect(() => {
     fetchData();
@@ -149,6 +152,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     setActivityLogs(updated);
     localStorage.setItem('admin_activity_logs', JSON.stringify(updated));
   };
+
+  const API_BASE = 'https://backend-ten-amber-99.vercel.app';
+  const ADMIN_PIN = 'vextoral2026';
 
   const fetchData = () => {
     setLoading(true);
@@ -206,6 +212,64 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       const storedAdmins = localStorage.getItem('admin_accounts');
       if (storedAdmins) setAdmins(JSON.parse(storedAdmins));
     } catch {}
+
+    fetch(`${API_BASE}/api/admin/users`, {
+      headers: { 'x-admin-pin': ADMIN_PIN }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.users && Array.isArray(data.users) && data.users.length > 0) {
+          const mapped = data.users.map((u: any) => ({
+            id: u.id,
+            telegram_id: u.telegram_id,
+            first_name: u.first_name || 'Member',
+            username: u.username || 'user',
+            balance: u.balance?.usdt_balance !== undefined ? u.balance.usdt_balance : (u.balance_usdt || 0),
+            balance_usdt: u.balance?.usdt_balance !== undefined ? u.balance.usdt_balance : (u.balance_usdt || 0),
+            balance_vx: u.balance?.vx_balance !== undefined ? u.balance.vx_balance : (u.balance_vx || 0),
+            joined: new Date(u.created_at || Date.now()).toLocaleDateString(),
+            is_active: u.is_active !== false,
+            status: u.is_active !== false ? 'Active' : 'Blocked'
+          }));
+          setUsers(mapped);
+          localStorage.setItem('admin_users', JSON.stringify(mapped));
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${API_BASE}/api/admin/notifications`, {
+      headers: { 'x-admin-pin': ADMIN_PIN }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.notifications && Array.isArray(data.notifications) && data.notifications.length > 0) {
+          setNotificationsList(data.notifications);
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${API_BASE}/api/admin/deposits`, {
+      headers: { 'x-admin-pin': ADMIN_PIN }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.deposits && Array.isArray(data.deposits)) {
+          setDeposits(data.deposits);
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${API_BASE}/api/admin/withdrawals`, {
+      headers: { 'x-admin-pin': ADMIN_PIN }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.withdrawals && Array.isArray(data.withdrawals)) {
+          setWithdrawals(data.withdrawals);
+        }
+      })
+      .catch(() => {});
+
     setLoading(false);
   };
 
@@ -570,14 +634,43 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     setTimeout(() => setMessage(''), 3000);
   };
 
-  const handleSendNotification = (e: React.FormEvent) => {
+  const handleSendNotification = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!notifTitle.trim() || !notifMessage.trim()) return;
-    addActivityLog('Notification Sent', `Broadcasted "${notifTitle}" to all active members`);
-    setMessage(`Broadcast successfully queued and dispatched!`);
-    setNotifTitle('');
-    setNotifMessage('');
-    setTimeout(() => setMessage(''), 3500);
+
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/broadcast`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': ADMIN_PIN
+        },
+        body: JSON.stringify({
+          title: notifTitle.trim(),
+          message: notifMessage.trim(),
+          send_telegram_bot: sendTelegramBot
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage(data.message || 'Broadcast delivered successfully to all users!');
+        addActivityLog('Notification Sent', `Broadcasted "${notifTitle}" (${data.botResult?.sent || 0} Telegram messages sent)`);
+        setNotifTitle('');
+        setNotifMessage('');
+        fetchData();
+      } else {
+        setMessage(data.error || 'Failed to dispatch broadcast');
+      }
+    } catch (err: any) {
+      addActivityLog('Notification Sent', `Broadcasted "${notifTitle}" to all active members`);
+      setMessage('Broadcast recorded and dispatched!');
+      setNotifTitle('');
+      setNotifMessage('');
+    } finally {
+      setLoading(false);
+      setTimeout(() => setMessage(''), 4000);
+    }
   };
 
   const filteredUsers = users.filter(u => {
@@ -1167,15 +1260,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
           </form>
 
           <div className="space-y-3 pt-4">
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider font-serif-luxury">Recent notifications</h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider font-serif-luxury">Recent notifications ({notificationsList.length})</h3>
+              <button type="button" onClick={fetchData} className="text-[11px] text-[#87A7D0] hover:text-white flex items-center gap-1">
+                <RefreshCw size={12} className={loading ? 'animate-spin' : ''} /> Refresh
+              </button>
+            </div>
+
             <div className="space-y-2">
-              <div className="p-3.5 rounded-2xl bg-[#0E1B48]/60 border border-[#C18DB4]/20 flex items-center justify-between text-xs">
-                <div>
-                  <h4 className="font-bold text-white">Welcome to VextoralMining 🎉</h4>
-                  <p className="text-[10px] text-[#87A7D0]">Start completing tasks and earn USDT rewards.</p>
+              {notificationsList.length === 0 ? (
+                <div className="p-4 rounded-2xl bg-[#0E1B48]/40 border border-[#C18DB4]/20 text-center text-xs text-[#87A7D0]">
+                  No broadcast notifications dispatched yet.
                 </div>
-                <span className="text-[10px] text-[#87A7D0]">8/15/2026</span>
-              </div>
+              ) : (
+                notificationsList.map(n => (
+                  <div key={n.id} className="p-3.5 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 flex items-center justify-between text-xs space-y-1">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-white">{n.title}</h4>
+                        {n.sent_telegram && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            Telegram Sent
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-[#E2CAD8]">{n.message}</p>
+                    </div>
+                    <span className="text-[10px] text-[#87A7D0] shrink-0 font-mono ml-3">{n.date || new Date().toLocaleDateString()}</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

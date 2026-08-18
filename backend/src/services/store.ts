@@ -18,6 +18,7 @@ export class DataStoreService {
   private transactions: Transaction[] = [];
   private requiredCommunities: RequiredCommunity[] = [];
   private spinSectors: SpinSector[] = [];
+  private notifications: Array<{ id: number; title: string; message: string; date: string; sent_telegram: boolean; created_at: Date }> = [];
 
   private settings: AppSettings = {
     vx_price_usdt: 0.10,
@@ -73,6 +74,7 @@ export class DataStoreService {
         if (data.settings) this.settings = { ...this.settings, ...data.settings };
         if (data.requiredCommunities) this.requiredCommunities = data.requiredCommunities;
         if (data.spinSectors) this.spinSectors = data.spinSectors;
+        if (data.notifications) this.notifications = data.notifications;
       }
     } catch (e) {
       console.warn('Could not load persistent database:', e);
@@ -96,7 +98,8 @@ export class DataStoreService {
         transactions: this.transactions,
         settings: this.settings,
         requiredCommunities: this.requiredCommunities,
-        spinSectors: this.spinSectors
+        spinSectors: this.spinSectors,
+        notifications: this.notifications
       };
       fs.writeFileSync(DB_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
     } catch (e) {
@@ -735,6 +738,24 @@ export class DataStoreService {
       pending_withdrawals_count: this.withdrawals.filter(w => w.status === 'pending').length,
       pending_deposits_count: this.deposits.filter(d => d.status === 'pending').length
     };
+  }
+
+  public addNotification(title: string, message: string, sentTelegram: boolean = false) {
+    const notif = {
+      id: Date.now(),
+      title,
+      message,
+      date: new Date().toLocaleDateString(),
+      sent_telegram: sentTelegram,
+      created_at: new Date()
+    };
+    this.notifications.unshift(notif);
+    this.saveToDisk();
+    return notif;
+  }
+
+  public getNotifications() {
+    return [...this.notifications];
   }
 }
 
