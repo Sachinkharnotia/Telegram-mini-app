@@ -329,13 +329,56 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       })
       .catch(() => {});
 
+    let localWdList: any[] = [];
+    try {
+      const storedWds = localStorage.getItem('admin_withdrawals');
+      localWdList = storedWds ? JSON.parse(storedWds) : [];
+
+      const rawTxs = localStorage.getItem('app_transactions');
+      if (rawTxs) {
+        const txs = JSON.parse(rawTxs);
+        for (const t of txs) {
+          if (t.type === 'withdrawal' || String(t.title || '').toLowerCase().includes('payout') || String(t.title || '').toLowerCase().includes('withdrawal')) {
+            const numAmount = parseFloat(String(t.amount || 0).replace(/[^0-9.]/g, '')) || 20;
+            const exists = localWdList.some((w: any) => w.id === t.id);
+            if (!exists) {
+              localWdList.push({
+                id: t.id || Date.now(),
+                user_id: 1001,
+                amount: numAmount,
+                currency: 'USDT',
+                network: 'BEP-20',
+                wallet_address: '0x000...UserWallet',
+                status: t.status || 'pending',
+                created_at: t.created_at || new Date().toISOString()
+              });
+            }
+          }
+        }
+      }
+      setWithdrawals(localWdList);
+      localStorage.setItem('admin_withdrawals', JSON.stringify(localWdList));
+    } catch {}
+
     fetch(`${API_BASE}/api/admin/withdrawals`, {
       headers: { 'x-admin-pin': ADMIN_PIN }
     })
       .then(res => res.json())
       .then(data => {
-        if (data.withdrawals && Array.isArray(data.withdrawals) && data.withdrawals.length > 0) {
-          setWithdrawals(data.withdrawals);
+        const apiWds = data.withdrawals && Array.isArray(data.withdrawals) ? data.withdrawals : [];
+        const wdMap = new Map();
+        for (const w of localWdList) {
+          wdMap.set(String(w.id), w);
+        }
+        for (const w of apiWds) {
+          const key = String(w.id);
+          const existing = wdMap.get(key);
+          wdMap.set(key, { ...existing, ...w });
+        }
+        const mergedWds = Array.from(wdMap.values());
+        if (mergedWds.length > 0) {
+          setWithdrawals(mergedWds);
+          localStorage.setItem('admin_withdrawals', JSON.stringify(mergedWds));
         }
       })
       .catch(() => {});
