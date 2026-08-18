@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle, XCircle, Search, Plus, Trash2, RefreshCw, ArrowLeft,
-  Send, UserPlus, Activity
+  Send, UserPlus, Activity, Save, ExternalLink
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -10,7 +10,7 @@ interface AdminPanelProps {
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'users' | 'deposits' | 'tasks' | 'submissions' | 'withdrawals' | 'transactions' | 'referrals' | 'notifications' | 'support' | 'admins' | 'settings' | 'activity'
+    'dashboard' | 'users' | 'deposits' | 'tasks' | 'submissions' | 'withdrawals' | 'transactions' | 'referrals' | 'notifications' | 'support' | 'admins' | 'settings' | 'activity' | 'channels'
   >('dashboard');
 
   const defaultSettings = {
@@ -136,6 +136,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   const [notificationsList, setNotificationsList] = useState<any[]>([
     { id: 1, title: 'Welcome to VextoralMining 🎉', message: 'Start completing tasks and earn USDT rewards.', date: '8/15/2026', sent_telegram: true }
   ]);
+
+  const defaultCommunities = [
+    { id: 1, name: 'Main Telegram Channel', link: 'https://t.me/telegram', type: 'channel', is_active: true },
+    { id: 2, name: 'Official Discussion Group', link: 'https://t.me/telegram', type: 'group', is_active: true },
+    { id: 3, name: 'Vextoral Mining News', link: 'https://t.me/telegram', type: 'channel', is_active: true }
+  ];
+  const [communities, setCommunities] = useState<any[]>(defaultCommunities);
+  const [newCommName, setNewCommName] = useState('');
+  const [newCommLink, setNewCommLink] = useState('');
+  const [newCommType, setNewCommType] = useState<'channel' | 'group'>('channel');
 
   useEffect(() => {
     fetchData();
@@ -285,7 +295,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         for (const t of txs) {
           if (t.type === 'deposit' || String(t.title || '').toLowerCase().includes('deposit')) {
             const numAmount = parseFloat(String(t.amount || 0).replace(/[^0-9.]/g, '')) || 50;
-            const exists = localDepositList.some((d: any) => d.id === t.id || d.order_id === t.id);
+            const isTon = String(t.title || '').includes('TON');
+            const exists = localDepositList.some((d: any) => 
+              d.id === t.id || d.order_id === t.id || 
+              (Math.abs(Number(d.amount) - numAmount) < 0.001 && d.network === (isTon ? 'TON' : 'BEP-20'))
+            );
             if (!exists) {
               localDepositList.push({
                 id: t.id || Date.now(),
@@ -293,7 +307,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                 user_id: 1001,
                 amount: numAmount,
                 currency: 'USDT',
-                network: String(t.title || '').includes('TON') ? 'TON' : 'BEP-20',
+                network: isTon ? 'TON' : 'BEP-20',
                 status: t.status || 'pending',
                 created_at: t.created_at || new Date().toISOString()
               });
@@ -379,6 +393,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         if (mergedWds.length > 0) {
           setWithdrawals(mergedWds);
           localStorage.setItem('admin_withdrawals', JSON.stringify(mergedWds));
+        }
+      })
+      .catch(() => {});
+
+    try {
+      const storedComms = localStorage.getItem('required_communities');
+      if (storedComms) {
+        const parsed = JSON.parse(storedComms);
+        if (Array.isArray(parsed) && parsed.length > 0) setCommunities(parsed);
+      }
+    } catch {}
+
+    fetch(`${API_BASE}/api/admin/required-communities`, {
+      headers: { 'x-admin-pin': ADMIN_PIN }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.communities && Array.isArray(data.communities) && data.communities.length > 0) {
+          setCommunities(data.communities);
+          localStorage.setItem('required_communities', JSON.stringify(data.communities));
         }
       })
       .catch(() => {});
@@ -481,7 +515,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     } catch {}
 
     const updated = deposits.map(d => {
-      if (d.id === depositId) {
+      if (d.id === depositId || d.order_id === depositId) {
         return { ...d, status: 'confirmed', confirmed_at: new Date().toISOString() };
       }
       return d;
@@ -489,26 +523,99 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     setDeposits(updated);
     localStorage.setItem('admin_deposits', JSON.stringify(updated));
 
-    const dep = deposits.find(d => d.id === depositId);
+    const dep = deposits.find(d => d.id === depositId || d.order_id === depositId);
     if (dep) {
       addActivityLog('Deposit Approved', `Approved $${dep.amount} USDT deposit (${dep.network})`);
       setMessage(`Deposit of $${dep.amount} USDT approved and credited!`);
       setTimeout(() => setMessage(''), 3500);
 
-      const txs = [
-        {
-          id: `DEP-${Date.now()}`,
-          title: `Deposit Credited (${dep.network})`,
-          amount: dep.amount,
+      let matched = false;
+      const curTxs = JSON.parse(localStorage.getItem('app_transactions') || '[]');
+      const updatedTxs = curTxs.map((t: any) => {
+        if (!matched && (t.id === dep.id || t.id === dep.order_id || (t.type === 'deposit' && Math.abs(parseFloat(t.amount) - dep.amount) < 0.01))) {
+          matched = true;
+          return {
+            ...t,
+            title: `USDT Deposit Credited (${dep.network})`,
+            status: 'completed',
+            confirmed_at: new Date().toISOString()
+          };
+        }
+        return t;
+      });
+
+      if (!matched) {
+        updatedTxs.unshift({
+          id: dep.order_id || dep.id || `DEP-${Date.now()}`,
+          type: 'deposit',
+          title: `USDT Deposit Credited (${dep.network})`,
+          amount: typeof dep.amount === 'number' ? dep.amount.toFixed(2) : String(dep.amount),
           currency: 'USDT',
-          created_at: new Date().toISOString()
-        },
-        ...transactions
-      ];
-      setTransactions(txs);
-      localStorage.setItem('app_transactions', JSON.stringify(txs));
+          status: 'completed',
+          created_at: dep.created_at || new Date().toISOString()
+        });
+      }
+
+      setTransactions(updatedTxs);
+      localStorage.setItem('app_transactions', JSON.stringify(updatedTxs));
     }
     fetchData();
+  };
+
+  const handleSaveCommunities = async () => {
+    localStorage.setItem('required_communities', JSON.stringify(communities));
+    window.dispatchEvent(new Event('storage'));
+    try {
+      await fetch(`${API_BASE}/api/admin/required-communities`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': ADMIN_PIN
+        },
+        body: JSON.stringify({ communities })
+      });
+    } catch {}
+    addActivityLog('Channels Updated', `Saved ${communities.length} mandatory pre-dashboard channels`);
+    setMessage('Mandatory Telegram channels saved and live!');
+    setTimeout(() => setMessage(''), 3500);
+  };
+
+  const handleAddCommunity = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCommName.trim() || !newCommLink.trim()) return;
+    const newComm = {
+      id: Date.now(),
+      name: newCommName.trim(),
+      link: newCommLink.trim().startsWith('http') ? newCommLink.trim() : `https://t.me/${newCommLink.trim().replace('@', '')}`,
+      type: newCommType,
+      is_active: true
+    };
+    const updated = [...communities, newComm];
+    setCommunities(updated);
+    localStorage.setItem('required_communities', JSON.stringify(updated));
+    window.dispatchEvent(new Event('storage'));
+    setNewCommName('');
+    setNewCommLink('');
+    addActivityLog('Channel Added', `Added required channel "${newComm.name}"`);
+    setMessage(`Added "${newComm.name}"! Click "Save All Channels" to push changes.`);
+    setTimeout(() => setMessage(''), 3500);
+  };
+
+  const handleDeleteCommunity = (id: number) => {
+    const updated = communities.filter(c => c.id !== id);
+    setCommunities(updated);
+    localStorage.setItem('required_communities', JSON.stringify(updated));
+    window.dispatchEvent(new Event('storage'));
+    addActivityLog('Channel Removed', `Removed verification channel ID #${id}`);
+    setMessage('Channel removed! Click "Save All Channels" to push changes.');
+    setTimeout(() => setMessage(''), 3500);
+  };
+
+  const handleToggleCommunity = (id: number) => {
+    const updated = communities.map(c => c.id === id ? { ...c, is_active: !c.is_active } : c);
+    setCommunities(updated);
+    localStorage.setItem('required_communities', JSON.stringify(updated));
+    window.dispatchEvent(new Event('storage'));
   };
 
   const handleRejectDeposit = (depositId: number) => {
@@ -857,6 +964,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
           { id: 'users', label: 'Users' },
           { id: 'deposits', label: 'Deposits' },
           { id: 'withdrawals', label: 'Withdrawals' },
+          { id: 'channels', label: 'Mandatory Channels' },
           { id: 'tasks', label: 'Tasks' },
           { id: 'transactions', label: 'Transactions' },
           { id: 'referrals', label: 'Referrals' },
@@ -1307,6 +1415,153 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                     <span className="text-[10px] text-[#87A7D0]">{new Date(tx.created_at).toLocaleString()}</span>
                   </div>
                   <span className="text-xs font-bold text-emerald-400 font-mono">+{tx.amount} {tx.currency}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'channels' && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-bold text-white font-serif-luxury">Mandatory Pre-Dashboard Channels</h2>
+              <p className="text-xs text-[#87A7D0]">Configure official Telegram channels and groups that users must join before accessing the dashboard</p>
+            </div>
+            <button
+              onClick={handleSaveCommunities}
+              className="btn-gold-vault px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg w-fit"
+            >
+              <Save size={15} /> Save & Deploy Channels
+            </button>
+          </div>
+
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider font-serif-luxury flex items-center gap-2">
+              <Plus size={15} className="text-emerald-400" /> Add New Verification Channel / Group
+            </h3>
+
+            <form onSubmit={handleAddCommunity} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+              <div className="sm:col-span-2 space-y-1">
+                <label className="text-[10px] font-bold text-[#E2CAD8]">Channel / Community Title</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Official Announcement Channel"
+                  value={newCommName}
+                  onChange={e => setNewCommName(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-400"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-[#E2CAD8]">Telegram Link / @Username</label>
+                <input
+                  type="text"
+                  placeholder="https://t.me/yourchannel or @channel"
+                  value={newCommLink}
+                  onChange={e => setNewCommLink(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-400"
+                />
+              </div>
+
+              <div className="flex gap-2 items-center">
+                <div className="flex-1 space-y-1">
+                  <label className="text-[10px] font-bold text-[#E2CAD8]">Type</label>
+                  <select
+                    value={newCommType}
+                    onChange={e => setNewCommType(e.target.value as any)}
+                    className="w-full px-2.5 py-2 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white focus:outline-none"
+                  >
+                    <option value="channel">Channel</option>
+                    <option value="group">Group</option>
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  className="btn-gold-vault px-4 py-2 rounded-xl text-xs font-bold self-end h-[34px] flex items-center gap-1"
+                >
+                  <Plus size={14} /> Add
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider font-serif-luxury">
+              Active Verification Channels ({communities.length})
+            </h3>
+
+            {communities.length === 0 ? (
+              <div className="card-vault p-8 rounded-3xl bg-[#0E1B48]/60 border border-[#C18DB4]/30 text-center space-y-2">
+                <h4 className="text-sm font-bold text-white">No mandatory channels configured</h4>
+                <p className="text-xs text-[#87A7D0]">Users will be able to enter dashboard directly without channel check.</p>
+              </div>
+            ) : (
+              communities.map((comm, idx) => (
+                <div
+                  key={comm.id || idx}
+                  className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                >
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={comm.name}
+                        onChange={e => {
+                          const updated = [...communities];
+                          updated[idx] = { ...updated[idx], name: e.target.value };
+                          setCommunities(updated);
+                        }}
+                        className="bg-transparent border-b border-[#C18DB4]/30 text-xs font-bold text-white focus:outline-none focus:border-emerald-400 py-0.5 px-1 max-w-xs"
+                      />
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        comm.type === 'channel' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                      }`}>
+                        {comm.type}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={comm.link}
+                        onChange={e => {
+                          const updated = [...communities];
+                          updated[idx] = { ...updated[idx], link: e.target.value };
+                          setCommunities(updated);
+                        }}
+                        className="bg-transparent border-b border-[#C18DB4]/20 text-[11px] font-mono text-[#87A7D0] focus:outline-none focus:border-emerald-400 py-0.5 px-1 flex-1 max-w-sm"
+                      />
+                      <a
+                        href={comm.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[#E2CAD8] hover:text-white p-1 text-[10px] flex items-center gap-1"
+                      >
+                        <ExternalLink size={12} /> Test Link
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleToggleCommunity(comm.id)}
+                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
+                        comm.is_active !== false
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                          : 'bg-slate-700/40 text-slate-400 border border-slate-600/30'
+                      }`}
+                    >
+                      {comm.is_active !== false ? 'Active' : 'Disabled'}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCommunity(comm.id)}
+                      className="p-2 text-rose-400 hover:text-rose-300 rounded-xl hover:bg-rose-500/10 transition-all"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               ))
             )}

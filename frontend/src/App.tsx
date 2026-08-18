@@ -98,11 +98,14 @@ const App: React.FC = () => {
         mining_rate: 1.50
       };
 
+      const startParam = getStartParam() || new URLSearchParams(window.location.search).get('start') || new URLSearchParams(window.location.search).get('ref');
+      const API_URL = 'https://backend-ten-amber-99.vercel.app';
+
       if (initData) {
-        fetch('/api/auth/telegram', {
+        fetch(`${API_URL}/api/auth/telegram`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ initData })
+          body: JSON.stringify({ initData, startParam })
         })
           .then(res => res.json())
           .then(data => {
@@ -113,7 +116,20 @@ const App: React.FC = () => {
             }
           })
           .catch(() => {
-            setAuth(`tg-${realUserData.id}`, realUserData);
+            fetch('/api/auth/telegram', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ initData, startParam })
+            })
+              .then(res => res.json())
+              .then(data => {
+                if (data.token && data.user) {
+                  setAuth(data.token, data.user);
+                } else {
+                  setAuth(`tg-${realUserData.id}`, realUserData);
+                }
+              })
+              .catch(() => setAuth(`tg-${realUserData.id}`, realUserData));
           });
       } else {
         setAuth(`tg-${realUserData.id}`, realUserData);

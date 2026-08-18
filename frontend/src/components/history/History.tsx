@@ -15,19 +15,88 @@ export const History: React.FC = () => {
     try {
       const stored = localStorage.getItem('app_transactions');
       if (stored) localTxs = JSON.parse(stored);
+      if (!Array.isArray(localTxs)) localTxs = [];
+
+      const rawDeps = localStorage.getItem('admin_deposits');
+      if (rawDeps) {
+        const deps = JSON.parse(rawDeps);
+        for (const d of deps) {
+          const exists = localTxs.some(t => t.id === d.id || t.id === d.order_id);
+          if (!exists) {
+            localTxs.push({
+              id: d.order_id || d.id || `DEP-${Date.now()}`,
+              type: 'deposit',
+              title: d.status === 'confirmed' ? `USDT Deposit Credited (${d.network})` : `USDT Deposit (${d.network})`,
+              amount: typeof d.amount === 'number' ? d.amount.toFixed(2) : String(d.amount),
+              currency: 'USDT',
+              status: d.status || 'pending',
+              created_at: d.created_at || new Date().toISOString()
+            });
+          }
+        }
+      }
+
+      const rawWds = localStorage.getItem('admin_withdrawals');
+      if (rawWds) {
+        const wds = JSON.parse(rawWds);
+        for (const w of wds) {
+          const exists = localTxs.some(t => t.id === w.id);
+          if (!exists) {
+            localTxs.push({
+              id: w.id || `WD-${Date.now()}`,
+              type: 'withdrawal',
+              title: `USDT Payout Request (${w.network || 'BEP-20'})`,
+              amount: typeof w.amount === 'number' ? w.amount.toFixed(2) : String(w.amount),
+              currency: 'USDT',
+              status: w.status || 'pending',
+              created_at: w.created_at || new Date().toISOString()
+            });
+          }
+        }
+      }
+
+      localTxs.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+      setTransactions(localTxs);
+      localStorage.setItem('app_transactions', JSON.stringify(localTxs));
     } catch {}
 
-    fetch('/api/transactions/history')
+    const API_URL = 'https://backend-ten-amber-99.vercel.app';
+    fetch(`${API_URL}/api/transactions/history`)
       .then(res => res.json())
       .then(data => {
-        if (data.transactions && Array.isArray(data.transactions) && data.transactions.length > 0) {
-          setTransactions(data.transactions);
-        } else {
-          setTransactions(localTxs);
+        const apiTxs = data.transactions && Array.isArray(data.transactions) ? data.transactions : [];
+        const txMap = new Map();
+        for (const t of localTxs) {
+          txMap.set(String(t.id || `${t.created_at}_${t.amount}`), t);
         }
+        for (const t of apiTxs) {
+          const key = String(t.id || `${t.created_at}_${t.amount}`);
+          const existing = txMap.get(key);
+          txMap.set(key, { ...existing, ...t });
+        }
+        const merged = Array.from(txMap.values());
+        merged.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+        setTransactions(merged);
+        localStorage.setItem('app_transactions', JSON.stringify(merged));
       })
       .catch(() => {
-        setTransactions(localTxs);
+        fetch('/api/transactions/history')
+          .then(res => res.json())
+          .then(data => {
+            if (data.transactions && Array.isArray(data.transactions) && data.transactions.length > 0) {
+              const txMap = new Map();
+              for (const t of localTxs) txMap.set(String(t.id || `${t.created_at}_${t.amount}`), t);
+              for (const t of data.transactions) {
+                const key = String(t.id || `${t.created_at}_${t.amount}`);
+                txMap.set(key, { ...txMap.get(key), ...t });
+              }
+              const merged = Array.from(txMap.values());
+              merged.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+              setTransactions(merged);
+              localStorage.setItem('app_transactions', JSON.stringify(merged));
+            }
+          })
+          .catch(() => {});
       })
       .finally(() => setLoading(false));
   };

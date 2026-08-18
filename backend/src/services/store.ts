@@ -261,8 +261,9 @@ export class DataStoreService {
     this.balances.set(id, newBalance);
 
     if (userData.referred_by && userData.referred_by !== id) {
-      const referrer = this.findUserById(userData.referred_by);
-      if (referrer) {
+      const referrer = this.findUserById(userData.referred_by) || this.findUserByTelegramId(userData.referred_by);
+      if (referrer && referrer.id !== id) {
+        newUser.referred_by = referrer.id;
         const refRecord: Referral = {
           id: Date.now(),
           referrer_id: referrer.id,
@@ -273,13 +274,14 @@ export class DataStoreService {
         };
         this.referrals.push(refRecord);
 
-        if (this.settings.referral_fixed_reward > 0) {
-          this.creditBalance(referrer.id, this.settings.referral_fixed_reward, 'referral_earnings');
+        const bonus = (this.settings as any).referral_fixed_reward || (this.settings as any).referral_signup_bonus_usdt || 0.50;
+        if (bonus > 0) {
+          this.creditBalance(referrer.id, bonus, 'referral_earnings');
           this.addTransaction({
             id: Date.now(),
             user_id: referrer.id,
             type: 'referral_commission',
-            amount: this.settings.referral_fixed_reward,
+            amount: bonus,
             currency: 'USDT',
             description: `Referral bonus for inviting ${newUser.first_name}`,
             status: 'completed',
@@ -756,6 +758,30 @@ export class DataStoreService {
 
   public getNotifications() {
     return [...this.notifications];
+  }
+
+  public getReferralStats(userId: number) {
+    const user = this.findUserById(userId) || this.findUserByTelegramId(userId);
+    const targetUserId = user?.id || userId;
+    const targetTgId = user?.telegram_id;
+
+    const directRefs = Array.from(this.users.values()).filter(
+      u => (u.referred_by === targetUserId || (targetTgId && u.referred_by === targetTgId)) && u.id !== targetUserId
+    );
+    const bal = this.getUserBalance(targetUserId);
+
+    return {
+      direct_referrals: directRefs.length,
+      total_referrals: directRefs.length,
+      total_earned: bal.referral_earnings,
+      list: directRefs.map(u => ({
+        id: u.id,
+        telegram_id: u.telegram_id,
+        first_name: u.first_name,
+        username: u.username,
+        joined: u.created_at
+      }))
+    };
   }
 }
 

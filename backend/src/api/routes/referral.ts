@@ -13,6 +13,8 @@ const getReferralInfo = (req: any, res: any) => {
   const referralCode = user ? `ref_${user.telegram_id}` : `ref_98765432`;
   const referralLink = `https://t.me/${botUsername}?start=${referralCode}`;
 
+  const refStats = dataStore.getReferralStats(userId);
+
   const t1 = settings.referral_commission_tier1 < 1 ? Math.round(settings.referral_commission_tier1 * 100) : Number(settings.referral_commission_tier1);
   const t2 = settings.referral_commission_tier2 < 1 ? Math.round(settings.referral_commission_tier2 * 100) : Number(settings.referral_commission_tier2);
   const t3 = (settings.referral_commission_tier3 !== undefined && settings.referral_commission_tier3 < 1)
@@ -24,13 +26,16 @@ const getReferralInfo = (req: any, res: any) => {
     referral_link: referralLink,
     referralCode,
     referralLink,
-    total_earned: bal.referral_earnings,
-    totalEarnings: bal.referral_earnings.toString(),
+    direct_referrals: refStats.direct_referrals,
+    total_referrals: refStats.total_referrals,
+    referral_count: refStats.direct_referrals,
+    total_earned: refStats.total_earned,
+    totalEarnings: refStats.total_earned.toString(),
     tier1_commission_rate: t1,
     tier2_commission_rate: t2,
     tier3_commission_rate: t3,
     fixed_reward: settings.referral_fixed_reward,
-    tier1Referrals: [],
+    tier1Referrals: refStats.list,
     tier2Referrals: [],
     enabled: settings.referral_enabled
   });

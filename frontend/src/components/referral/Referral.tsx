@@ -56,7 +56,10 @@ export const Referral: React.FC = () => {
   useEffect(() => {
     loadSettingsFromStorage();
 
-    fetch('/api/referral/stats')
+    const API_URL = 'https://backend-ten-amber-99.vercel.app';
+    const targetId = user?.telegram_id || user?.id || 10001;
+
+    fetch(`${API_URL}/api/referral/stats?user_id=${targetId}`)
       .then(res => res.json())
       .then(data => {
         setRefStats(data);
@@ -69,7 +72,14 @@ export const Referral: React.FC = () => {
           }));
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        fetch(`/api/referral/stats?user_id=${targetId}`)
+          .then(res => res.json())
+          .then(data => {
+            setRefStats(data);
+          })
+          .catch(() => {});
+      });
 
     window.addEventListener('storage', loadSettingsFromStorage);
     return () => window.removeEventListener('storage', loadSettingsFromStorage);
@@ -126,7 +136,7 @@ export const Referral: React.FC = () => {
           <div className="flex items-center gap-2 text-[#E2CAD8] text-xs mb-1">
             <Users size={16} className="text-[#87A7D0]" /> Direct Referrals
           </div>
-          <p className="text-xl font-extrabold text-white font-serif-luxury">{user?.referral_count ?? 0}</p>
+          <p className="text-xl font-extrabold text-white font-serif-luxury">{refStats?.direct_referrals ?? user?.referral_count ?? 0}</p>
         </div>
 
         <div className="card-vault rounded-2xl p-4 border border-[#C18DB4]/30">

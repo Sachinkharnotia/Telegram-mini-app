@@ -23,24 +23,44 @@ export const MandatoryJoin: React.FC<MandatoryJoinProps> = ({ onVerified }) => {
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('required_communities');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setCommunities(parsed);
+    const loadCommunities = () => {
+      try {
+        const stored = localStorage.getItem('required_communities');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setCommunities(parsed.filter((c: any) => c.is_active !== false));
+            return;
+          }
         }
-      }
-    } catch {}
+      } catch {}
+    };
 
-    fetch('/api/user/mandatory-join')
+    loadCommunities();
+
+    const API_URL = 'https://backend-ten-amber-99.vercel.app';
+    fetch(`${API_URL}/api/admin/required-communities`)
       .then(res => res.json())
       .then(data => {
         if (data.communities && Array.isArray(data.communities) && data.communities.length > 0) {
-          setCommunities(data.communities);
+          const activeOnly = data.communities.filter((c: any) => c.is_active !== false);
+          setCommunities(activeOnly);
+          localStorage.setItem('required_communities', JSON.stringify(data.communities));
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        fetch('/api/user/mandatory-join')
+          .then(res => res.json())
+          .then(data => {
+            if (data.communities && Array.isArray(data.communities) && data.communities.length > 0) {
+              setCommunities(data.communities.filter((c: any) => c.is_active !== false));
+            }
+          })
+          .catch(() => {});
+      });
+
+    window.addEventListener('storage', loadCommunities);
+    return () => window.removeEventListener('storage', loadCommunities);
   }, []);
 
   const handleJoinClick = (id: number, link: string) => {
