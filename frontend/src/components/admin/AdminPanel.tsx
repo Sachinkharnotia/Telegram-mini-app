@@ -158,37 +158,48 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
 
   const fetchData = () => {
     setLoading(true);
+    let userList: any[] = [];
     try {
       const storedUsers = localStorage.getItem('admin_users');
-      let userList = storedUsers ? JSON.parse(storedUsers) : [];
+      userList = storedUsers ? JSON.parse(storedUsers) : [];
       
       const currentUser = localStorage.getItem('user');
       if (currentUser) {
         try {
           const u = JSON.parse(currentUser);
-          const existsIndex = userList.findIndex((existing: any) => existing.id === u.id || (u.telegram_id && existing.telegram_id === u.telegram_id));
+          const uKey = u.telegram_id || u.id || 10001;
+          const existsIndex = userList.findIndex((existing: any) => (existing.telegram_id && existing.telegram_id === uKey) || existing.id === u.id);
+          const userObj = {
+            id: u.id || Date.now(),
+            telegram_id: uKey,
+            first_name: u.first_name || 'Member',
+            username: u.username || 'user',
+            balance: u.balance_usdt || 0,
+            balance_usdt: u.balance_usdt || 0,
+            balance_vx: u.balance_vx || 0,
+            joined: new Date().toLocaleDateString(),
+            is_active: true,
+            status: 'Active'
+          };
           if (existsIndex === -1) {
-            userList.unshift({
-              id: u.id || Date.now(),
-              telegram_id: u.telegram_id || u.id || 10001,
-              first_name: u.first_name || 'Member',
-              username: u.username || 'user',
-              balance_usdt: u.balance_usdt || 0,
-              balance_vx: u.balance_vx || 0,
-              joined: new Date().toLocaleDateString(),
-              is_active: true
-            });
-            localStorage.setItem('admin_users', JSON.stringify(userList));
+            userList.unshift(userObj);
           } else {
-            userList[existsIndex] = {
-              ...userList[existsIndex],
-              balance_usdt: u.balance_usdt !== undefined ? u.balance_usdt : userList[existsIndex].balance_usdt,
-              balance_vx: u.balance_vx !== undefined ? u.balance_vx : userList[existsIndex].balance_vx
-            };
-            localStorage.setItem('admin_users', JSON.stringify(userList));
+            userList[existsIndex] = { ...userList[existsIndex], ...userObj };
           }
+          localStorage.setItem('admin_users', JSON.stringify(userList));
+
+          fetch(`${API_BASE}/api/auth/register-sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              user_data: userObj,
+              balance_usdt: userObj.balance_usdt,
+              balance_vx: userObj.balance_vx
+            })
+          }).catch(() => {});
         } catch {}
       }
+
       setUsers(userList);
 
       const storedSettings = localStorage.getItem('platform_settings');
@@ -219,7 +230,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       .then(res => res.json())
       .then(data => {
         if (data.users && Array.isArray(data.users) && data.users.length > 0) {
-          const mapped = data.users.map((u: any) => ({
+          const apiMapped = data.users.map((u: any) => ({
             id: u.id,
             telegram_id: u.telegram_id,
             first_name: u.first_name || 'Member',
@@ -231,8 +242,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             is_active: u.is_active !== false,
             status: u.is_active !== false ? 'Active' : 'Blocked'
           }));
-          setUsers(mapped);
-          localStorage.setItem('admin_users', JSON.stringify(mapped));
+
+          const userMap = new Map();
+          for (const u of userList) {
+            const key = u.telegram_id || u.id;
+            if (key) userMap.set(key, u);
+          }
+          for (const u of apiMapped) {
+            const key = u.telegram_id || u.id;
+            if (key) {
+              const existing = userMap.get(key);
+              userMap.set(key, { ...existing, ...u });
+            }
+          }
+
+          const combined = Array.from(userMap.values());
+          setUsers(combined);
+          localStorage.setItem('admin_users', JSON.stringify(combined));
         }
       })
       .catch(() => {});
