@@ -343,6 +343,39 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     setTimeout(() => setMessage(''), 3000);
   };
 
+  const handleUpdateWheelSector = (index: number, field: string, value: any) => {
+    const currentSectors = [...(settings.wheel_sectors || defaultSettings.wheel_sectors)];
+    currentSectors[index] = {
+      ...currentSectors[index],
+      [field]: value
+    };
+    if (field === 'reward_amount' || field === 'reward_type') {
+      const type = field === 'reward_type' ? value : currentSectors[index].reward_type;
+      const amt = field === 'reward_amount' ? value : currentSectors[index].reward_amount;
+      currentSectors[index].label = `+${amt} ${type}`;
+    }
+    setSettings({ ...settings, wheel_sectors: currentSectors });
+  };
+
+  const handleUpdateGiftReward = (index: number, value: string) => {
+    const currentRewards = [...(settings.gift_rewards || defaultSettings.gift_rewards)];
+    currentRewards[index] = value;
+    setSettings({ ...settings, gift_rewards: currentRewards });
+  };
+
+  const handleAddGiftReward = () => {
+    const currentRewards = [...(settings.gift_rewards || defaultSettings.gift_rewards)];
+    currentRewards.push('1.00 USDT');
+    setSettings({ ...settings, gift_rewards: currentRewards });
+  };
+
+  const handleRemoveGiftReward = (index: number) => {
+    const currentRewards = [...(settings.gift_rewards || defaultSettings.gift_rewards)];
+    if (currentRewards.length <= 1) return;
+    currentRewards.splice(index, 1);
+    setSettings({ ...settings, gift_rewards: currentRewards });
+  };
+
   const handleCreateAdmin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAdminEmail.trim()) return;
@@ -1475,6 +1508,112 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
 
             <button onClick={() => handleSaveSettingsSection('branding')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
               Save Branding & Telegram
+            </button>
+          </div>
+
+          {/* 6. Lucky Spin Wheel Sectors & Values */}
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
+            <div className="border-b border-[#C18DB4]/20 pb-3">
+              <h3 className="text-sm font-bold text-white font-serif-luxury">🎡 Lucky Spin Wheel Sectors & Values</h3>
+              <p className="text-[11px] text-[#87A7D0]">Configure labels, reward currency, and prize amounts for all 8 wheel slices</p>
+            </div>
+
+            <div className="space-y-3">
+              {(settings.wheel_sectors || defaultSettings.wheel_sectors).map((sector: any, idx: number) => (
+                <div key={idx} className="p-3 bg-[#070D1E] rounded-2xl border border-[#C18DB4]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    <span 
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold text-white border border-white/20"
+                      style={{ backgroundColor: sector.color || '#C18DB4' }}
+                    >
+                      {idx + 1}
+                    </span>
+                    <span className="text-xs font-bold text-white font-mono">{sector.label}</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 w-full sm:w-auto">
+                    <div className="space-y-0.5">
+                      <label className="text-[10px] text-[#87A7D0] font-bold">Currency</label>
+                      <select
+                        value={sector.reward_type || 'USDT'}
+                        onChange={e => handleUpdateWheelSector(idx, 'reward_type', e.target.value)}
+                        className="w-full p-2 bg-[#0E1B48] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                      >
+                        <option value="USDT">USDT</option>
+                        <option value="VX">VX</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <label className="text-[10px] text-[#87A7D0] font-bold">Amount</label>
+                      <input
+                        type="number"
+                        step="0.05"
+                        value={sector.reward_amount || 0}
+                        onChange={e => handleUpdateWheelSector(idx, 'reward_amount', parseFloat(e.target.value) || 0)}
+                        className="w-full p-2 bg-[#0E1B48] border border-[#C18DB4]/30 rounded-xl text-xs text-emerald-400 font-bold outline-none font-mono"
+                      />
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <label className="text-[10px] text-[#87A7D0] font-bold">Color</label>
+                      <input
+                        type="text"
+                        value={sector.color || '#C18DB4'}
+                        onChange={e => handleUpdateWheelSector(idx, 'color', e.target.value)}
+                        className="w-full p-2 bg-[#0E1B48] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-mono outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={() => handleSaveSettingsSection('wheel_sectors')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
+              Save Lucky Wheel Sectors & Values
+            </button>
+          </div>
+
+          {/* 7. Daily Mystery Gift Box Rewards Pool */}
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
+            <div className="border-b border-[#C18DB4]/20 pb-3 flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-bold text-white font-serif-luxury">🎁 Daily Mystery Gift Box Rewards Pool</h3>
+                <p className="text-[11px] text-[#87A7D0]">Configure unboxable prize tiers and add custom payout amounts</p>
+              </div>
+              <button 
+                onClick={handleAddGiftReward}
+                className="px-3 py-1.5 rounded-xl bg-[#0E1B48] text-xs font-bold text-amber-300 border border-amber-400/30 hover:bg-amber-400/20"
+              >
+                + Add Reward Tier
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {(settings.gift_rewards || defaultSettings.gift_rewards).map((rewardStr: string, idx: number) => (
+                <div key={idx} className="p-3 bg-[#070D1E] rounded-2xl border border-[#C18DB4]/20 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-1">
+                    <span className="text-xs font-bold text-[#87A7D0]">#{idx + 1}</span>
+                    <input
+                      type="text"
+                      value={rewardStr}
+                      onChange={e => handleUpdateGiftReward(idx, e.target.value)}
+                      placeholder="e.g. 5.00 USDT"
+                      className="w-full p-2 bg-[#0E1B48] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none font-mono"
+                    />
+                  </div>
+                  <button 
+                    onClick={() => handleRemoveGiftReward(idx)}
+                    className="p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={() => handleSaveSettingsSection('gift_rewards')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
+              Save Gift Box Rewards Pool
             </button>
           </div>
         </div>
