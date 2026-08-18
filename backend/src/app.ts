@@ -45,17 +45,44 @@ app.post('/api/telegram/webhook', async (req, res) => {
   }
 });
 
+// Authentication Routes
 app.use('/api/auth', authRoutes);
+
+// User & Profile Routes (Singular & Plural Aliases)
 app.use('/api/user', userRoutes);
+app.use('/api/users', userRoutes);
+
+// Deposit Routes (Singular & Plural Aliases)
 app.use('/api/deposit', depositRoutes);
+app.use('/api/deposits', depositRoutes);
+
+// Mining & Yield Routes
 app.use('/api/mining', miningRoutes);
+app.use('/api/claims', miningRoutes);
+app.use('/api/calculator', miningRoutes);
+
+// Withdrawal & Finance Routes (Singular & Plural Aliases)
 app.use('/api/withdrawal', withdrawalRoutes);
+app.use('/api/withdrawals', withdrawalRoutes);
 app.use('/api/finance', withdrawalRoutes);
+
+// Referral Routes (Singular & Plural Aliases)
 app.use('/api/referral', referralRoutes);
+app.use('/api/referrals', referralRoutes);
+
+// Tasks Routes
 app.use('/api/tasks', tasksRoutes);
+
+// Lucky Wheel & Spin Routes
 app.use('/api/spin', spinRoutes);
+
+// Transactions & History Routes
 app.use('/api/transactions', transactionsRoutes);
+
+// Admin Control Routes
 app.use('/api/admin', adminRoutes);
+
+// Public & User Stats Routes
 app.use('/api/stats', statsRoutes);
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
