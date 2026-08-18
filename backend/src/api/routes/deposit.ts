@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { dataStore } from '../../services/store';
+import { blockchainService } from '../../services/blockchain.service';
 
 const router = Router();
 
@@ -78,6 +79,20 @@ router.post('/auto-deposit', (req: any, res) => {
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to process auto-deposit' });
+  }
+});
+
+router.post('/verify-tx', async (req: any, res) => {
+  try {
+    const { tx_hash, network } = req.body;
+    if (!tx_hash) {
+      return res.status(400).json({ error: 'Transaction hash is required' });
+    }
+
+    const result = await blockchainService.verifyTransaction(tx_hash, network || 'BEP20');
+    res.json({ success: true, ...result });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message || 'Failed to verify transaction on-chain' });
   }
 });
 
