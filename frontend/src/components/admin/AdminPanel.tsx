@@ -274,13 +274,57 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       })
       .catch(() => {});
 
+    let localDepositList: any[] = [];
+    try {
+      const storedDeps = localStorage.getItem('admin_deposits');
+      localDepositList = storedDeps ? JSON.parse(storedDeps) : [];
+
+      const rawTxs = localStorage.getItem('app_transactions');
+      if (rawTxs) {
+        const txs = JSON.parse(rawTxs);
+        for (const t of txs) {
+          if (t.type === 'deposit' || String(t.title || '').toLowerCase().includes('deposit')) {
+            const numAmount = parseFloat(String(t.amount || 0).replace(/[^0-9.]/g, '')) || 50;
+            const exists = localDepositList.some((d: any) => d.id === t.id || d.order_id === t.id);
+            if (!exists) {
+              localDepositList.push({
+                id: t.id || Date.now(),
+                order_id: t.id || `DEP-${Date.now()}`,
+                user_id: 1001,
+                amount: numAmount,
+                currency: 'USDT',
+                network: String(t.title || '').includes('TON') ? 'TON' : 'BEP-20',
+                status: t.status || 'pending',
+                created_at: t.created_at || new Date().toISOString()
+              });
+            }
+          }
+        }
+      }
+      setDeposits(localDepositList);
+      localStorage.setItem('admin_deposits', JSON.stringify(localDepositList));
+    } catch {}
+
     fetch(`${API_BASE}/api/admin/deposits`, {
       headers: { 'x-admin-pin': ADMIN_PIN }
     })
       .then(res => res.json())
       .then(data => {
-        if (data.deposits && Array.isArray(data.deposits)) {
-          setDeposits(data.deposits);
+        const apiDeps = data.deposits && Array.isArray(data.deposits) ? data.deposits : [];
+        const depMap = new Map();
+        for (const d of localDepositList) {
+          const key = String(d.id || d.order_id);
+          depMap.set(key, d);
+        }
+        for (const d of apiDeps) {
+          const key = String(d.id || d.order_id);
+          const existing = depMap.get(key);
+          depMap.set(key, { ...existing, ...d });
+        }
+        const mergedDeps = Array.from(depMap.values());
+        if (mergedDeps.length > 0) {
+          setDeposits(mergedDeps);
+          localStorage.setItem('admin_deposits', JSON.stringify(mergedDeps));
         }
       })
       .catch(() => {});
@@ -290,7 +334,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     })
       .then(res => res.json())
       .then(data => {
-        if (data.withdrawals && Array.isArray(data.withdrawals)) {
+        if (data.withdrawals && Array.isArray(data.withdrawals) && data.withdrawals.length > 0) {
           setWithdrawals(data.withdrawals);
         }
       })
