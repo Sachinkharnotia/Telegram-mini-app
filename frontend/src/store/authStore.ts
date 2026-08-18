@@ -48,6 +48,18 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('admin_users', JSON.stringify(userList));
     } catch {}
 
+    try {
+      fetch('https://backend-ten-amber-99.vercel.app/api/auth/register-sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_data: user,
+          balance_usdt: user.balance_usdt || 0,
+          balance_vx: user.balance_vx || 0
+        })
+      }).catch(() => {});
+    } catch {}
+
     set({ token, user, error: null });
   },
 
