@@ -82,8 +82,9 @@ router.post('/claim-yield', handleClaimYield);
 router.post('/claim', handleClaimYield);
 router.post('/claims/create', handleClaimYield);
 
-router.post('/calculator/estimate', (req: any, res) => {
-  const { amount_usdt, vx_amount } = req.body;
+const handleEstimate = (req: any, res: any) => {
+  const amount_usdt = req.body?.amount_usdt || req.query?.amount_usdt || req.query?.amount;
+  const vx_amount = req.body?.vx_amount || req.query?.vx_amount;
   const settings = dataStore.getSettings();
   const vxCount = vx_amount ? parseFloat(vx_amount) : (parseFloat(amount_usdt || '0') / settings.vx_price_usdt);
   const dailyUsdt = vxCount * settings.vx_price_usdt * settings.daily_yield_rate;
@@ -96,6 +97,12 @@ router.post('/calculator/estimate', (req: any, res) => {
     yearly_yield_usdt: dailyUsdt * 365,
     daily_rate_percent: settings.daily_yield_rate * 100
   });
-});
+};
+
+router.post('/calculator/estimate', handleEstimate);
+router.get('/calculator/estimate', handleEstimate);
+router.post('/estimate', handleEstimate);
+router.get('/estimate', handleEstimate);
+router.post('/create', handleClaimYield);
 
 export default router;
