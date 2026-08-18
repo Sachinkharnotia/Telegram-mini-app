@@ -80,10 +80,17 @@ router.post('/telegram', async (req, res) => {
     const settings = dataStore.getSettings();
     const required_communities = dataStore.getRequiredCommunities();
     
+    const userWithBalance = {
+      ...user,
+      balance_usdt: balance.usdt_balance,
+      balance_vx: balance.vx_balance,
+      mining_active: balance.vx_balance >= settings.min_vx_mining
+    };
+
     res.json({
       access_token,
       token: access_token,
-      user,
+      user: userWithBalance,
       balance,
       settings,
       required_communities,

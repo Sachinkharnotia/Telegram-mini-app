@@ -110,7 +110,12 @@ const App: React.FC = () => {
           .then(res => res.json())
           .then(data => {
             if (data.token && data.user) {
-              setAuth(data.token, data.user);
+              const fullUser = {
+                ...data.user,
+                balance_usdt: data.balance?.usdt_balance ?? data.user.balance_usdt ?? 0,
+                balance_vx: data.balance?.vx_balance ?? data.user.balance_vx ?? 0
+              };
+              setAuth(data.token, fullUser);
             } else {
               setAuth(`tg-${realUserData.id}`, realUserData);
             }
@@ -124,7 +129,12 @@ const App: React.FC = () => {
               .then(res => res.json())
               .then(data => {
                 if (data.token && data.user) {
-                  setAuth(data.token, data.user);
+                  const fullUser = {
+                    ...data.user,
+                    balance_usdt: data.balance?.usdt_balance ?? data.user.balance_usdt ?? 0,
+                    balance_vx: data.balance?.vx_balance ?? data.user.balance_vx ?? 0
+                  };
+                  setAuth(data.token, fullUser);
                 } else {
                   setAuth(`tg-${realUserData.id}`, realUserData);
                 }
