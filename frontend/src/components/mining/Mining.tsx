@@ -4,11 +4,32 @@ import { Pickaxe } from 'lucide-react';
 export const Mining: React.FC = () => {
   const [vxAmount, setVxAmount] = useState('500');
   const [activeTimeframe, setActiveTimeframe] = useState<'1 day' | 'Week' | 'Month' | '1 year'>('Month');
+  const [engineSettings, setEngineSettings] = useState({
+    price: 0.10,
+    yieldRate: 0.015
+  });
+
+  React.useEffect(() => {
+    const loadSettings = () => {
+      try {
+        const stored = localStorage.getItem('platform_settings');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const p = parsed.mining?.vx_price_usdt || parsed.vx_price_usdt || 0.10;
+          const y = parsed.mining?.daily_yield_rate || parsed.daily_yield_rate || 1.5;
+          const numY = Number(y) < 1 ? Number(y) : Number(y) / 100;
+          setEngineSettings({ price: Number(p), yieldRate: numY });
+        }
+      } catch {}
+    };
+    loadSettings();
+    window.addEventListener('storage', loadSettings);
+    return () => window.removeEventListener('storage', loadSettings);
+  }, []);
 
   const numVx = parseFloat(vxAmount) || 0;
-  const vxPriceUsdt = 0.10;
-  const usdtValue = numVx * vxPriceUsdt;
-  const dailyRate = usdtValue * 0.015;
+  const usdtValue = numVx * engineSettings.price;
+  const dailyRate = usdtValue * engineSettings.yieldRate;
 
   const multiplier = activeTimeframe === '1 day' ? 1 : activeTimeframe === 'Week' ? 7 : activeTimeframe === 'Month' ? 30 : 365;
   const projectedReturn = dailyRate * multiplier;
