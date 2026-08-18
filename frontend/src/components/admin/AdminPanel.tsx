@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle, XCircle, Search, Plus, Trash2, RefreshCw, ArrowLeft,
-  Send, UserPlus
+  Send, UserPlus, Activity
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -1572,6 +1572,99 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                 />
               </div>
             </div>
+
+            {/* Live Accrual Rate Breakdown & Simulator */}
+            {(() => {
+              const currentVxPrice = parseFloat(settings.mining?.vx_price_usdt || settings.vx_price_usdt || 0.10);
+              const rawYield = parseFloat(settings.mining?.daily_yield_rate || settings.daily_yield_rate || 1.5);
+              const currentDailyRate = rawYield < 0.2 ? rawYield * 100 : rawYield;
+              const sampleVx = 15680;
+              const sampleCapital = sampleVx * currentVxPrice;
+              const dailyYieldUsdt = sampleCapital * (currentDailyRate / 100);
+              const hourlyYieldUsdt = dailyYieldUsdt / 24;
+              const minYieldUsdt = dailyYieldUsdt / 1440;
+              const secYieldUsdt = dailyYieldUsdt / 86400;
+
+              return (
+                <div className="bg-[#070D1E] p-4 rounded-2xl border border-[#C18DB4]/30 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#C18DB4]/20 pb-2">
+                    <h4 className="text-xs font-bold text-white flex items-center gap-1.5 font-serif-luxury">
+                      <Activity size={15} className="text-amber-400" /> Live Accrual Rate Breakdown & Earning Simulator
+                    </h4>
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30 w-fit">
+                      ⚡ Active Yield: {currentDailyRate.toFixed(2)}% / 24 Hours
+                    </span>
+                  </div>
+
+                  {/* 4 Speed Metrics */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                    <div className="bg-[#0E1B48] p-2.5 rounded-xl border border-[#C18DB4]/20 space-y-0.5">
+                      <span className="text-[9px] text-[#87A7D0] uppercase font-bold block">24 Hours Earning</span>
+                      <span className="text-xs font-extrabold text-white font-mono block">${dailyYieldUsdt.toFixed(2)} USDT</span>
+                      <span className="text-[8px] text-[#E2CAD8] block">On 15,680 VX ($1,568)</span>
+                    </div>
+
+                    <div className="bg-[#0E1B48] p-2.5 rounded-xl border border-[#C18DB4]/20 space-y-0.5">
+                      <span className="text-[9px] text-[#87A7D0] uppercase font-bold block">1 Hour (Hourly)</span>
+                      <span className="text-xs font-extrabold text-amber-300 font-mono block">${hourlyYieldUsdt.toFixed(3)} USDT / hr</span>
+                      <span className="text-[8px] text-[#E2CAD8] block">Every 60 minutes</span>
+                    </div>
+
+                    <div className="bg-[#0E1B48] p-2.5 rounded-xl border border-[#C18DB4]/20 space-y-0.5">
+                      <span className="text-[9px] text-[#87A7D0] uppercase font-bold block">1 Minute (Per Min)</span>
+                      <span className="text-xs font-extrabold text-emerald-300 font-mono block">${minYieldUsdt.toFixed(4)} USDT / min</span>
+                      <span className="text-[8px] text-[#E2CAD8] block">Every 60 seconds</span>
+                    </div>
+
+                    <div className="bg-[#0E1B48] p-2.5 rounded-xl border border-[#C18DB4]/20 space-y-0.5">
+                      <span className="text-[9px] text-[#87A7D0] uppercase font-bold block">1 Second (Live Accrual)</span>
+                      <span className="text-xs font-extrabold text-sky-300 font-mono block">${secYieldUsdt.toFixed(6)} USDT / s</span>
+                      <span className="text-[8px] text-[#E2CAD8] block">Live Ticker Speed</span>
+                    </div>
+                  </div>
+
+                  {/* Reference Comparison Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-[11px]">
+                      <thead>
+                        <tr className="border-b border-[#C18DB4]/20 text-[#87A7D0]">
+                          <th className="pb-1.5 font-bold">Daily Yield Rate</th>
+                          <th className="pb-1.5 font-bold">24 Hours Return</th>
+                          <th className="pb-1.5 font-bold">Hourly Rate</th>
+                          <th className="pb-1.5 font-bold">Per Minute</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#C18DB4]/10 text-white font-mono text-[10px]">
+                        <tr className="hover:bg-[#0E1B48]/50">
+                          <td className="py-1.5 font-bold text-amber-300">1.5% (Standard)</td>
+                          <td className="py-1.5">$23.52 USDT</td>
+                          <td className="py-1.5">$0.980 USDT / hr</td>
+                          <td className="py-1.5">$0.0163 USDT / min</td>
+                        </tr>
+                        <tr className="hover:bg-[#0E1B48]/50">
+                          <td className="py-1.5 font-bold text-amber-300">3.0% (Boosted)</td>
+                          <td className="py-1.5">$47.04 USDT</td>
+                          <td className="py-1.5">$1.960 USDT / hr</td>
+                          <td className="py-1.5">$0.0326 USDT / min</td>
+                        </tr>
+                        <tr className="hover:bg-[#0E1B48]/50">
+                          <td className="py-1.5 font-bold text-amber-300">5.0% (High Yield)</td>
+                          <td className="py-1.5">$78.40 USDT</td>
+                          <td className="py-1.5">$3.266 USDT / hr</td>
+                          <td className="py-1.5">$0.0544 USDT / min</td>
+                        </tr>
+                        <tr className="bg-emerald-500/15 font-bold text-emerald-300">
+                          <td className="py-1.5 font-extrabold text-emerald-400">👉 {currentDailyRate.toFixed(1)}% (Active Setting)</td>
+                          <td className="py-1.5">${dailyYieldUsdt.toFixed(2)} USDT</td>
+                          <td className="py-1.5">${hourlyYieldUsdt.toFixed(3)} USDT / hr</td>
+                          <td className="py-1.5">${minYieldUsdt.toFixed(4)} USDT / min</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })()}
 
             <button
               onClick={() => handleSaveSettingsSection('mining')}
