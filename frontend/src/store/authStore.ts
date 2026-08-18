@@ -111,6 +111,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         } catch {}
       }
 
+      try {
+        fetch('/api/auth/register-sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user: updatedUser })
+        }).catch(() => {});
+      } catch {}
+
       return { user: updatedUser };
     });
   },
