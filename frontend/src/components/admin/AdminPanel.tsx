@@ -1381,7 +1381,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               </label>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-[#E2CAD8]">Tier 1 Commission Rate (%)</label>
                 <div className="relative">
@@ -1409,6 +1409,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                     onChange={e => setSettings({
                       ...settings,
                       referral: { ...settings.referral, level2_percent: parseFloat(e.target.value) }
+                    })}
+                    className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#87A7D0]">%</span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">Tier 3 Commission Rate (%)</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={settings.referral?.level3_percent !== undefined ? settings.referral.level3_percent : 2}
+                    onChange={e => setSettings({
+                      ...settings,
+                      referral: { ...settings.referral, level3_percent: parseFloat(e.target.value) }
                     })}
                     className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
                   />

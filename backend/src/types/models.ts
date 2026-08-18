@@ -48,6 +48,7 @@ export interface AppSettings {
   auto_withdrawal: boolean;
   referral_commission_tier1: number;
   referral_commission_tier2: number;
+  referral_commission_tier3?: number;
   referral_fixed_reward: number;
   referral_enabled: boolean;
   daily_free_spins: number;

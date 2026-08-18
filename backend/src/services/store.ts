@@ -34,6 +34,7 @@ export class DataStoreService {
     auto_withdrawal: false,
     referral_commission_tier1: 0.10,
     referral_commission_tier2: 0.05,
+    referral_commission_tier3: 0.02,
     referral_fixed_reward: 0.50,
     referral_enabled: true,
     daily_free_spins: 1,
