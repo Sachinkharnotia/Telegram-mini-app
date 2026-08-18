@@ -63,16 +63,31 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     setLoading(false);
 
     try {
-      await fetch('/api/withdrawal/request', {
+      const API_URL = 'https://backend-ten-amber-99.vercel.app';
+      await fetch(`${API_URL}/api/withdrawal/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: numAmount,
           network,
-          wallet_address: walletAddress.trim()
+          wallet_address: walletAddress.trim(),
+          user_id: user?.id || 10001
         })
       });
-    } catch {}
+    } catch {
+      try {
+        await fetch('/api/withdrawal/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: numAmount,
+            network,
+            wallet_address: walletAddress.trim(),
+            user_id: user?.id || 10001
+          })
+        });
+      } catch {}
+    }
   };
 
   return (

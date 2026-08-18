@@ -41,7 +41,8 @@ export const Tasks: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       }
     } catch {}
 
-    fetch('/api/tasks/list')
+    const API_URL = 'https://backend-ten-amber-99.vercel.app';
+    fetch(`${API_URL}/api/tasks/list`)
       .then(res => res.json())
       .then(data => {
         if (data.tasks && Array.isArray(data.tasks) && data.tasks.length > 0) {
@@ -51,7 +52,16 @@ export const Tasks: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         }
       })
       .catch(() => {
-        setTasksList(defaultTasks);
+        fetch('/api/tasks/list')
+          .then(res => res.json())
+          .then(data => {
+            if (data.tasks && Array.isArray(data.tasks) && data.tasks.length > 0) {
+              setTasksList(data.tasks);
+            } else {
+              setTasksList(defaultTasks);
+            }
+          })
+          .catch(() => setTasksList(defaultTasks));
       });
   };
 

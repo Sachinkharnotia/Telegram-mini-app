@@ -13,6 +13,9 @@ shared/**/*.js
 
 # Temporary tunnel scripts & binaries
 *.exe
+*.cjs
+*.zip
+deploy.sh
 frontend/*.exe
 frontend/*.cjs
 frontend/*.js
