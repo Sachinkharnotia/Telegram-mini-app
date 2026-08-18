@@ -109,8 +109,6 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
         </div>
       )}
 
-
-
       {activeSubView === 'faq' && (
         <div className="space-y-6 animate-slide-up">
           <button 
@@ -258,7 +256,6 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
           </div>
 
           <div className="card-vault rounded-3xl p-3 border border-[#C18DB4]/30 space-y-2">
-
 
             <div 
               onClick={() => setActiveSubView('lang')}

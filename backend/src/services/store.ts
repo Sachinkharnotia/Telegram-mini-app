@@ -296,7 +296,7 @@ export class DataStoreService {
     const lastTime = bal.last_claim_at ? new Date(bal.last_claim_at).getTime() : now;
     const elapsedSeconds = Math.max(0, (now - lastTime) / 1000);
     if (elapsedSeconds > 0) {
-      const dailyRate = this.settings.daily_yield_rate; // 0.015
+      const dailyRate = this.settings.daily_yield_rate; 
       const dailyUsdt = bal.vx_balance * this.settings.vx_price_usdt * dailyRate;
       const perSecond = dailyUsdt / 86400;
       bal.unclaimed_yield = parseFloat((bal.unclaimed_yield + elapsedSeconds * perSecond).toFixed(6));

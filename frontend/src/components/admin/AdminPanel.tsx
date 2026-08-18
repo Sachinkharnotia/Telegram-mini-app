@@ -1249,7 +1249,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             <p className="text-xs text-[#87A7D0]">Configure payment wallets, referral rewards, mining rates, and limits in real-time</p>
           </div>
 
-          {/* 1. Payment & Wallet Addresses */}
+          {}
           <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
             <div className="border-b border-[#C18DB4]/20 pb-3">
               <h3 className="text-sm font-bold text-white font-serif-luxury">💳 Deposit & Payout Wallets</h3>
@@ -1360,7 +1360,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             </button>
           </div>
 
-          {/* 2. Referral Program Settings */}
+          {}
           <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
             <div className="border-b border-[#C18DB4]/20 pb-3 flex justify-between items-center">
               <div>
@@ -1477,7 +1477,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             </button>
           </div>
 
-          {/* 3. Daily Spin & Gift Box Limits */}
+          {}
           <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
             <div className="border-b border-[#C18DB4]/20 pb-3">
               <h3 className="text-sm font-bold text-white font-serif-luxury">🎯 Daily Spin & Gift Chest Limits</h3>
@@ -1520,7 +1520,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             </button>
           </div>
 
-          {/* 4. Mining & VX Parameters */}
+          {}
           <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
             <div className="border-b border-[#C18DB4]/20 pb-3">
               <h3 className="text-sm font-bold text-white font-serif-luxury">⛏️ VX Quantitative Mining Engine</h3>
@@ -1573,7 +1573,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               </div>
             </div>
 
-            {/* Live Accrual Rate Breakdown & Simulator */}
+            {}
             {(() => {
               const currentVxPrice = parseFloat(settings.mining?.vx_price_usdt || settings.vx_price_usdt || 0.10);
               const rawYield = parseFloat(settings.mining?.daily_yield_rate || settings.daily_yield_rate || 1.5);
@@ -1596,7 +1596,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                     </span>
                   </div>
 
-                  {/* 4 Speed Metrics */}
+                  {}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                     <div className="bg-[#0E1B48] p-2.5 rounded-xl border border-[#C18DB4]/20 space-y-0.5">
                       <span className="text-[9px] text-[#87A7D0] uppercase font-bold block">24 Hours Earning</span>
@@ -1623,7 +1623,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                     </div>
                   </div>
 
-                  {/* Reference Comparison Table */}
+                  {}
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-[11px]">
                       <thead>
@@ -1676,7 +1676,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             </button>
           </div>
 
-          {/* 5. Telegram & Branding */}
+          {}
           <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
             <div className="border-b border-[#C18DB4]/20 pb-3">
               <h3 className="text-sm font-bold text-white font-serif-luxury">📱 Telegram Bot & Branding</h3>
@@ -1788,7 +1788,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             </button>
           </div>
 
-          {/* General & Maintenance Settings */}
+          {}
           <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
             <div className="border-b border-[#C18DB4]/20 pb-3 flex justify-between items-center">
               <div>
@@ -1832,7 +1832,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             </button>
           </div>
 
-          {/* 6. Lucky Spin Wheel Sectors & Values */}
+          {}
           <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
             <div className="border-b border-[#C18DB4]/20 pb-3">
               <h3 className="text-sm font-bold text-white font-serif-luxury">🎡 Lucky Spin Wheel Sectors & Values</h3>
@@ -1900,7 +1900,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             </button>
           </div>
 
-          {/* 7. Daily Mystery Gift Box Rewards Pool */}
+          {}
           <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
             <div className="border-b border-[#C18DB4]/20 pb-3 flex justify-between items-center">
               <div>

@@ -41,7 +41,6 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
   const [buyVxMsg, setBuyVxMsg] = useState('');
   const [showAdminPanel, setShowAdminPanel] = useState(false);
 
-  // Load live dynamic settings from Admin Panel
   useEffect(() => {
     const loadSettings = () => {
       try {
@@ -76,7 +75,6 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
     }
   }, []);
 
-  // Live real-time continuous ticker (Updates every 100ms for smooth live growth)
   useEffect(() => {
     if (!isEligibleToMine) {
       setUnclaimedYield(0);
@@ -221,10 +219,10 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         </div>
       </header>
 
-      {/* 🚀 Dynamic Mining Accrual Engine Card with 4 Clarity Features */}
+      {}
       <div className="card-vault rounded-3xl p-5 sm:p-6 relative overflow-hidden space-y-4 text-center border border-[#C18DB4]/40 shadow-2xl bg-gradient-to-b from-[#0E1B48]/90 via-[#0A1435]/95 to-[#0E1B48]/90">
         
-        {/* Top Header & Live Elapsed Timer Badge */}
+        {}
         <div className="flex items-center justify-between gap-2">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#0E1B48] border border-[#C18DB4]/40 text-[#E2CAD8] text-[9px] font-bold uppercase tracking-wider font-serif-luxury">
             <Sparkles size={11} className="text-[#C18DB4]" /> Dynamic USDT Yield
@@ -236,13 +234,13 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
           </div>
         </div>
 
-        {/* Feature 4: Live Real-Time Ticking Counter */}
+        {}
         <div className="py-1">
           <div className="text-3xl sm:text-4xl font-extrabold font-serif-luxury text-white tracking-tight drop-shadow-md">
             + ${unclaimedYield.toFixed(4)} <span className="text-lg font-bold text-[#C18DB4]">USDT</span>
           </div>
           
-          {/* Feature 2: Live Mining Speed Breakdown (Hourly & Daily Rate) */}
+          {}
           <div className="mt-2 flex items-center justify-center gap-2 flex-wrap text-[11px] font-medium text-[#E2CAD8]">
             <span className="inline-flex items-center gap-1 bg-[#0E1B48] px-2.5 py-0.5 rounded-lg border border-[#C18DB4]/20 text-amber-300 font-bold">
               ⚡ +${hourlyUsdtYield.toFixed(3)} / hr
@@ -254,7 +252,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
           </div>
         </div>
 
-        {/* Feature 3: 24-Hour Cycle Progress Bar */}
+        {}
         <div className="space-y-1.5 text-left bg-[#08102B]/80 p-3 rounded-2xl border border-[#C18DB4]/20">
           <div className="flex justify-between items-center text-[10px] font-bold">
             <span className="text-[#87A7D0] flex items-center gap-1">
@@ -276,7 +274,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
           </div>
         </div>
 
-        {/* Claim & Buy VX Buttons */}
+        {}
         <div className="flex gap-2 pt-1">
           <button
             onClick={handleClaim}
@@ -370,7 +368,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
       <div className="card-vault p-4 rounded-3xl border border-[#C18DB4]/40 bg-gradient-to-br from-[#0E1B48] via-indigo-950/60 to-[#0E1B48] space-y-3 shadow-xl">
         <div className="flex items-center justify-between">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#0E1B48] border border-[#C18DB4]/30 text-[10px] font-bold text-[#87A7D0]">
-            <Sparkles size={10} className="text-[#C18DB4]" /> AI RECOMMENDATION
+            <Sparkles size={10} className="text-[#C18DB4]" /> TOP RECOMMENDATION
           </div>
           <span className="text-[10px] text-amber-300 font-bold">10% Yield Commission</span>
         </div>
