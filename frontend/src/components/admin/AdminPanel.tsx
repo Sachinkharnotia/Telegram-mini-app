@@ -209,6 +209,88 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     setLoading(false);
   };
 
+  const isInitialMount = React.useRef(true);
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    const t1 = parseFloat(String(settings.referral?.level1_percent ?? settings.referral_level1_percent ?? 10));
+    const t2 = parseFloat(String(settings.referral?.level2_percent ?? settings.referral_level2_percent ?? 5));
+    const t3 = parseFloat(String(settings.referral?.level3_percent ?? settings.referral_level3_percent ?? 2));
+    const rewardBonus = parseFloat(String(settings.referral?.reward ?? settings.referral_fixed_reward ?? 0.50));
+
+    const syncObj = {
+      ...settings,
+      bep20_wallet: settings.payment?.bep20_wallet || settings.bep20_wallet || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+      ton_wallet: settings.payment?.ton_wallet || settings.ton_wallet || 'EQBvW8Z5huBkMJY78A29P0nLw84920kLzW190kLs920pL',
+      min_deposit: parseFloat(String(settings.payment?.min_deposit || settings.min_deposit || 10)),
+      min_withdrawal: parseFloat(String(settings.payment?.min_withdrawal || settings.min_withdrawal || 3)),
+      max_withdrawal: parseFloat(String(settings.payment?.max_withdrawal || settings.max_withdrawal || 10000)),
+      withdrawal_fee: parseFloat(String(settings.payment?.withdrawal_fee || settings.withdrawal_fee || 0)),
+      referral: {
+        ...settings.referral,
+        level1_percent: t1,
+        level2_percent: t2,
+        level3_percent: t3,
+        reward: rewardBonus,
+        enabled: settings.referral?.enabled !== false
+      },
+      referral_level1_percent: t1,
+      referral_level2_percent: t2,
+      referral_level3_percent: t3,
+      referral_signup_bonus_usdt: rewardBonus,
+      referral_commission_tier1: t1,
+      referral_commission_tier2: t2,
+      referral_fixed_reward: rewardBonus,
+      daily_spins_limit: parseInt(String(settings.daily_spins_limit || 3), 10),
+      daily_giftbox_limit: parseInt(String(settings.daily_giftbox_limit || 1), 10),
+      wheel_sectors: settings.wheel_sectors || defaultSettings.wheel_sectors,
+      gift_rewards: settings.gift_rewards || defaultSettings.gift_rewards,
+    };
+
+    localStorage.setItem('platform_settings', JSON.stringify(syncObj));
+    window.dispatchEvent(new Event('storage'));
+
+    const timer = setTimeout(async () => {
+      try {
+        const backendPayload = {
+          vx_price_usdt: parseFloat(String(settings.mining?.vx_price_usdt || settings.vx_price_usdt || 0.10)),
+          min_vx_purchase: parseFloat(String(settings.mining?.min_vx_purchase || settings.min_vx_purchase || 100)),
+          min_vx_mining: parseFloat(String(settings.mining?.min_vx_mining || settings.min_vx_mining || 100)),
+          daily_yield_rate: (parseFloat(String(settings.mining?.daily_yield_rate || settings.daily_yield_rate || 1.5))) / 100,
+          mining_enabled: true,
+          bep20_wallet: syncObj.bep20_wallet,
+          ton_wallet: syncObj.ton_wallet,
+          min_deposit: syncObj.min_deposit,
+          min_withdrawal: syncObj.min_withdrawal,
+          max_withdrawal: syncObj.max_withdrawal,
+          withdrawal_fee: syncObj.withdrawal_fee,
+          referral_commission_tier1: t1,
+          referral_commission_tier2: t2,
+          referral_fixed_reward: rewardBonus,
+          referral_enabled: settings.referral?.enabled !== false,
+          daily_spins_limit: syncObj.daily_spins_limit,
+          daily_giftbox_limit: syncObj.daily_giftbox_limit,
+          app_name: settings.branding?.app_name || 'VextoralMining',
+          support_username: settings.branding?.support_telegram || 'VaultSupportAdmin'
+        };
+
+        await fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-pin': 'vextoral2026'
+          },
+          body: JSON.stringify(backendPayload)
+        });
+      } catch {}
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [settings]);
+
   const handleApproveDeposit = (depositId: number) => {
     const updated = deposits.map(d => {
       if (d.id === depositId) {

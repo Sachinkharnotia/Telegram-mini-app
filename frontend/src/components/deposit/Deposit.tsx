@@ -14,7 +14,7 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [errorMsg, setErrorMsg] = useState('');
   const [lastOrderId, setLastOrderId] = useState<string>('');
 
-  useEffect(() => {
+  const loadWallets = () => {
     try {
       const stored = localStorage.getItem('platform_settings');
       if (stored) {
@@ -27,6 +27,10 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         }
       }
     } catch {}
+  };
+
+  useEffect(() => {
+    loadWallets();
 
     fetch('/api/deposit/wallets')
       .then(res => res.json())
@@ -35,6 +39,9 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         if (data.ton_wallet) setTonWallet(data.ton_wallet);
       })
       .catch(() => {});
+
+    window.addEventListener('storage', loadWallets);
+    return () => window.removeEventListener('storage', loadWallets);
   }, []);
 
   const activeWallet = network === 'TON' ? tonWallet : bep20Wallet;
