@@ -20,7 +20,19 @@ import { AdminPanel } from '../admin/AdminPanel';
 
 export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) => {
   const { user, updateBalance } = useAuthStore();
-  const [unclaimedYield, setUnclaimedYield] = useState(0.00);
+  const [unclaimedYield, setUnclaimedYield] = useState<number>(() => {
+    const lastClaimTs = localStorage.getItem('vx_last_claim_ts') 
+      ? parseInt(localStorage.getItem('vx_last_claim_ts') as string, 10) 
+      : (Date.now() - 7200000); // 2 hours initial simulation if fresh
+    const vxAmt = Number(user?.balance_vx || 0);
+    if (vxAmt >= 100) {
+      const dailyYield = vxAmt * 0.10 * 0.015;
+      const elapsedSec = Math.max(0, (Date.now() - lastClaimTs) / 1000);
+      return parseFloat((elapsedSec * (dailyYield / 86400)).toFixed(4));
+    }
+    return 0.00;
+  });
+
   const [isClaiming, setIsClaiming] = useState(false);
   const walletBalance = Number(user?.balance_usdt || 0);
   const vxBalance = Number(user?.balance_vx || 0);
@@ -40,20 +52,35 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
   const dailyUsdtYield = isEligibleToMine ? vxBalance * vxPriceUsdt * dailyYieldRate : 0;
 
   useEffect(() => {
-    const userId = user?.id || user?.telegram_id || 1001;
-    fetch(`/api/mining/dashboard?user_id=${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.unclaimed_yield !== undefined) setUnclaimedYield(data.unclaimed_yield);
-      })
-      .catch(() => {});
-  }, [user?.id]);
+    if (!localStorage.getItem('vx_last_claim_ts')) {
+      localStorage.setItem('vx_last_claim_ts', (Date.now() - 7200000).toString());
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isEligibleToMine) {
+      setUnclaimedYield(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const lastClaimTs = localStorage.getItem('vx_last_claim_ts') 
+        ? parseInt(localStorage.getItem('vx_last_claim_ts') as string, 10) 
+        : Date.now();
+      const elapsedSec = Math.max(0, (Date.now() - lastClaimTs) / 1000);
+      const exactAccrued = elapsedSec * (dailyUsdtYield / 86400);
+      setUnclaimedYield(exactAccrued);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isEligibleToMine, dailyUsdtYield]);
 
   const handleClaim = () => {
     if (unclaimedYield > 0) {
       setIsClaiming(true);
       const claimAmount = parseFloat(unclaimedYield.toFixed(4));
       updateBalance(claimAmount, 0, { type: 'mining_yield', title: 'VX Yield Claim' });
+      localStorage.setItem('vx_last_claim_ts', Date.now().toString());
       setUnclaimedYield(0);
       setTimeout(() => {
         setIsClaiming(false);
@@ -91,15 +118,6 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
       });
     } catch {}
   };
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (isEligibleToMine) {
-        setUnclaimedYield(prev => prev + (dailyUsdtYield / 86400));
-      }
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [isEligibleToMine, dailyUsdtYield]);
 
   if (showAdminPanel) {
     return <AdminPanel onBack={() => setShowAdminPanel(false)} />;
