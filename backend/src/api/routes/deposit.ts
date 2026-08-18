@@ -16,7 +16,7 @@ router.get('/wallets', (req, res) => {
 router.post('/create', (req: any, res) => {
   try {
     const userId = req.body.user_id || req.user?.id || 1001;
-    const { amount, network, wallet_address } = req.body;
+    const { amount, network, wallet_address, id, order_id } = req.body;
     
     const numAmount = parseFloat(amount);
     const settings = dataStore.getSettings();
@@ -25,12 +25,10 @@ router.post('/create', (req: any, res) => {
       return res.status(400).json({ error: `Minimum deposit is $${settings.min_deposit} USDT` });
     }
 
-    if (network !== 'BEP20' && network !== 'TON') {
-      return res.status(400).json({ error: 'Supported networks: BEP20, TON' });
-    }
+    const netKey = network === 'TON' ? 'TON' : 'BEP20';
 
-    const deposit = dataStore.createDeposit(userId, numAmount, network, wallet_address);
-    const activeWallet = network === 'TON' ? settings.ton_wallet : settings.bep20_wallet;
+    const deposit = dataStore.createDeposit(userId, numAmount, netKey, wallet_address, id, order_id);
+    const activeWallet = netKey === 'TON' ? settings.ton_wallet : settings.bep20_wallet;
 
     res.json({
       success: true,

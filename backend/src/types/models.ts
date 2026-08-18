@@ -98,6 +98,7 @@ export interface MiningRecord {
 
 export interface Deposit {
   id: number;
+  order_id?: string;
   user_id: number;
   amount: number;
   network: 'BEP20' | 'TON' | 'TRC20';

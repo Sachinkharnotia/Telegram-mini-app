@@ -289,22 +289,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       const storedDeps = localStorage.getItem('admin_deposits');
       const rawList = storedDeps ? JSON.parse(storedDeps) : [];
 
-      // Clean and deduplicate deposits
       const confirmedMap = new Map<string, any>();
-      const pendingList: any[] = [];
+      const seenFuzzyKeys = new Set<string>();
+      const pendingMap = new Map<string, any>();
 
       for (const d of rawList) {
         if (!d) continue;
         const dTime = new Date(d.created_at || Date.now()).getTime();
-        const minBucket = Math.floor(dTime / 60000);
+        const bucket = Math.floor(dTime / 120000);
         const amountNum = parseFloat(String(d.amount || 0));
-        const fuzzyKey = `${amountNum.toFixed(2)}_${d.network}_${minBucket}`;
+        const fuzzyKey = `${amountNum.toFixed(2)}_${d.network}_${bucket}`;
 
         if (d.status === 'confirmed' || d.status === 'completed' || d.status === 'approved') {
           confirmedMap.set(fuzzyKey, d);
           confirmedMap.set(String(d.order_id || d.id), d);
-        } else {
-          pendingList.push(d);
+          seenFuzzyKeys.add(fuzzyKey);
+        }
+      }
+
+      for (const d of rawList) {
+        if (!d) continue;
+        if (d.status !== 'confirmed' && d.status !== 'completed' && d.status !== 'approved') {
+          const dTime = new Date(d.created_at || Date.now()).getTime();
+          const bucket = Math.floor(dTime / 120000);
+          const amountNum = parseFloat(String(d.amount || 0));
+          const fuzzyKey = `${amountNum.toFixed(2)}_${d.network}_${bucket}`;
+
+          if (!seenFuzzyKeys.has(fuzzyKey)) {
+            seenFuzzyKeys.add(fuzzyKey);
+            pendingMap.set(String(d.order_id || d.id), d);
+          }
         }
       }
 
@@ -312,16 +326,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       for (const v of confirmedMap.values()) {
         finalMap.set(String(v.order_id || v.id), v);
       }
-
-      for (const p of pendingList) {
-        const pTime = new Date(p.created_at || Date.now()).getTime();
-        const minBucket = Math.floor(pTime / 60000);
-        const amountNum = parseFloat(String(p.amount || 0));
-        const fuzzyKey = `${amountNum.toFixed(2)}_${p.network}_${minBucket}`;
-
-        if (!confirmedMap.has(fuzzyKey) && !finalMap.has(String(p.order_id || p.id))) {
-          finalMap.set(String(p.order_id || p.id), p);
-        }
+      for (const [k, v] of pendingMap.entries()) {
+        if (!finalMap.has(k)) finalMap.set(k, v);
       }
 
       localDepositList = Array.from(finalMap.values());
@@ -339,20 +345,35 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         const combined = [...localDepositList, ...apiDeps];
 
         const confirmedMap = new Map<string, any>();
-        const pendingList: any[] = [];
+        const seenFuzzyKeys = new Set<string>();
+        const pendingMap = new Map<string, any>();
 
         for (const d of combined) {
           if (!d) continue;
           const dTime = new Date(d.created_at || Date.now()).getTime();
-          const minBucket = Math.floor(dTime / 60000);
+          const bucket = Math.floor(dTime / 120000);
           const amountNum = parseFloat(String(d.amount || 0));
-          const fuzzyKey = `${amountNum.toFixed(2)}_${d.network}_${minBucket}`;
+          const fuzzyKey = `${amountNum.toFixed(2)}_${d.network}_${bucket}`;
 
           if (d.status === 'confirmed' || d.status === 'completed' || d.status === 'approved') {
             confirmedMap.set(fuzzyKey, d);
             confirmedMap.set(String(d.order_id || d.id), d);
-          } else {
-            pendingList.push(d);
+            seenFuzzyKeys.add(fuzzyKey);
+          }
+        }
+
+        for (const d of combined) {
+          if (!d) continue;
+          if (d.status !== 'confirmed' && d.status !== 'completed' && d.status !== 'approved') {
+            const dTime = new Date(d.created_at || Date.now()).getTime();
+            const bucket = Math.floor(dTime / 120000);
+            const amountNum = parseFloat(String(d.amount || 0));
+            const fuzzyKey = `${amountNum.toFixed(2)}_${d.network}_${bucket}`;
+
+            if (!seenFuzzyKeys.has(fuzzyKey)) {
+              seenFuzzyKeys.add(fuzzyKey);
+              pendingMap.set(String(d.order_id || d.id), d);
+            }
           }
         }
 
@@ -360,16 +381,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         for (const v of confirmedMap.values()) {
           finalMap.set(String(v.order_id || v.id), v);
         }
-
-        for (const p of pendingList) {
-          const pTime = new Date(p.created_at || Date.now()).getTime();
-          const minBucket = Math.floor(pTime / 60000);
-          const amountNum = parseFloat(String(p.amount || 0));
-          const fuzzyKey = `${amountNum.toFixed(2)}_${p.network}_${minBucket}`;
-
-          if (!confirmedMap.has(fuzzyKey) && !finalMap.has(String(p.order_id || p.id))) {
-            finalMap.set(String(p.order_id || p.id), p);
-          }
+        for (const [k, v] of pendingMap.entries()) {
+          if (!finalMap.has(k)) finalMap.set(k, v);
         }
 
         const mergedDeps = Array.from(finalMap.values());

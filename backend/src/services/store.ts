@@ -568,9 +568,23 @@ export class DataStoreService {
     return { success: true, sectorIndex: idx, sector };
   }
 
-  public createDeposit(userId: number, amount: number, network: 'BEP20' | 'TON', walletAddress?: string): Deposit {
+  public createDeposit(userId: number, amount: number, network: 'BEP20' | 'TON', walletAddress?: string, customId?: number | string, orderId?: string): Deposit {
+    const numericId = typeof customId === 'number' ? customId : (customId ? parseInt(String(customId).replace(/\D/g, ''), 10) || Date.now() : Date.now());
+    const now = Date.now();
+
+    const existing = this.deposits.find(d => 
+      d.id === numericId || 
+      (d.order_id && (d.order_id === orderId || d.order_id === String(customId))) ||
+      (d.user_id === userId && Math.abs(d.amount - amount) < 0.01 && d.network === network && Math.abs(now - new Date(d.created_at).getTime()) < 60000)
+    );
+
+    if (existing) {
+      return existing;
+    }
+
     const dep: Deposit = {
-      id: Date.now(),
+      id: numericId,
+      order_id: orderId || `DEP-${numericId}`,
       user_id: userId,
       amount,
       network,

@@ -71,7 +71,8 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     setLoading(true);
     setErrorMsg('');
 
-    const orderId = `DEP-${Date.now()}`;
+    const depositNumericId = Date.now();
+    const orderId = `DEP-${depositNumericId}`;
     setLastOrderId(orderId);
     const userId = user?.id || user?.telegram_id || 10001;
     const userName = user?.first_name || user?.username || 'Member';
@@ -80,7 +81,7 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       const raw = localStorage.getItem('admin_deposits') || '[]';
       const deps = JSON.parse(raw);
       deps.unshift({
-        id: Date.now(),
+        id: depositNumericId,
         order_id: orderId,
         user_id: userId,
         user_name: userName,
@@ -115,14 +116,14 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       await fetch(`${API_URL}/api/deposit/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: numAmt, network, user_id: userId })
+        body: JSON.stringify({ id: depositNumericId, order_id: orderId, amount: numAmt, network, user_id: userId })
       });
     } catch {
       try {
         await fetch('/api/deposit/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: numAmt, network, user_id: userId })
+          body: JSON.stringify({ id: depositNumericId, order_id: orderId, amount: numAmt, network, user_id: userId })
         });
       } catch {}
     }
