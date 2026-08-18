@@ -598,18 +598,72 @@ export class DataStoreService {
   }
 
   public getDeposits(userId?: number): Deposit[] {
-    if (userId) return this.deposits.filter(d => d.user_id === userId);
-    return this.deposits;
+    const list = userId ? this.deposits.filter(d => d.user_id === userId) : this.deposits;
+    
+    const confirmedMap = new Map<string, Deposit>();
+    const seenFuzzy = new Set<string>();
+    const pendingMap = new Map<string, Deposit>();
+
+    for (const d of list) {
+      if (!d) continue;
+      const dTime = new Date(d.created_at).getTime();
+      const bucket = Math.floor(dTime / 120000);
+      const fuzzyKey = `${d.user_id}_${Number(d.amount).toFixed(2)}_${d.network}_${bucket}`;
+
+      if (d.status === 'confirmed') {
+        confirmedMap.set(fuzzyKey, d);
+        confirmedMap.set(String(d.id), d);
+        seenFuzzy.add(fuzzyKey);
+      }
+    }
+
+    for (const d of list) {
+      if (!d) continue;
+      if (d.status !== 'confirmed') {
+        const dTime = new Date(d.created_at).getTime();
+        const bucket = Math.floor(dTime / 120000);
+        const fuzzyKey = `${d.user_id}_${Number(d.amount).toFixed(2)}_${d.network}_${bucket}`;
+
+        if (!seenFuzzy.has(fuzzyKey)) {
+          seenFuzzy.add(fuzzyKey);
+          pendingMap.set(String(d.id), d);
+        }
+      }
+    }
+
+    const finalMap = new Map<string, Deposit>();
+    for (const v of confirmedMap.values()) {
+      finalMap.set(String(v.id), v);
+    }
+    for (const [k, v] of pendingMap.entries()) {
+      if (!finalMap.has(k)) finalMap.set(k, v);
+    }
+
+    const res = Array.from(finalMap.values());
+    res.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return res;
   }
 
   public confirmDeposit(depositId: number, txHash?: string): Deposit | null {
-    const dep = this.deposits.find(d => d.id === depositId);
-    if (!dep || dep.status !== 'pending') return null;
+    const dep = this.deposits.find(d => d.id === depositId || (d.order_id && d.order_id === `DEP-${depositId}`));
+    if (!dep) return null;
 
     dep.status = 'confirmed';
     dep.tx_hash = txHash || '0x' + Math.random().toString(16).substr(2, 40);
     dep.confirmed_at = new Date();
     dep.updated_at = new Date();
+
+    const dTime = new Date(dep.created_at).getTime();
+    const bucket = Math.floor(dTime / 120000);
+
+    // Purge any ghost duplicates matching the same user, amount, network, and time window
+    this.deposits = this.deposits.filter(d => {
+      if (d.id === dep.id || d.status === 'confirmed') return true;
+      const otherTime = new Date(d.created_at).getTime();
+      const otherBucket = Math.floor(otherTime / 120000);
+      const isGhost = d.user_id === dep.user_id && Math.abs(d.amount - dep.amount) < 0.01 && d.network === dep.network && Math.abs(otherBucket - bucket) <= 1;
+      return !isGhost;
+    });
 
     const bal = this.getUserBalance(dep.user_id);
     bal.usdt_balance = parseFloat((bal.usdt_balance + dep.amount).toFixed(4));
