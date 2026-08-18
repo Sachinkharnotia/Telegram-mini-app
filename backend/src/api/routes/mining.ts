@@ -28,6 +28,8 @@ const getMiningStatus = (req: any, res: any) => {
 
 router.get('/dashboard', getMiningStatus);
 router.get('/status', getMiningStatus);
+router.get('/packages', getMiningStatus);
+router.get('/', getMiningStatus);
 
 router.post('/buy-vx', (req: any, res) => {
   try {

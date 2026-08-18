@@ -16,6 +16,8 @@ const getTasksList = (req: any, res: any) => {
   res.json({ tasks: formattedTasks });
 };
 
+router.get('/', getTasksList);
+router.get('/user', getTasksList);
 router.get('/list', getTasksList);
 router.get('/available', getTasksList);
 

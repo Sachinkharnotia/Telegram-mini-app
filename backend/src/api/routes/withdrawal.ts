@@ -53,7 +53,19 @@ router.get('/my-withdrawals', (req: any, res) => {
   res.json({ withdrawals });
 });
 
+router.get('/history', (req: any, res) => {
+  const userId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : 1001);
+  const withdrawals = dataStore.getWithdrawals(userId);
+  res.json({ withdrawals });
+});
+
 router.get('/list', (req: any, res) => {
+  const userId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : undefined);
+  const withdrawals = dataStore.getWithdrawals(userId);
+  res.json({ withdrawals });
+});
+
+router.get('/', (req: any, res) => {
   const userId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : undefined);
   const withdrawals = dataStore.getWithdrawals(userId);
   res.json({ withdrawals });

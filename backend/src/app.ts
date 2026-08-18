@@ -32,6 +32,10 @@ app.get('/', (req, res) => {
   res.json({ status: 'online', service: 'VextoralMining API Engine', version: '2.4.0' });
 });
 
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });

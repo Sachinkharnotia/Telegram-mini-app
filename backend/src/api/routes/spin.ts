@@ -3,7 +3,7 @@ import { dataStore } from '../../services/store';
 
 const router = Router();
 
-router.get('/sectors', (req, res) => {
+const getSpinInfo = (req: any, res: any) => {
   const sectors = dataStore.getSpinSectors();
   const settings = dataStore.getSettings();
   res.json({
@@ -11,7 +11,11 @@ router.get('/sectors', (req, res) => {
     spin_cost_usdt: settings.spin_cost_usdt,
     daily_free_spins: settings.daily_free_spins
   });
-});
+};
+
+router.get('/sectors', getSpinInfo);
+router.get('/status', getSpinInfo);
+router.get('/', getSpinInfo);
 
 router.post('/play', (req: any, res) => {
   try {
