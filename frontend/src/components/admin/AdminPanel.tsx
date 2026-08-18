@@ -488,11 +488,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
           support_username: settings.branding?.support_telegram || 'VaultSupportAdmin'
         };
 
-        await fetch('/api/admin/settings', {
+        await fetch(`${API_BASE}/api/admin/settings`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-admin-pin': 'vextoral2026'
+            'x-admin-pin': ADMIN_PIN
           },
           body: JSON.stringify(backendPayload)
         });
@@ -726,11 +726,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         support_username: settings.branding?.support_telegram || 'VaultSupportAdmin'
       };
 
-      await fetch('/api/admin/settings', {
+      await fetch(`${API_BASE}/api/admin/settings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-pin': 'vextoral2026'
+          'x-admin-pin': ADMIN_PIN
         },
         body: JSON.stringify(backendPayload)
       });

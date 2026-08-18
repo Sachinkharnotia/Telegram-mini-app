@@ -81,15 +81,24 @@ export const MandatoryJoin: React.FC<MandatoryJoinProps> = ({ onVerified }) => {
     }
 
     setLoading(true);
-    fetch('/api/user/mandatory-join/confirm', { method: 'POST' })
+    const API_URL = 'https://backend-ten-amber-99.vercel.app';
+    fetch(`${API_URL}/api/user/mandatory-join/confirm`, { method: 'POST' })
       .then(res => res.json())
       .then(() => {
         localStorage.setItem('mandatory_joined', 'true');
         onVerified();
       })
       .catch(() => {
-        localStorage.setItem('mandatory_joined', 'true');
-        onVerified();
+        fetch('/api/user/mandatory-join/confirm', { method: 'POST' })
+          .then(res => res.json())
+          .then(() => {
+            localStorage.setItem('mandatory_joined', 'true');
+            onVerified();
+          })
+          .catch(() => {
+            localStorage.setItem('mandatory_joined', 'true');
+            onVerified();
+          });
       })
       .finally(() => setLoading(false));
   };

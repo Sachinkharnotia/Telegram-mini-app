@@ -124,11 +124,18 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
 
       try {
-        fetch('/api/auth/register-sync', {
+        const API_URL = 'https://backend-ten-amber-99.vercel.app';
+        fetch(`${API_URL}/api/auth/register-sync`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user: updatedUser })
-        }).catch(() => {});
+        }).catch(() => {
+          fetch('/api/auth/register-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user: updatedUser })
+          }).catch(() => {});
+        });
       } catch {}
 
       return { user: updatedUser };

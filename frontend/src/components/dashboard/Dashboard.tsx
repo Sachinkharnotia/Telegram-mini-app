@@ -119,7 +119,10 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         setIsClaiming(false);
       }, 600);
 
-      fetch('/api/mining/claim-yield', { method: 'POST' }).catch(() => {});
+      const API_URL = 'https://backend-ten-amber-99.vercel.app';
+      fetch(`${API_URL}/api/mining/claim-yield`, { method: 'POST' }).catch(() => {
+        fetch('/api/mining/claim-yield', { method: 'POST' }).catch(() => {});
+      });
     }
   };
 
@@ -144,12 +147,21 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
     }, 1200);
 
     try {
-      await fetch('/api/mining/buy-vx', {
+      const API_URL = 'https://backend-ten-amber-99.vercel.app';
+      await fetch(`${API_URL}/api/mining/buy-vx`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ vx_amount: vxAmt })
       });
-    } catch {}
+    } catch {
+      try {
+        await fetch('/api/mining/buy-vx', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ vx_amount: vxAmt })
+        });
+      } catch {}
+    }
   };
 
   if (showAdminPanel) {

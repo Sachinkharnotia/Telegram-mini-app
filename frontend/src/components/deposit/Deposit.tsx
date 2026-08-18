@@ -32,13 +32,22 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   useEffect(() => {
     loadWallets();
 
-    fetch('/api/deposit/wallets')
+    const API_URL = 'https://backend-ten-amber-99.vercel.app';
+    fetch(`${API_URL}/api/deposit/wallets`)
       .then(res => res.json())
       .then(data => {
         if (data.bep20_wallet) setBep20Wallet(data.bep20_wallet);
         if (data.ton_wallet) setTonWallet(data.ton_wallet);
       })
-      .catch(() => {});
+      .catch(() => {
+        fetch('/api/deposit/wallets')
+          .then(res => res.json())
+          .then(data => {
+            if (data.bep20_wallet) setBep20Wallet(data.bep20_wallet);
+            if (data.ton_wallet) setTonWallet(data.ton_wallet);
+          })
+          .catch(() => {});
+      });
 
     window.addEventListener('storage', loadWallets);
     return () => window.removeEventListener('storage', loadWallets);

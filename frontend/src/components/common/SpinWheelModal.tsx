@@ -62,7 +62,8 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
         }
       } catch {}
 
-      fetch('/api/spin/sectors')
+      const API_URL = 'https://backend-ten-amber-99.vercel.app';
+      fetch(`${API_URL}/api/spin/sectors`)
         .then(res => res.json())
         .then(data => {
           if (data.sectors && Array.isArray(data.sectors) && data.sectors.length > 0) {
@@ -72,7 +73,19 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
             setDailyLimit(Number(data.daily_spins_limit));
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          fetch('/api/spin/sectors')
+            .then(res => res.json())
+            .then(data => {
+              if (data.sectors && Array.isArray(data.sectors) && data.sectors.length > 0) {
+                setSectors(data.sectors);
+              }
+              if (data.daily_spins_limit) {
+                setDailyLimit(Number(data.daily_spins_limit));
+              }
+            })
+            .catch(() => {});
+        });
     }
   }, [isOpen, todayStr]);
 
@@ -92,7 +105,8 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
     setWonPrize(null);
     setErrorMsg('');
 
-    fetch('/api/spin/play', { method: 'POST' })
+    const API_URL = 'https://backend-ten-amber-99.vercel.app';
+    fetch(`${API_URL}/api/spin/play`, { method: 'POST' })
       .then(res => res.json())
       .then(data => {
         if (!data.success && data.error) {
