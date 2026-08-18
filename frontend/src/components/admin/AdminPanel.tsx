@@ -1504,10 +1504,90 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                   className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
                 />
               </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">Platform Tagline</label>
+                <input
+                  type="text"
+                  value={settings.branding?.tagline || 'Complete tasks & earn daily USDT yield.'}
+                  onChange={e => setSettings({
+                    ...settings,
+                    branding: { ...settings.branding, tagline: e.target.value }
+                  })}
+                  className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">Logo Image URL</label>
+                <input
+                  type="text"
+                  placeholder="https://..."
+                  value={settings.branding?.logo_url || ''}
+                  onChange={e => setSettings({
+                    ...settings,
+                    branding: { ...settings.branding, logo_url: e.target.value }
+                  })}
+                  className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#E2CAD8]">Banner Image URL</label>
+                <input
+                  type="text"
+                  placeholder="https://..."
+                  value={settings.branding?.banner_url || ''}
+                  onChange={e => setSettings({
+                    ...settings,
+                    branding: { ...settings.branding, banner_url: e.target.value }
+                  })}
+                  className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white outline-none"
+                />
+              </div>
             </div>
 
             <button onClick={() => handleSaveSettingsSection('branding')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
               Save Branding & Telegram
+            </button>
+          </div>
+
+          {/* General & Maintenance Settings */}
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4 shadow-xl">
+            <div className="border-b border-[#C18DB4]/20 pb-3 flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-bold text-white font-serif-luxury">⚙️ General & Maintenance Mode</h3>
+                <p className="text-[11px] text-[#87A7D0]">Toggle platform accessibility and service outage announcements</p>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-amber-400">
+                <input
+                  type="checkbox"
+                  checked={settings.general?.maintenance_mode || false}
+                  onChange={e => setSettings({
+                    ...settings,
+                    general: { ...settings.general, maintenance_mode: e.target.checked }
+                  })}
+                  className="rounded text-amber-500 w-4 h-4"
+                />
+                <span>Maintenance Mode</span>
+              </label>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#E2CAD8]">Maintenance Notice Message</label>
+              <input
+                type="text"
+                value={settings.general?.maintenance_message || 'VextoralMining is under scheduled maintenance. Please check back soon.'}
+                onChange={e => setSettings({
+                  ...settings,
+                  general: { ...settings.general, maintenance_message: e.target.value }
+                })}
+                className="w-full p-3 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white outline-none"
+              />
+            </div>
+
+            <button onClick={() => handleSaveSettingsSection('general')} className="btn-gold-vault px-6 py-2.5 rounded-xl text-xs font-bold shadow-lg">
+              Save General Settings
             </button>
           </div>
 
