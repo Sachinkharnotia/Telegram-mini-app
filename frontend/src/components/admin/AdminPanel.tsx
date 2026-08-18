@@ -1273,7 +1273,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[#E2CAD8]">USDT TON Receiving Address (The Open Network)</label>
+                <label className="text-xs font-bold text-[#E2CAD8]">TON Coin Receiving Address (TON Blockchain)</label>
                 <input
                   type="text"
                   value={settings.payment?.ton_wallet || settings.ton_wallet || ''}

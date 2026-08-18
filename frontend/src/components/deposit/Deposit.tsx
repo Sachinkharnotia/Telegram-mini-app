@@ -118,8 +118,10 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
           <ChevronLeft size={20} />
         </button>
         <div>
-          <h2 className="text-lg font-bold text-white font-serif-luxury">Deposit USDT</h2>
-          <p className="text-xs text-[#E2CAD8]">Select Network & Send Transfer</p>
+          <h2 className="text-lg font-bold text-white font-serif-luxury">
+            {network === 'TON' ? 'Deposit TON Coin' : 'Deposit USDT (BEP-20)'}
+          </h2>
+          <p className="text-xs text-[#E2CAD8]">Select Asset & Send Blockchain Transfer</p>
         </div>
       </header>
 
@@ -136,7 +138,7 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
           </div>
           <h3 className="text-xl font-bold text-white font-serif-luxury">Deposit Order Created</h3>
           <p className="text-xs text-[#E2CAD8]">
-            Your deposit order for <strong className="text-emerald-400 font-mono text-sm">${parseFloat(amount || '0').toFixed(2)} USDT ({network})</strong> has been registered with Order ID <span className="font-mono text-white">{lastOrderId}</span>.
+            Your deposit order for <strong className="text-emerald-400 font-mono text-sm">{parseFloat(amount || '0').toFixed(2)} {network === 'TON' ? 'TON' : 'USDT'} ({network === 'TON' ? 'TON Network' : 'BEP-20'})</strong> has been registered with Order ID <span className="font-mono text-white">{lastOrderId}</span>.
           </p>
 
           <div className="p-3.5 bg-[#0E1B48] border border-[#C18DB4]/30 rounded-2xl text-left space-y-1.5">
@@ -145,12 +147,12 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
               <span className="text-amber-300 font-bold uppercase">Pending Verification</span>
             </div>
             <div className="flex justify-between text-[11px]">
-              <span className="text-[#87A7D0]">Network:</span>
-              <span className="text-white font-bold">{network}</span>
+              <span className="text-[#87A7D0]">Asset / Network:</span>
+              <span className="text-white font-bold">{network === 'TON' ? 'TON Coin (TON Blockchain)' : 'USDT (BEP-20 BSC)'}</span>
             </div>
             <div className="flex justify-between text-[11px]">
               <span className="text-[#87A7D0]">Amount:</span>
-              <span className="text-emerald-400 font-bold font-mono">${parseFloat(amount || '0').toFixed(2)} USDT</span>
+              <span className="text-emerald-400 font-bold font-mono">{parseFloat(amount || '0').toFixed(2)} {network === 'TON' ? 'TON' : 'USDT'}</span>
             </div>
           </div>
 
@@ -162,48 +164,54 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         <div className="space-y-5">
           
           <div>
-            <label className="block text-xs font-bold text-white mb-2">1. Select Network</label>
+            <label className="block text-xs font-bold text-white mb-2">1. Select Asset & Network</label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setNetwork('BEP20')}
-                className={`p-3.5 rounded-2xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                className={`p-3.5 rounded-2xl border text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 ${
                   network === 'BEP20'
                     ? 'btn-gold-vault shadow-lg'
                     : 'bg-[#0E1B48]/80 text-[#E2CAD8] border border-[#C18DB4]/30 hover:bg-[#0E1B48]'
                 }`}
               >
-                <span>USDT BEP20</span>
+                <span className="font-extrabold">USDT (BEP-20)</span>
+                <span className="text-[10px] opacity-80">BNB Smart Chain</span>
               </button>
 
               <button
                 onClick={() => setNetwork('TON')}
-                className={`p-3.5 rounded-2xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                className={`p-3.5 rounded-2xl border text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 ${
                   network === 'TON'
                     ? 'btn-gold-vault shadow-lg'
                     : 'bg-[#0E1B48]/80 text-[#E2CAD8] border border-[#C18DB4]/30 hover:bg-[#0E1B48]'
                 }`}
               >
-                <span>TON Network</span>
+                <span className="font-extrabold">TON Coin</span>
+                <span className="text-[10px] opacity-80">TON Blockchain</span>
               </button>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-white mb-2">2. Deposit Amount (USDT)</label>
+            <label className="block text-xs font-bold text-white mb-2">
+              2. Deposit Amount ({network === 'TON' ? 'TON Coin' : 'USDT'})
+            </label>
             <input
               type="number"
-              min="10"
+              min={network === 'TON' ? '2' : '10'}
               value={amount}
               onChange={e => setAmount(e.target.value)}
               className="w-full px-4 py-3.5 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-2xl text-white font-bold text-base focus:outline-none"
             />
-            <span className="text-[10px] text-[#E2CAD8] mt-1 block">Minimum Deposit: $10.00 USDT</span>
+            <span className="text-[10px] text-[#E2CAD8] mt-1 block">
+              {network === 'TON' ? 'Minimum Deposit: 2.00 TON Coin' : 'Minimum Deposit: $10.00 USDT'}
+            </span>
           </div>
 
           <div className="card-vault p-5 rounded-3xl space-y-4 border border-[#C18DB4]/40">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <QrCode size={16} className="text-[#C18DB4]" /> Deposit Address
+                <QrCode size={16} className="text-[#C18DB4]" /> {network === 'TON' ? 'TON Receiving Address' : 'BEP-20 USDT Address'}
               </span>
               <span className="text-[10px] text-emerald-400 font-bold">Auto-Detected</span>
             </div>
@@ -216,7 +224,11 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
             </div>
 
             <p className="text-[10px] text-[#E2CAD8] leading-relaxed">
-              Send exact USDT amount to the wallet above via <strong>{network}</strong>. Balance updates automatically upon confirmation.
+              {network === 'TON' ? (
+                <>Send exact <strong>TON Coin amount</strong> to the wallet above via <strong>TON Blockchain</strong>. Balance updates automatically upon confirmation.</>
+              ) : (
+                <>Send exact <strong>USDT amount</strong> to the wallet above via <strong>BNB Smart Chain (BEP-20)</strong>. Balance updates automatically upon confirmation.</>
+              )}
             </p>
           </div>
 
@@ -225,7 +237,9 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
             disabled={loading}
             className="w-full py-4 btn-gold-vault text-xs font-extrabold rounded-2xl uppercase tracking-wider shadow-xl flex items-center justify-center gap-2"
           >
-            {loading ? <RefreshCw size={16} className="animate-spin" /> : <span>I Have Transferred ${amount} USDT</span>}
+            {loading ? <RefreshCw size={16} className="animate-spin" /> : (
+              <span>I Have Transferred {amount} {network === 'TON' ? 'TON' : 'USDT'}</span>
+            )}
           </button>
 
         </div>
