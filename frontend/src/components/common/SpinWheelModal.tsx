@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Sparkles, Trophy, RotateCw } from 'lucide-react';
+import { X, Sparkles, Trophy, RotateCw, AlertCircle } from 'lucide-react';
 
 interface SpinSector {
   id: number;
@@ -20,6 +20,8 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
   const [rotationDegree, setRotationDegree] = useState(0);
   const [wonPrize, setWonPrize] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [dailyLimit, setDailyLimit] = useState(3);
+  const [spinsUsedToday, setSpinsUsedToday] = useState(0);
 
   const defaultSectors: SpinSector[] = [
     { id: 1, label: '+0.10 USDT', reward_type: 'USDT', reward_amount: 0.10, color: '#C18DB4' },
@@ -34,15 +36,25 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
 
   const [sectors, setSectors] = useState<SpinSector[]>(defaultSectors);
 
+  const todayStr = new Date().toISOString().slice(0, 10);
+
   useEffect(() => {
     if (isOpen) {
       setWonPrize(null);
       setErrorMsg('');
 
+      const count = Number(localStorage.getItem(`user_spins_${todayStr}`) || 0);
+      setSpinsUsedToday(count);
+
       try {
         const stored = localStorage.getItem('platform_settings');
         if (stored) {
           const parsed = JSON.parse(stored);
+          if (parsed.daily_spins_limit !== undefined) {
+            setDailyLimit(Number(parsed.daily_spins_limit));
+          } else if (parsed.rewards?.daily_spins_limit !== undefined) {
+            setDailyLimit(Number(parsed.rewards.daily_spins_limit));
+          }
           if (parsed.wheel_sectors && Array.isArray(parsed.wheel_sectors) && parsed.wheel_sectors.length > 0) {
             setSectors(parsed.wheel_sectors);
             return;
@@ -56,15 +68,26 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
           if (data.sectors && Array.isArray(data.sectors) && data.sectors.length > 0) {
             setSectors(data.sectors);
           }
+          if (data.daily_spins_limit) {
+            setDailyLimit(Number(data.daily_spins_limit));
+          }
         })
         .catch(() => {});
     }
-  }, [isOpen]);
+  }, [isOpen, todayStr]);
 
   if (!isOpen) return null;
 
+  const spinsRemaining = Math.max(0, dailyLimit - spinsUsedToday);
+  const isLimitReached = spinsRemaining <= 0;
+
   const handleSpin = () => {
     if (isSpinning) return;
+    if (isLimitReached) {
+      setErrorMsg(`Daily limit of ${dailyLimit} spins reached. Please return tomorrow!`);
+      return;
+    }
+
     setIsSpinning(true);
     setWonPrize(null);
     setErrorMsg('');
@@ -94,6 +117,9 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
         setTimeout(() => {
           setIsSpinning(false);
           setWonPrize(prizeText);
+          const newCount = spinsUsedToday + 1;
+          setSpinsUsedToday(newCount);
+          localStorage.setItem(`user_spins_${todayStr}`, newCount.toString());
           onRewardWon(prizeText);
         }, 3600);
       })
@@ -114,6 +140,9 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
         setTimeout(() => {
           setIsSpinning(false);
           setWonPrize(prizeText);
+          const newCount = spinsUsedToday + 1;
+          setSpinsUsedToday(newCount);
+          localStorage.setItem(`user_spins_${todayStr}`, newCount.toString());
           onRewardWon(prizeText);
         }, 3600);
       });
@@ -136,15 +165,18 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
             <Sparkles size={12} className="text-[#C18DB4]" /> Lucky Wheel Reward
           </div>
           <h3 className="text-xl font-extrabold font-serif-luxury text-white">Daily Spin Wheel</h3>
+          <div className="text-[11px] font-bold text-amber-400">
+            Spins Today: {spinsRemaining} / {dailyLimit} Available
+          </div>
         </div>
 
         {errorMsg && (
-          <div className="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-200 text-xs font-semibold">
-            {errorMsg}
+          <div className="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-200 text-xs font-semibold flex items-center justify-center gap-1.5">
+            <AlertCircle size={14} /> {errorMsg}
           </div>
         )}
 
-        <div className="relative w-64 h-64 mx-auto my-3 flex items-center justify-center">
+        <div className="relative w-64 h-64 mx-auto my-2 flex items-center justify-center">
           <div className="absolute -top-3 z-30 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[22px] border-t-[#C18DB4] drop-shadow-[0_4px_12px_rgba(193,141,180,0.9)]"></div>
 
           <div 
@@ -178,25 +210,33 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
         </div>
 
         {wonPrize ? (
-          <div className="bg-[#0E1B48] border border-[#C18DB4]/60 rounded-2xl p-4 space-y-1 animate-bounce">
-            <p className="text-xs font-bold uppercase tracking-wider text-[#C18DB4]">Reward Claimed!</p>
-            <p className="text-lg font-extrabold font-serif-luxury text-white">You Won {wonPrize}</p>
+          <div className="bg-[#0E1B48] border border-[#C18DB4]/60 rounded-2xl p-3 space-y-0.5 animate-bounce">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#C18DB4]">Reward Claimed!</p>
+            <p className="text-base font-extrabold font-serif-luxury text-white">You Won {wonPrize}</p>
           </div>
         ) : (
-          <p className="text-xs text-[#E2CAD8]">Spin to win instant USDT & VX rewards credited to your wallet.</p>
+          <p className="text-xs text-[#E2CAD8]">
+            {isLimitReached ? 'You have used all spins for today.' : 'Spin to win instant USDT & VX rewards.'}
+          </p>
         )}
 
         <button
           onClick={handleSpin}
-          disabled={isSpinning}
+          disabled={isSpinning || isLimitReached}
           className={`w-full py-4 rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-2xl transition-all flex items-center justify-center gap-2 ${
-            isSpinning 
+            isSpinning || isLimitReached
               ? 'bg-[#0E1B48]/60 text-slate-500 border border-[#C18DB4]/20 cursor-not-allowed' 
               : 'btn-gold-vault'
           }`}
         >
           <RotateCw size={16} className={isSpinning ? 'animate-spin' : ''} />
-          <span>{isSpinning ? 'Spinning Wheel...' : 'Spin The Wheel Now'}</span>
+          <span>
+            {isSpinning 
+              ? 'Spinning Wheel...' 
+              : isLimitReached 
+                ? 'Daily Limit Reached' 
+                : `Spin Wheel (${spinsRemaining} Left)`}
+          </span>
         </button>
 
       </div>

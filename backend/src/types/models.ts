@@ -51,6 +51,8 @@ export interface AppSettings {
   referral_fixed_reward: number;
   referral_enabled: boolean;
   daily_free_spins: number;
+  daily_spins_limit: number;
+  daily_giftbox_limit: number;
   spin_cost_usdt: number;
   mandatory_join_enabled: boolean;
   app_name: string;

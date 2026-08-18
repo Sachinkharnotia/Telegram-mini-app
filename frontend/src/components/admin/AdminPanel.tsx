@@ -48,6 +48,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       maintenance_mode: false,
       maintenance_message: 'VextoralMining is under maintenance. Please check back soon.'
     },
+    daily_spins_limit: 3,
+    daily_giftbox_limit: 1,
     gift_rewards: [
       '0.50 USDT',
       '1.25 USDT',
@@ -1148,6 +1150,43 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             />
             <button onClick={() => handleSaveSettingsSection('gift_rewards')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
               Save Gift Box Rewards
+            </button>
+          </div>
+
+          <div className="card-vault p-5 rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-4">
+            <div>
+              <h3 className="text-sm font-bold text-white font-serif-luxury">Daily Spin & Gift Box Limits Control</h3>
+              <p className="text-[11px] text-[#87A7D0]">Configure how many times a user can spin the wheel and open the gift box per day</p>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#E2CAD8]">Daily Spin Limit (Spins / Day)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={settings.daily_spins_limit || 3}
+                  onChange={e => setSettings({ ...settings, daily_spins_limit: parseInt(e.target.value, 10) || 1 })}
+                  className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#E2CAD8]">Daily Gift Box Limit (Opens / Day)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={settings.daily_giftbox_limit || 1}
+                  onChange={e => setSettings({ ...settings, daily_giftbox_limit: parseInt(e.target.value, 10) || 1 })}
+                  className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
+                />
+              </div>
+            </div>
+
+            <button onClick={() => handleSaveSettingsSection('daily_limits')} className="btn-gold-vault px-5 py-2 rounded-xl text-xs font-bold">
+              Save Daily Limits
             </button>
           </div>
 

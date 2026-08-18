@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Sparkles, Gift, PackageOpen, Award } from 'lucide-react';
 
 interface GiftBoxModalProps {
@@ -11,6 +11,8 @@ export const GiftBoxModal = ({ isOpen, onClose, onRewardWon }: GiftBoxModalProps
   const [isOpening, setIsOpening] = useState(false);
   const [isOpened, setIsOpened] = useState(false);
   const [wonPrize, setWonPrize] = useState<string | null>(null);
+  const [dailyLimit, setDailyLimit] = useState(1);
+  const [chestsUsedToday, setChestsUsedToday] = useState(0);
 
   const defaultRewards = [
     '0.50 USDT',
@@ -20,6 +22,31 @@ export const GiftBoxModal = ({ isOpen, onClose, onRewardWon }: GiftBoxModalProps
     '5.00 USDT',
     '10.00 USDT'
   ];
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsOpening(false);
+      setIsOpened(false);
+      setWonPrize(null);
+
+      const count = Number(localStorage.getItem(`user_giftbox_${todayStr}`) || 0);
+      setChestsUsedToday(count);
+
+      try {
+        const stored = localStorage.getItem('platform_settings');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.daily_giftbox_limit !== undefined) {
+            setDailyLimit(Number(parsed.daily_giftbox_limit));
+          } else if (parsed.rewards?.daily_giftbox_limit !== undefined) {
+            setDailyLimit(Number(parsed.rewards.daily_giftbox_limit));
+          }
+        }
+      } catch {}
+    }
+  }, [isOpen, todayStr]);
 
   const getRewards = (): string[] => {
     try {
@@ -38,8 +65,13 @@ export const GiftBoxModal = ({ isOpen, onClose, onRewardWon }: GiftBoxModalProps
 
   if (!isOpen) return null;
 
+  const chestsRemaining = Math.max(0, dailyLimit - chestsUsedToday);
+  const isLimitReached = chestsRemaining <= 0;
+
   const handleOpenGift = () => {
     if (isOpening || isOpened) return;
+    if (isLimitReached) return;
+
     setIsOpening(true);
 
     const randomReward = rewards[Math.floor(Math.random() * rewards.length)];
@@ -48,6 +80,9 @@ export const GiftBoxModal = ({ isOpen, onClose, onRewardWon }: GiftBoxModalProps
       setIsOpening(false);
       setIsOpened(true);
       setWonPrize(randomReward);
+      const newCount = chestsUsedToday + 1;
+      setChestsUsedToday(newCount);
+      localStorage.setItem(`user_giftbox_${todayStr}`, newCount.toString());
       onRewardWon(randomReward);
     }, 2000);
   };
@@ -76,9 +111,12 @@ export const GiftBoxModal = ({ isOpen, onClose, onRewardWon }: GiftBoxModalProps
             <Sparkles size={12} className="text-[#C18DB4]" /> Mystery Chest Rewards
           </div>
           <h3 className="text-xl font-extrabold font-serif-luxury text-white">Daily Gift Box</h3>
+          <div className="text-[11px] font-bold text-amber-400">
+            Chests Today: {chestsRemaining} / {dailyLimit} Available
+          </div>
         </div>
 
-        <div className="relative py-6 flex items-center justify-center">
+        <div className="relative py-5 flex items-center justify-center">
           <div className={`w-36 h-36 rounded-3xl bg-[#0E1B48] border-2 border-[#C18DB4]/60 flex items-center justify-center relative shadow-[0_0_50px_rgba(193,141,180,0.3)] transition-transform duration-500 ${
             isOpening ? 'animate-bounce scale-110' : isOpened ? 'scale-105 border-[#87A7D0]' : 'hover:scale-105'
           }`}>
@@ -105,7 +143,11 @@ export const GiftBoxModal = ({ isOpen, onClose, onRewardWon }: GiftBoxModalProps
             <p className="text-[10px] text-[#E2CAD8]">Credited directly to your available balance</p>
           </div>
         ) : (
-          <p className="text-xs text-[#E2CAD8]">Open your free daily mystery gift box to unlock instant USDT rewards.</p>
+          <p className="text-xs text-[#E2CAD8]">
+            {isLimitReached 
+              ? 'You have opened all gift chests for today.' 
+              : 'Open your daily mystery gift box to unlock instant USDT rewards.'}
+          </p>
         )}
 
         {isOpened ? (
@@ -118,14 +160,18 @@ export const GiftBoxModal = ({ isOpen, onClose, onRewardWon }: GiftBoxModalProps
         ) : (
           <button
             onClick={handleOpenGift}
-            disabled={isOpening}
+            disabled={isOpening || isLimitReached}
             className={`w-full py-4 rounded-2xl text-xs font-extrabold font-serif-luxury uppercase tracking-wider shadow-2xl transition-all ${
-              isOpening 
+              isOpening || isLimitReached
                 ? 'bg-[#0E1B48]/60 text-slate-500 border border-[#C18DB4]/20 cursor-not-allowed' 
                 : 'btn-gold-vault'
             }`}
           >
-            {isOpening ? 'Unboxing Gift Box...' : 'Open Gift Box Now'}
+            {isOpening 
+              ? 'Unboxing Gift Box...' 
+              : isLimitReached 
+                ? 'Daily Limit Reached' 
+                : `Open Gift Box (${chestsRemaining} Left)`}
           </button>
         )}
 
