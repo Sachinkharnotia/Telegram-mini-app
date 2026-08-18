@@ -14,7 +14,7 @@ export const Referral: React.FC = () => {
     bonus: 0.50
   });
 
-  const [botUsername, setBotUsername] = useState('VXMiningBot');
+  const [botUsername, setBotUsername] = useState('Vextoralbot');
   const tgId = user?.telegram_id || user?.id || 10001;
   const referralLink = `https://t.me/${botUsername}?start=ref_${tgId}`;
 
@@ -31,10 +31,11 @@ export const Referral: React.FC = () => {
       const stored = localStorage.getItem('platform_settings');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed.telegram?.bot_username) {
-          setBotUsername(parsed.telegram.bot_username.replace('@', ''));
-        } else if (parsed.bot_username) {
-          setBotUsername(parsed.bot_username.replace('@', ''));
+        const rawName = parsed.telegram?.bot_username || parsed.bot_username || '';
+        if (rawName && rawName !== 'VXMiningBot' && rawName !== '@VXMiningBot') {
+          setBotUsername(rawName.replace('@', ''));
+        } else {
+          setBotUsername('Vextoralbot');
         }
 
         const t1 = normalizePercent(parsed.referral?.level1_percent ?? parsed.referral_commission_tier1 ?? parsed.referral_level1_percent, 10);

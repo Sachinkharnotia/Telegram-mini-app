@@ -34,9 +34,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       level3_percent: 2
     },
     telegram: {
-      bot_username: 'VXMiningBot',
+      bot_username: 'Vextoralbot',
       mini_app_short_name: 'vextoral',
-      bot_token: ''
+      bot_token: '8921722561:AAGbrA4p6acTznLKZV5Ad1M1j8G5eq4psGw'
     },
     branding: {
       app_name: 'VextoralMining',

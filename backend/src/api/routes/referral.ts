@@ -9,7 +9,7 @@ const getReferralInfo = (req: any, res: any) => {
   const bal = dataStore.getUserBalance(userId);
   const settings = dataStore.getSettings();
 
-  const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'VXMiningBot';
+  const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'Vextoralbot';
   const referralCode = user ? `ref_${user.telegram_id}` : `ref_98765432`;
   const referralLink = `https://t.me/${botUsername}?start=${referralCode}`;
 
