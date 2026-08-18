@@ -22,8 +22,8 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
   const { user, updateBalance } = useAuthStore();
   const [unclaimedYield, setUnclaimedYield] = useState(0.00);
   const [isClaiming, setIsClaiming] = useState(false);
-  const [walletBalance, setWalletBalance] = useState(Number(user?.balance_usdt || 0));
-  const [vxBalance, setVxBalance] = useState(Number(user?.balance_vx || 0));
+  const walletBalance = Number(user?.balance_usdt || 0);
+  const vxBalance = Number(user?.balance_vx || 0);
   const [expandActivities, setExpandActivities] = useState(true);
   const [wheelOpen, setWheelOpen] = useState(false);
   const [giftModalOpen, setGiftModalOpen] = useState(false);
@@ -40,29 +40,20 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
   const dailyUsdtYield = isEligibleToMine ? vxBalance * vxPriceUsdt * dailyYieldRate : 0;
 
   useEffect(() => {
-    if (user) {
-      setWalletBalance(Number(user.balance_usdt || 0));
-      setVxBalance(Number(user.balance_vx || 0));
-    }
-  }, [user?.balance_usdt, user?.balance_vx]);
-
-  useEffect(() => {
-    fetch('/api/mining/dashboard')
+    const userId = user?.id || user?.telegram_id || 1001;
+    fetch(`/api/mining/dashboard?user_id=${userId}`)
       .then(res => res.json())
       .then(data => {
-        if (data.usdt_balance !== undefined) setWalletBalance(data.usdt_balance);
-        if (data.vx_balance !== undefined) setVxBalance(data.vx_balance);
         if (data.unclaimed_yield !== undefined) setUnclaimedYield(data.unclaimed_yield);
       })
       .catch(() => {});
-  }, []);
+  }, [user?.id]);
 
   const handleClaim = () => {
     if (unclaimedYield > 0) {
       setIsClaiming(true);
       const claimAmount = parseFloat(unclaimedYield.toFixed(4));
       updateBalance(claimAmount, 0, { type: 'mining_yield', title: 'VX Yield Claim' });
-      setWalletBalance(prev => prev + claimAmount);
       setUnclaimedYield(0);
       setTimeout(() => {
         setIsClaiming(false);
@@ -86,8 +77,6 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
     }
 
     updateBalance(-costUsdt, vxAmt, { type: 'vx_purchase', title: 'VX Token Purchase' });
-    setWalletBalance(prev => Math.max(0, prev - costUsdt));
-    setVxBalance(prev => prev + vxAmt);
     setBuyVxMsg('Successfully purchased VX Tokens!');
     setTimeout(() => {
       setBuyVxModalOpen(false);
@@ -128,10 +117,8 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
           if (amountNum > 0) {
             if (isVx) {
               updateBalance(0, amountNum, { type: 'spin_reward', title: `Lucky Wheel Spin: +${amountNum} VX` });
-              setVxBalance(prev => prev + amountNum);
             } else {
               updateBalance(amountNum, 0, { type: 'spin_reward', title: `Lucky Wheel Spin: +$${amountNum.toFixed(2)} USDT` });
-              setWalletBalance(prev => prev + amountNum);
             }
           }
         }}
@@ -146,10 +133,8 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
           if (amountNum > 0) {
             if (isVx) {
               updateBalance(0, amountNum, { type: 'gift_reward', title: `Mystery Gift Chest: +${amountNum} VX` });
-              setVxBalance(prev => prev + amountNum);
             } else {
               updateBalance(amountNum, 0, { type: 'gift_reward', title: `Mystery Gift Chest: +$${amountNum.toFixed(2)} USDT` });
-              setWalletBalance(prev => prev + amountNum);
             }
           }
         }}
