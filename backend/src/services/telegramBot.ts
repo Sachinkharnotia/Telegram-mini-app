@@ -55,7 +55,7 @@ export class TelegramBotService {
           reply_markup: {
             inline_keyboard: [
               [{ text: '⚡ Launch Vextoral App', web_app: { url: miniAppUrl } }],
-              [{ text: '📢 Official Channel', url: 'https://t.me/Vextoral' }, { text: '💬 Support', url: 'https://t.me/VextoralSupport' }]
+              [{ text: '📢 Official Channel', url: 'https://t.me/Vextoral' }, { text: '💬 Support & Community', url: 'https://t.me/vextoralcomunity' }]
             ]
           }
         });

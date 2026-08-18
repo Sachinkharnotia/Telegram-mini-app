@@ -260,34 +260,44 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
           </button>
 
           <div className="card-vault rounded-3xl p-6 space-y-4 border border-[#C18DB4]/30">
-            <h2 className="text-xl font-bold text-white font-serif-luxury">{t.support}</h2>
-            <p className="text-xs text-[#E2CAD8]">Submit your inquiry to 24/7 VextoralMining support.</p>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">Official Community & Support</h2>
+            <p className="text-xs text-[#E2CAD8]">Join our official community channel for announcements, updates, and 24/7 member assistance.</p>
 
-            {ticketSent ? (
-              <div className="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-center space-y-2">
-                <CheckCircle2 size={32} className="text-emerald-400 mx-auto" />
-                <h4 className="text-sm font-bold text-white">Ticket Submitted</h4>
-                <p className="text-xs text-emerald-200">Our team will respond via Telegram support chat.</p>
-              </div>
-            ) : (
-              <form onSubmit={handleSupportSubmit} className="space-y-4">
-                <div>
+            <a
+              href="https://t.me/vextoralcomunity"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full btn-gold-vault py-3.5 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg"
+            >
+              <Send size={16} /> Join Official Community (@vextoralcomunity)
+            </a>
+
+            <div className="border-t border-[#C18DB4]/20 pt-4">
+              <h4 className="text-xs font-bold text-white mb-2">Or submit a support inquiry:</h4>
+              {ticketSent ? (
+                <div className="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-center space-y-2">
+                  <CheckCircle2 size={32} className="text-emerald-400 mx-auto" />
+                  <h4 className="text-sm font-bold text-white">Inquiry Submitted</h4>
+                  <p className="text-xs text-emerald-200">Our team will respond in the official community chat.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSupportSubmit} className="space-y-3">
                   <textarea 
-                    rows={4}
+                    rows={3}
                     value={ticketMessage}
                     onChange={(e) => setTicketMessage(e.target.value)}
                     placeholder="Describe your question or issue..."
-                    className="w-full bg-[#0E1B48] border border-[#C18DB4]/40 rounded-2xl p-3.5 text-xs text-white outline-none"
+                    className="w-full bg-[#0E1B48] border border-[#C18DB4]/40 rounded-2xl p-3 text-xs text-white outline-none"
                   />
-                </div>
-                <button 
-                  type="submit"
-                  className="w-full btn-gold-vault py-3.5 rounded-2xl text-xs font-bold flex items-center justify-center gap-2"
-                >
-                  <Send size={14} /> Submit Ticket
-                </button>
-              </form>
-            )}
+                  <button 
+                    type="submit"
+                    className="w-full py-2.5 rounded-xl bg-[#0E1B48] text-[#87A7D0] border border-[#C18DB4]/30 text-xs font-bold hover:bg-[#1A285A]"
+                  >
+                    Submit Ticket
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -449,7 +459,7 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
             >
               <div className="flex items-center gap-3">
                 <LifeBuoy size={18} className="text-[#87A7D0]" />
-                <span className="text-xs font-bold text-white">{t.support}</span>
+                <span className="text-xs font-bold text-white">Official Community & Support</span>
               </div>
               <ChevronRight size={16} className="text-[#E2CAD8]" />
             </div>

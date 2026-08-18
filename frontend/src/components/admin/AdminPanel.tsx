@@ -41,7 +41,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     branding: {
       app_name: 'VextoralMining',
       tagline: 'Complete tasks & earn daily USDT yield.',
-      support_telegram: '@VextoralSupport',
+      support_telegram: '@vextoralcomunity',
       support_email: 'businessvextoral@gmail.com'
     },
     general: {
