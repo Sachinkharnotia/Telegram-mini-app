@@ -82,15 +82,19 @@ export class TelegramBotService {
         const miniAppUrl = process.env.TELEGRAM_MINI_APP_URL || DEFAULT_WEB_APP_URL;
         const launchUrl = startParam ? `${miniAppUrl}?start=${startParam}#tgWebAppStartParam=${startParam}` : miniAppUrl;
 
-        await this.bot.sendMessage(chatId, welcomeText, {
-          parse_mode: 'HTML',
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: '⚡ Launch Vextoral App', web_app: { url: launchUrl } }],
-              [{ text: '📢 Official Channel', url: 'https://t.me/Vextoral' }, { text: '💬 Support & Community', url: 'https://t.me/vextoralcomunity' }]
-            ]
-          }
-        });
+        try {
+          await this.bot.sendMessage(chatId, welcomeText, {
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '⚡ Launch Vextoral App', web_app: { url: launchUrl } }],
+                [{ text: '📢 Official Channel', url: 'https://t.me/Vextoral' }, { text: '💬 Support & Community', url: 'https://t.me/vextoralcomunity' }]
+              ]
+            }
+          });
+        } catch (err: any) {
+          console.error('Telegram bot sendMessage error:', err.message);
+        }
       }
     }
   }
