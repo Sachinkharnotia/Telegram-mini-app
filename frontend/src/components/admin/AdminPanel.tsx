@@ -249,7 +249,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             balance_usdt: u.balance?.usdt_balance !== undefined ? u.balance.usdt_balance : (u.balance_usdt || 0),
             balance_vx: u.balance?.vx_balance !== undefined ? u.balance.vx_balance : (u.balance_vx || 0),
             referral_count: u.referral_count || 0,
+            referrals: u.referral_count || 0,
             referral_earnings: u.referral_earnings || 0,
+            earned: u.referral_earnings || 0,
             referred_by: u.referred_by,
             joined: new Date(u.created_at || Date.now()).toLocaleDateString(),
             is_active: u.is_active !== false,
@@ -1661,13 +1663,46 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       {activeTab === 'referrals' && (
         <div className="space-y-5 animate-fade-in">
           <div>
-            <h2 className="text-xl font-bold text-white font-serif-luxury">Referrals</h2>
-            <p className="text-xs text-[#87A7D0]">Reward: ${settings.referral?.reward ?? 0.50} · condition: {settings.referral?.condition ?? 'first_task_approved'}</p>
+            <h2 className="text-xl font-bold text-white font-serif-luxury">Referrals Network</h2>
+            <p className="text-xs text-[#87A7D0]">Live ledger of user invitations and signup bonus rewards ($0.50 / invite)</p>
           </div>
 
-          <div className="card-vault p-8 rounded-3xl bg-[#0E1B48]/60 border border-[#C18DB4]/30 text-center space-y-2">
-            <h4 className="text-sm font-bold text-white">No referrals yet</h4>
-            <p className="text-xs text-[#87A7D0]">User invitation networks will populate here.</p>
+          <div className="card-vault rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-[#C18DB4]/20 text-[#87A7D0] font-bold">
+                <tr>
+                  <th className="p-3.5">Invited Member</th>
+                  <th className="p-3.5">Telegram ID</th>
+                  <th className="p-3.5">Referred By (Inviter ID)</th>
+                  <th className="p-3.5">Bonus Reward</th>
+                  <th className="p-3.5">Date Joined</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#C18DB4]/10">
+                {users.filter(u => u.referred_by).length > 0 ? (
+                  users.filter(u => u.referred_by).map(u => (
+                    <tr key={u.id} className="hover:bg-[#1A285A]/40 transition-colors">
+                      <td className="p-3.5 font-bold text-white">
+                        <div>{u.first_name} {u.last_name || ''}</div>
+                        <span className="text-[10px] text-[#87A7D0]">@{u.username || 'user'}</span>
+                      </td>
+                      <td className="p-3.5 font-mono text-[#E2CAD8]">{u.telegram_id}</td>
+                      <td className="p-3.5 font-mono text-purple-300 font-bold">
+                        ID: {u.referred_by}
+                      </td>
+                      <td className="p-3.5 font-bold text-emerald-400">+$0.50 USDT</td>
+                      <td className="p-3.5 text-[#87A7D0] text-[11px]">{u.joined}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-[#87A7D0]">
+                      No referral invitations recorded yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
