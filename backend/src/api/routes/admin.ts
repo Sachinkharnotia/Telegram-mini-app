@@ -28,22 +28,25 @@ const checkAdmin = (req: any, res: any, next: any) => {
 
 router.use(checkAdmin);
 
-router.get('/stats', (req, res) => {
+router.get('/stats', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const stats = dataStore.getAdminStats();
   res.json({ stats });
 });
 
-router.get('/settings', (req, res) => {
+router.get('/settings', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const settings = dataStore.getSettings();
   res.json({ settings });
 });
 
-router.post('/settings', (req, res) => {
+router.post('/settings', async (req, res) => {
   const updated = dataStore.updateSettings(req.body);
   res.json({ success: true, settings: updated });
 });
 
-router.get('/users', (req, res) => {
+router.get('/users', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const query = (req.query.q as string || '').toLowerCase().trim();
   let users = dataStore.getAllUsers();
   

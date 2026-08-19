@@ -3,7 +3,8 @@ import { dataStore } from '../../services/store';
 
 const router = Router();
 
-const getReferralInfo = (req: any, res: any) => {
+const getReferralInfo = async (req: any, res: any) => {
+  await dataStore.syncWithPostgres();
   const rawId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : undefined);
   let user: any = null;
   if (rawId) {

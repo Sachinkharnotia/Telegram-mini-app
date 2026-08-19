@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { User, UserBalance, AppSettings, RequiredCommunity, VXPurchase, Deposit, Withdrawal, Referral, Task, UserTask, Transaction, SpinSector } from '../types/models';
+import { pool } from '../config/database';
 
 const DB_FILE_PATH = process.env.VERCEL
   ? path.join('/tmp', 'vextoral_db.json')
@@ -52,6 +53,49 @@ export class DataStoreService {
   constructor() {
     this.seedDefaultData();
     this.loadFromDisk();
+    this.initPostgres();
+  }
+
+  private async initPostgres() {
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS app_state (
+          key VARCHAR(255) PRIMARY KEY,
+          value JSONB NOT NULL,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      await this.syncWithPostgres();
+    } catch (e: any) {
+      console.warn('PostgreSQL initialization skipped / error:', e.message);
+    }
+  }
+
+  public async syncWithPostgres() {
+    try {
+      const res = await pool.query(`SELECT value FROM app_state WHERE key = 'main_store'`);
+      if (res.rows.length > 0 && res.rows[0].value) {
+        const data = res.rows[0].value;
+        if (data.users && Array.isArray(data.users)) {
+          this.users = new Map(data.users);
+        }
+        if (data.balances && Array.isArray(data.balances)) {
+          this.balances = new Map(data.balances);
+        }
+        if (data.deposits) this.deposits = data.deposits;
+        if (data.withdrawals) this.withdrawals = data.withdrawals;
+        if (data.referrals) this.referrals = data.referrals;
+        if (data.tasks) this.tasks = data.tasks;
+        if (data.userTasks) this.userTasks = data.userTasks;
+        if (data.transactions) this.transactions = data.transactions;
+        if (data.settings) this.settings = { ...this.settings, ...data.settings };
+        if (data.requiredCommunities) this.requiredCommunities = data.requiredCommunities;
+        if (data.spinSectors) this.spinSectors = data.spinSectors;
+        if (data.notifications) this.notifications = data.notifications;
+      }
+    } catch (e: any) {
+      console.warn('PostgreSQL sync error:', e.message);
+    }
   }
 
   private loadFromDisk() {
@@ -82,29 +126,38 @@ export class DataStoreService {
   }
 
   public saveToDisk() {
+    const data = {
+      users: Array.from(this.users.entries()),
+      balances: Array.from(this.balances.entries()),
+      deposits: this.deposits,
+      withdrawals: this.withdrawals,
+      referrals: this.referrals,
+      tasks: this.tasks,
+      userTasks: this.userTasks,
+      transactions: this.transactions,
+      settings: this.settings,
+      requiredCommunities: this.requiredCommunities,
+      spinSectors: this.spinSectors,
+      notifications: this.notifications
+    };
+
     try {
       const dir = path.dirname(DB_FILE_PATH);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
-      const data = {
-        users: Array.from(this.users.entries()),
-        balances: Array.from(this.balances.entries()),
-        deposits: this.deposits,
-        withdrawals: this.withdrawals,
-        referrals: this.referrals,
-        tasks: this.tasks,
-        userTasks: this.userTasks,
-        transactions: this.transactions,
-        settings: this.settings,
-        requiredCommunities: this.requiredCommunities,
-        spinSectors: this.spinSectors,
-        notifications: this.notifications
-      };
       fs.writeFileSync(DB_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
     } catch (e) {
       console.warn('Could not save persistent database:', e);
     }
+
+    try {
+      pool.query(`
+        INSERT INTO app_state (key, value, updated_at) 
+        VALUES ('main_store', $1, NOW())
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+      `, [JSON.stringify(data)]).catch((err: any) => console.warn('PG background save warn:', err.message));
+    } catch {}
   }
 
   private seedDefaultData() {
@@ -138,8 +191,8 @@ export class DataStoreService {
       is_premium: true,
       is_admin: true,
       is_active: true,
-      created_at: new Date(),
-      updated_at: new Date()
+      created_at: new Date('2026-08-18T10:00:00Z'),
+      updated_at: new Date('2026-08-18T10:00:00Z')
     };
 
     const demoAdminBalance: UserBalance = {
