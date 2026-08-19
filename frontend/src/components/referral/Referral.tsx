@@ -96,6 +96,23 @@ export const Referral: React.FC = () => {
     window.open(`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${text}`, '_blank');
   };
 
+  let localRefCount = 0;
+  try {
+    const rawUsers = localStorage.getItem('admin_users');
+    if (rawUsers) {
+      const uList = JSON.parse(rawUsers);
+      const myTgId = user?.telegram_id;
+      const myId = user?.id;
+      localRefCount = uList.filter((u: any) => 
+        (u.referred_by && (u.referred_by === myTgId || u.referred_by === myId)) && u.id !== myId
+      ).length;
+    }
+  } catch {}
+
+  const directCount = Math.max(refStats?.direct_referrals ?? 0, user?.referral_count ?? 0, localRefCount);
+  const totalEarned = Math.max(refStats?.total_earned ?? 0, user?.referral_earnings ?? 0, directCount * commSettings.bonus);
+  const referralsList = refStats?.tier1Referrals || refStats?.list || [];
+
   return (
     <div className="animate-fade-in min-h-[calc(100vh-64px)] pb-24 max-w-md mx-auto p-4 pt-6 space-y-6">
       
@@ -136,7 +153,7 @@ export const Referral: React.FC = () => {
           <div className="flex items-center gap-2 text-[#E2CAD8] text-xs mb-1">
             <Users size={16} className="text-[#87A7D0]" /> Direct Referrals
           </div>
-          <p className="text-xl font-extrabold text-white font-serif-luxury">{refStats?.direct_referrals ?? user?.referral_count ?? 0}</p>
+          <p className="text-xl font-extrabold text-white font-serif-luxury">{directCount}</p>
         </div>
 
         <div className="card-vault rounded-2xl p-4 border border-[#C18DB4]/30">
@@ -144,10 +161,27 @@ export const Referral: React.FC = () => {
             <Gift size={16} className="text-[#C18DB4]" /> Total Earned
           </div>
           <p className="text-xl font-extrabold text-emerald-400 font-serif-luxury">
-            ${(refStats?.total_earned ?? user?.referral_earnings ?? 0).toFixed(2)} USDT
+            ${totalEarned.toFixed(2)} USDT
           </p>
         </div>
       </div>
+
+      {referralsList.length > 0 && (
+        <div className="card-vault p-5 rounded-3xl space-y-3 border border-[#C18DB4]/30">
+          <h3 className="text-xs font-bold text-white uppercase tracking-wider font-serif-luxury">Invited Friends ({referralsList.length})</h3>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {referralsList.map((refUser: any, idx: number) => (
+              <div key={idx} className="flex justify-between items-center p-2.5 bg-[#0E1B48] rounded-xl border border-[#C18DB4]/20 text-xs">
+                <div className="flex flex-col">
+                  <span className="text-white font-bold">{refUser.first_name || 'Member'}</span>
+                  <span className="text-[10px] text-[#E2CAD8]">@{refUser.username || `ID:${refUser.telegram_id || refUser.id}`}</span>
+                </div>
+                <span className="text-emerald-400 font-bold">+$0.50 USDT</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="card-vault p-5 rounded-3xl space-y-4 border border-[#C18DB4]/30">
         <h3 className="text-xs font-bold text-white uppercase tracking-wider font-serif-luxury">Tier Commission Structure</h3>
