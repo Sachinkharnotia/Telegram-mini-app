@@ -55,10 +55,25 @@ export const isTelegramEnvironment = (): boolean => {
 export const getStartParam = (): string | null => {
   const tg = getTelegramWebApp();
   if (tg?.initDataUnsafe?.start_param) {
+    localStorage.setItem('cached_start_param', tg.initDataUnsafe.start_param);
     return tg.initDataUnsafe.start_param;
   }
+
   const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get('tgWebAppStartParam') || urlParams.get('startapp') || urlParams.get('ref');
+  let param = urlParams.get('tgWebAppStartParam') || urlParams.get('startapp') || urlParams.get('start') || urlParams.get('ref');
+
+  if (!param && typeof window !== 'undefined' && window.location.hash) {
+    const cleanHash = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : window.location.hash;
+    const hashParams = new URLSearchParams(cleanHash.includes('?') ? cleanHash.substring(cleanHash.indexOf('?') + 1) : cleanHash);
+    param = hashParams.get('tgWebAppStartParam') || hashParams.get('start_param') || hashParams.get('start') || hashParams.get('ref');
+  }
+
+  if (param) {
+    localStorage.setItem('cached_start_param', param);
+    return param;
+  }
+
+  return localStorage.getItem('cached_start_param') || null;
 };
 
 export const getTelegramDeepLink = (startParam: string = 'home'): string => {

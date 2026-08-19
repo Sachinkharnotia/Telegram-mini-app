@@ -248,6 +248,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             balance: u.balance?.usdt_balance !== undefined ? u.balance.usdt_balance : (u.balance_usdt || 0),
             balance_usdt: u.balance?.usdt_balance !== undefined ? u.balance.usdt_balance : (u.balance_usdt || 0),
             balance_vx: u.balance?.vx_balance !== undefined ? u.balance.vx_balance : (u.balance_vx || 0),
+            referral_count: u.referral_count || 0,
+            referral_earnings: u.referral_earnings || 0,
+            referred_by: u.referred_by,
             joined: new Date(u.created_at || Date.now()).toLocaleDateString(),
             is_active: u.is_active !== false,
             status: u.is_active !== false ? 'Active' : 'Blocked'

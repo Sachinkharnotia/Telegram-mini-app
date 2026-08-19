@@ -43,16 +43,20 @@ router.post('/telegram', async (req, res) => {
     let user = dataStore.findUserByTelegramId(telegramUser.id);
     let is_new = false;
     
-    if (!user) {
-      let referrerId: number | undefined = undefined;
-      if (startParam && startParam.startsWith('ref_')) {
-        const refTgId = parseInt(startParam.replace('ref_', ''), 10);
-        if (!isNaN(refTgId)) {
-          const refUser = dataStore.findUserByTelegramId(refTgId);
-          if (refUser) referrerId = refUser.id;
-        }
+    let referrerId: number | undefined = undefined;
+    if (startParam && startParam.startsWith('ref_')) {
+      const refRaw = parseInt(startParam.replace('ref_', ''), 10);
+      if (!isNaN(refRaw)) {
+        const refUser = dataStore.findUserByTelegramId(refRaw) || dataStore.findUserById(refRaw);
+        referrerId = refUser ? refUser.id : refRaw;
       }
+    } else if (startParam && !isNaN(parseInt(startParam, 10))) {
+      const refRaw = parseInt(startParam, 10);
+      const refUser = dataStore.findUserByTelegramId(refRaw) || dataStore.findUserById(refRaw);
+      referrerId = refUser ? refUser.id : refRaw;
+    }
 
+    if (!user) {
       user = dataStore.createUser({
         telegram_id: telegramUser.id,
         username: telegramUser.username,
@@ -63,6 +67,8 @@ router.post('/telegram', async (req, res) => {
         referred_by: referrerId
       });
       is_new = true;
+    } else if (!user.referred_by && referrerId && user.id !== referrerId && user.telegram_id !== referrerId) {
+      dataStore.linkReferral(referrerId, user.id);
     }
 
     if (!user.is_active) {

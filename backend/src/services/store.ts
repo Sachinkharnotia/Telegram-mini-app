@@ -854,14 +854,75 @@ export class DataStoreService {
     return [...this.notifications];
   }
 
+  public linkReferral(referrerId: number, referredId: number) {
+    if (referrerId === referredId) return;
+    const referrer = this.findUserById(referrerId) || this.findUserByTelegramId(referrerId);
+    const referred = this.findUserById(referredId) || this.findUserByTelegramId(referredId);
+    if (!referrer || !referred || referrer.id === referred.id) return;
+
+    referred.referred_by = referrer.id;
+
+    const exists = this.referrals.some(r => 
+      (r.referrer_id === referrer.id || r.referrer_id === referrer.telegram_id) && 
+      (r.referred_id === referred.id || r.referred_id === referred.telegram_id)
+    );
+
+    if (!exists) {
+      this.referrals.push({
+        id: Date.now(),
+        referrer_id: referrer.id,
+        referred_id: referred.id,
+        tier: 1,
+        commission_earned: 0,
+        created_at: new Date()
+      });
+
+      const bonus = (this.settings as any).referral_fixed_reward || (this.settings as any).referral_signup_bonus_usdt || 0.50;
+      if (bonus > 0) {
+        this.creditBalance(referrer.id, bonus, 'referral_earnings');
+        this.addTransaction({
+          id: Date.now(),
+          user_id: referrer.id,
+          type: 'referral_commission',
+          amount: bonus,
+          currency: 'USDT',
+          description: `Referral bonus for inviting ${referred.first_name || 'Member'}`,
+          status: 'completed',
+          created_at: new Date()
+        });
+      }
+    }
+    this.saveToDisk();
+  }
+
   public getReferralStats(userId: number) {
     const user = this.findUserById(userId) || this.findUserByTelegramId(userId);
     const targetUserId = user?.id || userId;
     const targetTgId = user?.telegram_id;
 
-    const directRefs = Array.from(this.users.values()).filter(
-      u => (u.referred_by === targetUserId || (targetTgId && u.referred_by === targetTgId)) && u.id !== targetUserId
-    );
+    const refUserIds = new Set<number>();
+    const directRefs: User[] = [];
+
+    for (const u of this.users.values()) {
+      if (u.id === targetUserId || (targetTgId && u.telegram_id === targetTgId)) continue;
+      const isReferred = u.referred_by === targetUserId || (targetTgId && u.referred_by === targetTgId);
+      if (isReferred && !refUserIds.has(u.id)) {
+        refUserIds.add(u.id);
+        directRefs.push(u);
+      }
+    }
+
+    for (const r of this.referrals) {
+      const isMatch = r.referrer_id === targetUserId || (targetTgId && r.referrer_id === targetTgId);
+      if (isMatch) {
+        const u = this.findUserById(r.referred_id) || this.findUserByTelegramId(r.referred_id);
+        if (u && u.id !== targetUserId && !refUserIds.has(u.id)) {
+          refUserIds.add(u.id);
+          directRefs.push(u);
+        }
+      }
+    }
+
     const bal = this.getUserBalance(targetUserId);
 
     return {

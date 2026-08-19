@@ -1,4 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
+import { dataStore } from './store';
 
 const DEFAULT_BOT_TOKEN = '8921722561:AAGbrA4p6acTznLKZV5Ad1M1j8G5eq4psGw';
 const DEFAULT_WEB_APP_URL = 'https://frontend-sooty-theta-89.vercel.app';
@@ -43,18 +44,49 @@ export class TelegramBotService {
     if (!this.bot) return;
     if (update.message && update.message.text) {
       const chatId = update.message.chat.id;
-      const text = update.message.text;
-      const firstName = update.message.from?.first_name || 'Member';
+      const text = update.message.text.trim();
+      const fromUser = update.message.from;
+      const firstName = fromUser?.first_name || 'Member';
 
       if (text.startsWith('/start')) {
+        const parts = text.split(' ');
+        const startParam = parts.length > 1 ? parts[1].trim() : '';
+        
+        let referrerId: number | undefined = undefined;
+        if (startParam && startParam.startsWith('ref_')) {
+          const rawId = parseInt(startParam.replace('ref_', ''), 10);
+          if (!isNaN(rawId)) {
+            const refUser = dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId);
+            referrerId = refUser ? refUser.id : rawId;
+          }
+        }
+
+        if (fromUser) {
+          let u = dataStore.findUserByTelegramId(fromUser.id);
+          if (!u) {
+            u = dataStore.createUser({
+              telegram_id: fromUser.id,
+              username: fromUser.username,
+              first_name: fromUser.first_name,
+              last_name: fromUser.last_name,
+              language_code: fromUser.language_code,
+              is_premium: fromUser.is_premium || false,
+              referred_by: referrerId
+            });
+          } else if (!u.referred_by && referrerId && u.id !== referrerId && u.telegram_id !== referrerId) {
+            dataStore.linkReferral(referrerId, u.id);
+          }
+        }
+
         const welcomeText = `🚀 <b>Welcome to Vextoral Mining Engine, ${firstName}!</b>\n\n💎 Complete tasks, mine VX tokens, spin the lucky wheel, and earn continuous daily USDT yield.\n\n👇 Click the button below to launch the Mini App:`;
         const miniAppUrl = process.env.TELEGRAM_MINI_APP_URL || DEFAULT_WEB_APP_URL;
+        const launchUrl = startParam ? `${miniAppUrl}?start=${startParam}#tgWebAppStartParam=${startParam}` : miniAppUrl;
 
         await this.bot.sendMessage(chatId, welcomeText, {
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [
-              [{ text: '⚡ Launch Vextoral App', web_app: { url: miniAppUrl } }],
+              [{ text: '⚡ Launch Vextoral App', web_app: { url: launchUrl } }],
               [{ text: '📢 Official Channel', url: 'https://t.me/Vextoral' }, { text: '💬 Support & Community', url: 'https://t.me/vextoralcomunity' }]
             ]
           }

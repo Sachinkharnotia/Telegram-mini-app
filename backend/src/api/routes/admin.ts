@@ -55,10 +55,18 @@ router.get('/users', (req, res) => {
     );
   }
 
-  const userList = users.map(u => ({
-    ...u,
-    balance: dataStore.getUserBalance(u.id)
-  }));
+  const userList = users.map(u => {
+    const bal = dataStore.getUserBalance(u.id);
+    const refStats = dataStore.getReferralStats(u.id);
+    return {
+      ...u,
+      balance: bal,
+      balance_usdt: bal.usdt_balance,
+      balance_vx: bal.vx_balance,
+      referral_count: refStats.direct_referrals,
+      referral_earnings: bal.referral_earnings
+    };
+  });
 
   res.json({ users: userList });
 });
