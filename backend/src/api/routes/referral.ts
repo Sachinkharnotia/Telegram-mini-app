@@ -12,6 +12,14 @@ const getReferralInfo = (req: any, res: any) => {
   if (!user && req.user?.telegram_id) {
     user = dataStore.findUserByTelegramId(req.user.telegram_id);
   }
+  if (!user && rawId && rawId > 100000) {
+    user = dataStore.createUser({
+      telegram_id: rawId,
+      username: `user_${rawId}`,
+      first_name: 'Member',
+      is_premium: false
+    });
+  }
   if (!user) {
     user = dataStore.findUserById(1001);
   }
