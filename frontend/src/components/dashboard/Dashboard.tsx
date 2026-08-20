@@ -21,7 +21,7 @@ import { GiftBoxModal } from '../common/GiftBoxModal';
 import { AdminPanel } from '../admin/AdminPanel';
 
 export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) => {
-  const { user, updateBalance } = useAuthStore();
+  const { user, updateBalance, fetchUserBalance } = useAuthStore();
   const [engineSettings, setEngineSettings] = useState({
     vxPriceUsdt: 0.10,
     dailyYieldRate: 0.015,
@@ -40,6 +40,14 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
   const [buyVxInput, setBuyVxInput] = useState('100');
   const [buyVxMsg, setBuyVxMsg] = useState('');
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+
+  useEffect(() => {
+    fetchUserBalance();
+    const interval = setInterval(() => {
+      fetchUserBalance();
+    }, 6000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const loadSettings = () => {

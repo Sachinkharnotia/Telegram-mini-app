@@ -1690,7 +1690,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                       <td className="p-3.5 font-mono text-purple-300 font-bold">
                         ID: {u.referred_by}
                       </td>
-                      <td className="p-3.5 font-bold text-emerald-400">+$0.50 USDT</td>
+                      <td className="p-3.5 font-bold text-emerald-400">
+                        +${(settings.referral?.reward ?? settings.referral_fixed_reward ?? 0.50).toFixed(2)} USDT
+                      </td>
                       <td className="p-3.5 text-[#87A7D0] text-[11px]">{u.joined}</td>
                     </tr>
                   ))

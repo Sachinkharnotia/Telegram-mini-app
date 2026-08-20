@@ -176,7 +176,7 @@ export const Referral: React.FC = () => {
                   <span className="text-white font-bold">{refUser.first_name || 'Member'}</span>
                   <span className="text-[10px] text-[#E2CAD8]">@{refUser.username || `ID:${refUser.telegram_id || refUser.id}`}</span>
                 </div>
-                <span className="text-emerald-400 font-bold">+$0.50 USDT</span>
+                <span className="text-emerald-400 font-bold">+${(refUser.commission_earned !== undefined ? Number(refUser.commission_earned) : commSettings.bonus).toFixed(2)} USDT</span>
               </div>
             ))}
           </div>

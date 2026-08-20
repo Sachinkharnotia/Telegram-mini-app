@@ -8,12 +8,13 @@ interface AuthState {
   error: string | null;
   setAuth: (token: string, user: User) => void;
   updateBalance: (usdtDelta: number, vxDelta?: number, txMeta?: { type: string; title: string }) => void;
+  fetchUserBalance: () => Promise<void>;
   logout: () => void;
   setError: (error: string | null) => void;
   setLoading: (isLoading: boolean) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   token: localStorage.getItem('token'),
   user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') as string) : null,
   isLoading: false,
@@ -142,6 +143,34 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
   },
   
+  fetchUserBalance: async () => {
+    const currentUser = get().user;
+    if (!currentUser) return;
+    const targetId = currentUser.telegram_id || currentUser.id;
+    const API_URL = 'https://backend-ten-amber-99.vercel.app';
+    try {
+      let res = await fetch(`${API_URL}/api/user/profile?user_id=${targetId}`);
+      if (!res.ok) {
+        res = await fetch(`/api/user/profile?user_id=${targetId}`);
+      }
+      const data = await res.json();
+      if (data.user || data.balance) {
+        const serverUsdt = Number(data.balance?.usdt_balance ?? data.user?.balance_usdt ?? currentUser.balance_usdt ?? 0);
+        const serverVx = Number(data.balance?.vx_balance ?? data.user?.balance_vx ?? currentUser.balance_vx ?? 0);
+        const updated = {
+          ...currentUser,
+          ...(data.user || {}),
+          balance_usdt: serverUsdt,
+          balance_vx: serverVx,
+          referral_count: data.user?.referral_count ?? currentUser.referral_count,
+          referral_earnings: data.user?.referral_earnings ?? currentUser.referral_earnings
+        };
+        localStorage.setItem('user', JSON.stringify(updated));
+        set({ user: updated });
+      }
+    } catch {}
+  },
+
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');

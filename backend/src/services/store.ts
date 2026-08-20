@@ -977,18 +977,27 @@ export class DataStoreService {
     }
 
     const bal = this.getUserBalance(targetUserId);
+    const currentRewardBonus = (this.settings as any).referral_fixed_reward !== undefined 
+      ? Number((this.settings as any).referral_fixed_reward) 
+      : ((this.settings as any).referral_signup_bonus_usdt !== undefined ? Number((this.settings as any).referral_signup_bonus_usdt) : 0.50);
+
+    const friendsList = directRefs.map(u => ({
+      id: u.id,
+      telegram_id: u.telegram_id,
+      first_name: u.first_name || 'Member',
+      username: u.username || `user_${u.telegram_id}`,
+      commission_earned: currentRewardBonus,
+      joined: u.created_at
+    }));
 
     return {
       direct_referrals: directRefs.length,
       total_referrals: directRefs.length,
       total_earned: bal.referral_earnings,
-      list: directRefs.map(u => ({
-        id: u.id,
-        telegram_id: u.telegram_id,
-        first_name: u.first_name,
-        username: u.username,
-        joined: u.created_at
-      }))
+      fixed_reward: currentRewardBonus,
+      signup_bonus: currentRewardBonus,
+      tier1Referrals: friendsList,
+      list: friendsList
     };
   }
 }
