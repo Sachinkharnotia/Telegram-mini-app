@@ -313,21 +313,56 @@ export class DataStoreService {
     this.users.set(userData.telegram_id, newUser);
     this.balances.set(id, newBalance);
 
-    if (userData.referred_by && userData.referred_by !== id) {
-      const referrer = this.findUserById(userData.referred_by) || this.findUserByTelegramId(userData.referred_by);
-      if (referrer && referrer.id !== id) {
-        newUser.referred_by = referrer.id;
+    if (userData.referred_by && userData.referred_by !== id && userData.referred_by !== userData.telegram_id) {
+      let referrer = this.findUserById(userData.referred_by) || this.findUserByTelegramId(userData.referred_by);
+      if (!referrer && userData.referred_by > 100000) {
+        const refId = Math.floor(100000 + Math.random() * 900000);
+        referrer = {
+          id: refId,
+          telegram_id: userData.referred_by,
+          username: `user_${userData.referred_by}`,
+          first_name: 'Member',
+          is_premium: false,
+          is_admin: false,
+          is_active: true,
+          created_at: new Date(),
+          updated_at: new Date()
+        };
+        const refBal: UserBalance = {
+          id: Math.floor(100000 + Math.random() * 900000),
+          user_id: refId,
+          usdt_balance: 0,
+          vx_balance: 0,
+          unclaimed_yield: 0,
+          claimed_yield_total: 0,
+          total_invested: 0,
+          withdrawn_total: 0,
+          referral_earnings: 0,
+          task_earnings: 0,
+          spin_earnings: 0,
+          last_claim_at: new Date(),
+          updated_at: new Date()
+        };
+        this.users.set(referrer.telegram_id, referrer);
+        this.balances.set(referrer.id, refBal);
+      }
+
+      if (referrer && referrer.id !== id && referrer.telegram_id !== userData.telegram_id) {
+        newUser.referred_by = referrer.telegram_id || referrer.id;
+        const bonus = (this.settings as any).referral_fixed_reward !== undefined 
+          ? Number((this.settings as any).referral_fixed_reward) 
+          : ((this.settings as any).referral_signup_bonus_usdt !== undefined ? Number((this.settings as any).referral_signup_bonus_usdt) : 0.50);
+
         const refRecord: Referral = {
           id: Date.now(),
           referrer_id: referrer.id,
           referred_id: id,
           tier: 1,
-          commission_earned: 0,
+          commission_earned: bonus,
           created_at: new Date()
         };
         this.referrals.push(refRecord);
 
-        const bonus = (this.settings as any).referral_fixed_reward || (this.settings as any).referral_signup_bonus_usdt || 0.50;
         if (bonus > 0) {
           this.creditBalance(referrer.id, bonus, 'referral_earnings');
           this.addTransaction({
@@ -336,7 +371,7 @@ export class DataStoreService {
             type: 'referral_commission',
             amount: bonus,
             currency: 'USDT',
-            description: `Referral bonus for inviting ${newUser.first_name}`,
+            description: `Referral bonus for inviting ${newUser.first_name || 'Member'}`,
             status: 'completed',
             created_at: new Date()
           });
@@ -909,28 +944,63 @@ export class DataStoreService {
 
   public linkReferral(referrerId: number, referredId: number) {
     if (referrerId === referredId) return;
-    const referrer = this.findUserById(referrerId) || this.findUserByTelegramId(referrerId);
-    const referred = this.findUserById(referredId) || this.findUserByTelegramId(referredId);
-    if (!referrer || !referred || referrer.id === referred.id) return;
+    let referrer = this.findUserById(referrerId) || this.findUserByTelegramId(referrerId);
+    if (!referrer && referrerId > 100000) {
+      const refId = Math.floor(100000 + Math.random() * 900000);
+      referrer = {
+        id: refId,
+        telegram_id: referrerId,
+        username: `user_${referrerId}`,
+        first_name: 'Member',
+        is_premium: false,
+        is_admin: false,
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+      const refBal: UserBalance = {
+        id: Math.floor(100000 + Math.random() * 900000),
+        user_id: refId,
+        usdt_balance: 0,
+        vx_balance: 0,
+        unclaimed_yield: 0,
+        claimed_yield_total: 0,
+        total_invested: 0,
+        withdrawn_total: 0,
+        referral_earnings: 0,
+        task_earnings: 0,
+        spin_earnings: 0,
+        last_claim_at: new Date(),
+        updated_at: new Date()
+      };
+      this.users.set(referrer.telegram_id, referrer);
+      this.balances.set(referrer.id, refBal);
+    }
 
-    referred.referred_by = referrer.id;
+    let referred = this.findUserById(referredId) || this.findUserByTelegramId(referredId);
+    if (!referrer || !referred || referrer.id === referred.id || referrer.telegram_id === referred.telegram_id) return;
+
+    referred.referred_by = referrer.telegram_id || referrer.id;
 
     const exists = this.referrals.some(r => 
-      (r.referrer_id === referrer.id || r.referrer_id === referrer.telegram_id) && 
-      (r.referred_id === referred.id || r.referred_id === referred.telegram_id)
+      (r.referrer_id === referrer.id || (referrer.telegram_id && r.referrer_id === referrer.telegram_id)) && 
+      (r.referred_id === referred.id || (referred.telegram_id && r.referred_id === referred.telegram_id))
     );
 
     if (!exists) {
+      const bonus = (this.settings as any).referral_fixed_reward !== undefined 
+        ? Number((this.settings as any).referral_fixed_reward) 
+        : ((this.settings as any).referral_signup_bonus_usdt !== undefined ? Number((this.settings as any).referral_signup_bonus_usdt) : 0.50);
+
       this.referrals.push({
         id: Date.now(),
         referrer_id: referrer.id,
         referred_id: referred.id,
         tier: 1,
-        commission_earned: 0,
+        commission_earned: bonus,
         created_at: new Date()
       });
 
-      const bonus = (this.settings as any).referral_fixed_reward || (this.settings as any).referral_signup_bonus_usdt || 0.50;
       if (bonus > 0) {
         this.creditBalance(referrer.id, bonus, 'referral_earnings');
         this.addTransaction({

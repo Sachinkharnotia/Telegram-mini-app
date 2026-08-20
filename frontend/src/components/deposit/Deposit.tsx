@@ -13,6 +13,7 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [lastOrderId, setLastOrderId] = useState<string>('');
+  const [minDeposit, setMinDeposit] = useState(10);
 
   const loadWallets = () => {
     try {
@@ -24,6 +25,9 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         }
         if (parsed.ton_wallet || parsed.deposit_address_ton) {
           setTonWallet(parsed.ton_wallet || parsed.deposit_address_ton);
+        }
+        if (parsed.min_deposit || parsed.payment?.min_deposit) {
+          setMinDeposit(Number(parsed.min_deposit || parsed.payment?.min_deposit));
         }
       }
     } catch {}
@@ -38,6 +42,7 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       .then(data => {
         if (data.bep20_wallet) setBep20Wallet(data.bep20_wallet);
         if (data.ton_wallet) setTonWallet(data.ton_wallet);
+        if (data.min_deposit) setMinDeposit(Number(data.min_deposit));
       })
       .catch(() => {
         fetch('/api/deposit/wallets')
@@ -45,6 +50,7 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
           .then(data => {
             if (data.bep20_wallet) setBep20Wallet(data.bep20_wallet);
             if (data.ton_wallet) setTonWallet(data.ton_wallet);
+            if (data.min_deposit) setMinDeposit(Number(data.min_deposit));
           })
           .catch(() => {});
       });
@@ -63,8 +69,8 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
   const handleCreateDeposit = async () => {
     const numAmt = parseFloat(amount);
-    if (isNaN(numAmt) || numAmt < 10) {
-      setErrorMsg('Minimum deposit amount is $10.00 USDT');
+    if (isNaN(numAmt) || numAmt < minDeposit) {
+      setErrorMsg(`Minimum deposit amount is $${minDeposit.toFixed(2)} USDT`);
       return;
     }
 

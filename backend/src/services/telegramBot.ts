@@ -41,6 +41,7 @@ export class TelegramBotService {
   }
 
   async handleWebhookUpdate(update: any): Promise<void> {
+    await dataStore.syncWithPostgres();
     if (!this.bot) return;
     if (update.message && update.message.text) {
       const chatId = update.message.chat.id;

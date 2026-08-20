@@ -3,7 +3,8 @@ import { dataStore } from '../../services/store';
 
 const router = Router();
 
-const handleWithdrawalRequest = (req: any, res: any) => {
+const handleWithdrawalRequest = async (req: any, res: any) => {
+  await dataStore.syncWithPostgres();
   try {
     const userId = req.body.user_id || req.user?.id || 1001;
     const { amount, network, wallet_address, destination_address } = req.body;

@@ -4,7 +4,8 @@ import { blockchainService } from '../../services/blockchain.service';
 
 const router = Router();
 
-router.get('/wallets', (req, res) => {
+router.get('/wallets', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const settings = dataStore.getSettings();
   res.json({
     bep20_wallet: settings.bep20_wallet,
@@ -13,7 +14,8 @@ router.get('/wallets', (req, res) => {
   });
 });
 
-router.post('/create', (req: any, res) => {
+router.post('/create', async (req: any, res) => {
+  await dataStore.syncWithPostgres();
   try {
     const userId = req.body.user_id || req.user?.id || 1001;
     const { amount, network, wallet_address, id, order_id } = req.body;

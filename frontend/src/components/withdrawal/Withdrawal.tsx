@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Check, AlertCircle, RefreshCw, TrendingDown, Lock } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
@@ -12,9 +12,47 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [errorMsg, setErrorMsg] = useState('');
   const [lossTimeframe, setLossTimeframe] = useState<'1 day' | 'Week' | 'Month' | '1 year'>('Month');
 
+  const [minWithdrawal, setMinWithdrawal] = useState(3.00);
+  const [maxWithdrawal, setMaxWithdrawal] = useState(10000);
+  const [withdrawalFee, setWithdrawalFee] = useState(0.00);
+
+  useEffect(() => {
+    const loadSettings = () => {
+      try {
+        const stored = localStorage.getItem('platform_settings');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.min_withdrawal !== undefined || parsed.payment?.min_withdrawal !== undefined) {
+            setMinWithdrawal(Number(parsed.min_withdrawal ?? parsed.payment?.min_withdrawal));
+          }
+          if (parsed.max_withdrawal !== undefined || parsed.payment?.max_withdrawal !== undefined) {
+            setMaxWithdrawal(Number(parsed.max_withdrawal ?? parsed.payment?.max_withdrawal));
+          }
+          if (parsed.withdrawal_fee !== undefined || parsed.payment?.withdrawal_fee !== undefined) {
+            setWithdrawalFee(Number(parsed.withdrawal_fee ?? parsed.payment?.withdrawal_fee));
+          }
+        }
+      } catch {}
+    };
+    loadSettings();
+
+    const API_URL = 'https://backend-ten-amber-99.vercel.app';
+    fetch(`${API_URL}/api/user/profile`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.settings) {
+          if (data.settings.min_withdrawal !== undefined) setMinWithdrawal(Number(data.settings.min_withdrawal));
+          if (data.settings.max_withdrawal !== undefined) setMaxWithdrawal(Number(data.settings.max_withdrawal));
+          if (data.settings.withdrawal_fee !== undefined) setWithdrawalFee(Number(data.settings.withdrawal_fee));
+        }
+      })
+      .catch(() => {});
+
+    window.addEventListener('storage', loadSettings);
+    return () => window.removeEventListener('storage', loadSettings);
+  }, []);
+
   const userBalance = Number(user?.balance_usdt || 0);
-  const minWithdrawal = 3.00;
-  const withdrawalFee = 1.00;
   const numAmount = parseFloat(amount) || 0;
   const netAmount = Math.max(0, numAmount - withdrawalFee);
 
@@ -26,7 +64,11 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
   const handleWithdrawalRequest = async () => {
     if (numAmount < minWithdrawal) {
-      setErrorMsg(`Minimum withdrawal amount is $${minWithdrawal} USDT`);
+      setErrorMsg(`Minimum withdrawal amount is $${minWithdrawal.toFixed(2)} USDT`);
+      return;
+    }
+    if (numAmount > maxWithdrawal) {
+      setErrorMsg(`Maximum withdrawal limit is $${maxWithdrawal.toFixed(2)} USDT`);
       return;
     }
     if (isExceeding) {
