@@ -148,6 +148,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!currentUser) return;
     const targetId = currentUser.telegram_id || currentUser.id;
     const API_URL = 'https://backend-ten-amber-99.vercel.app';
+    const tg = (window as any).Telegram?.WebApp;
+    const tgUser = tg?.initDataUnsafe?.user;
     try {
       let res = await fetch(`${API_URL}/api/user/profile?user_id=${targetId}`);
       if (!res.ok) {
@@ -157,9 +159,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (data.user || data.balance) {
         const serverUsdt = Number(data.balance?.usdt_balance ?? data.user?.balance_usdt ?? currentUser.balance_usdt ?? 0);
         const serverVx = Number(data.balance?.vx_balance ?? data.user?.balance_vx ?? currentUser.balance_vx ?? 0);
+
+        const realFirstName = tgUser?.first_name 
+          || (currentUser.first_name && currentUser.first_name !== 'Member' ? currentUser.first_name : (data.user?.first_name && data.user?.first_name !== 'Member' ? data.user.first_name : (tgUser?.first_name || 'Member')));
+        
+        const realUsername = tgUser?.username || currentUser.username || data.user?.username || `user_${targetId}`;
+        const realLastName = tgUser?.last_name || currentUser.last_name || data.user?.last_name;
+
         const updated = {
           ...currentUser,
           ...(data.user || {}),
+          first_name: realFirstName,
+          username: realUsername,
+          last_name: realLastName,
           balance_usdt: serverUsdt,
           balance_vx: serverVx,
           referral_count: data.user?.referral_count ?? currentUser.referral_count,

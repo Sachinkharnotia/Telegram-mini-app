@@ -67,8 +67,15 @@ router.post('/telegram', async (req, res) => {
         referred_by: referrerId
       });
       is_new = true;
-    } else if (!user.referred_by && referrerId && user.id !== referrerId && user.telegram_id !== referrerId) {
-      dataStore.linkReferral(referrerId, user.id);
+    } else {
+      if (telegramUser.first_name) user.first_name = telegramUser.first_name;
+      if (telegramUser.username) user.username = telegramUser.username;
+      if (telegramUser.last_name) user.last_name = telegramUser.last_name;
+      if (telegramUser.is_premium !== undefined) user.is_premium = telegramUser.is_premium;
+      if (!user.referred_by && referrerId && user.id !== referrerId && user.telegram_id !== referrerId) {
+        dataStore.linkReferral(referrerId, user.id);
+      }
+      dataStore.saveToDisk();
     }
 
     if (!user.is_active) {

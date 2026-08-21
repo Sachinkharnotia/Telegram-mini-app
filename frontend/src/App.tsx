@@ -81,14 +81,40 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!token && !user) {
-      const tg = (window as any).Telegram?.WebApp;
-      const tgUser = tg?.initDataUnsafe?.user;
-      const initData = tg?.initData;
+    const tg = (window as any).Telegram?.WebApp;
+    const tgUser = tg?.initDataUnsafe?.user;
+    const initData = tg?.initData;
 
+    if (tgUser && tgUser.first_name) {
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser && (currentUser.first_name === 'Member' || currentUser.first_name !== tgUser.first_name || currentUser.username !== tgUser.username)) {
+        const updated = {
+          ...currentUser,
+          first_name: tgUser.first_name,
+          last_name: tgUser.last_name || currentUser.last_name,
+          username: tgUser.username || currentUser.username || `user_${tgUser.id}`,
+          telegram_id: tgUser.id || currentUser.telegram_id
+        };
+        useAuthStore.setState({ user: updated });
+        localStorage.setItem('user', JSON.stringify(updated));
+
+        // Sync real name to backend:
+        try {
+          fetch('https://backend-ten-amber-99.vercel.app/api/auth/register-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_data: updated })
+          }).catch(() => {});
+        } catch {}
+      }
+    }
+
+    if (!token && !user) {
       const realUserData = {
         id: tgUser?.id || 10001,
+        telegram_id: tgUser?.id || 10001,
         first_name: tgUser?.first_name || 'Member',
+        last_name: tgUser?.last_name,
         username: tgUser?.username || 'member_user',
         is_verified: true,
         referrer_id: undefined,
@@ -112,6 +138,8 @@ const App: React.FC = () => {
             if (data.token && data.user) {
               const fullUser = {
                 ...data.user,
+                first_name: tgUser?.first_name || data.user.first_name || 'Member',
+                username: tgUser?.username || data.user.username || 'user',
                 balance_usdt: data.balance?.usdt_balance ?? data.user.balance_usdt ?? 0,
                 balance_vx: data.balance?.vx_balance ?? data.user.balance_vx ?? 0
               };
@@ -131,6 +159,8 @@ const App: React.FC = () => {
                 if (data.token && data.user) {
                   const fullUser = {
                     ...data.user,
+                    first_name: tgUser?.first_name || data.user.first_name || 'Member',
+                    username: tgUser?.username || data.user.username || 'user',
                     balance_usdt: data.balance?.usdt_balance ?? data.user.balance_usdt ?? 0,
                     balance_vx: data.balance?.vx_balance ?? data.user.balance_vx ?? 0
                   };
