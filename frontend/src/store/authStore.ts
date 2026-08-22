@@ -125,16 +125,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       try {
+        const payload = {
+          user_data: updatedUser,
+          user: updatedUser,
+          balance_usdt: newUsdt,
+          balance_vx: newVx,
+          telegram_id: updatedUser.telegram_id || updatedUser.id
+        };
         const API_URL = 'https://backend-ten-amber-99.vercel.app';
         fetch(`${API_URL}/api/auth/register-sync`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user: updatedUser })
+          body: JSON.stringify(payload)
         }).catch(() => {
           fetch('/api/auth/register-sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user: updatedUser })
+            body: JSON.stringify(payload)
           }).catch(() => {});
         });
       } catch {}
@@ -157,8 +164,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
       const data = await res.json();
       if (data.user || data.balance) {
-        const serverUsdt = Number(data.balance?.usdt_balance ?? data.user?.balance_usdt ?? currentUser.balance_usdt ?? 0);
-        const serverVx = Number(data.balance?.vx_balance ?? data.user?.balance_vx ?? currentUser.balance_vx ?? 0);
+        const rawServerUsdt = Number(data.balance?.usdt_balance ?? data.user?.balance_usdt ?? 0);
+        const rawServerVx = Number(data.balance?.vx_balance ?? data.user?.balance_vx ?? 0);
+        const clientUsdt = Number(currentUser.balance_usdt || 0);
+        const clientVx = Number(currentUser.balance_vx || 0);
+        const finalUsdt = Math.max(rawServerUsdt, clientUsdt);
+        const finalVx = Math.max(rawServerVx, clientVx);
 
         const realFirstName = tgUser?.first_name 
           || (currentUser.first_name && currentUser.first_name !== 'Member' ? currentUser.first_name : (data.user?.first_name && data.user?.first_name !== 'Member' ? data.user.first_name : (tgUser?.first_name || 'Member')));
@@ -172,8 +183,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           first_name: realFirstName,
           username: realUsername,
           last_name: realLastName,
-          balance_usdt: serverUsdt,
-          balance_vx: serverVx,
+          balance_usdt: finalUsdt,
+          balance_vx: finalVx,
           referral_count: data.user?.referral_count ?? currentUser.referral_count,
           referral_earnings: data.user?.referral_earnings ?? currentUser.referral_earnings
         };

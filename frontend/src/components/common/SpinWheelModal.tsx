@@ -106,7 +106,23 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
     setErrorMsg('');
 
     const API_URL = 'https://backend-ten-amber-99.vercel.app';
-    fetch(`${API_URL}/api/spin/play`, { method: 'POST' })
+    let currentUser: any = null;
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) currentUser = JSON.parse(stored);
+    } catch {}
+    const tg = (window as any).Telegram?.WebApp;
+    const tgUser = tg?.initDataUnsafe?.user;
+    const payload = {
+      user_id: currentUser?.id || tgUser?.id || 10001,
+      telegram_id: currentUser?.telegram_id || tgUser?.id || 10001
+    };
+
+    fetch(`${API_URL}/api/spin/play`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
       .then(res => res.json())
       .then(data => {
         if (!data.success && data.error) {

@@ -260,16 +260,18 @@ export class DataStoreService {
       });
     } else {
       if (userData.username) user.username = userData.username;
-      if (userData.first_name) user.first_name = userData.first_name;
+      if (userData.first_name && userData.first_name !== 'Member') user.first_name = userData.first_name;
+      else if (userData.first_name && user.first_name === 'Member') user.first_name = userData.first_name;
+      if (userData.last_name) user.last_name = userData.last_name;
       user.updated_at = new Date();
     }
 
     const bal = this.getUserBalance(user.id);
-    if (userData.balance_usdt !== undefined && userData.balance_usdt > bal.usdt_balance) {
-      bal.usdt_balance = userData.balance_usdt;
+    if (userData.balance_usdt !== undefined) {
+      bal.usdt_balance = Math.max(bal.usdt_balance, userData.balance_usdt);
     }
-    if (userData.balance_vx !== undefined && userData.balance_vx > bal.vx_balance) {
-      bal.vx_balance = userData.balance_vx;
+    if (userData.balance_vx !== undefined) {
+      bal.vx_balance = Math.max(bal.vx_balance, userData.balance_vx);
     }
     this.saveToDisk();
     return { user, balance: bal };
@@ -744,7 +746,6 @@ export class DataStoreService {
     const dTime = new Date(dep.created_at).getTime();
     const bucket = Math.floor(dTime / 120000);
 
-    // Purge any ghost duplicates matching the same user, amount, network, and time window
     this.deposits = this.deposits.filter(d => {
       if (d.id === dep.id || d.status === 'confirmed' || d.status === 'rejected') return true;
       const otherTime = new Date(d.created_at).getTime();
@@ -782,7 +783,6 @@ export class DataStoreService {
     const dTime = new Date(dep.created_at).getTime();
     const bucket = Math.floor(dTime / 120000);
 
-    // Purge or update any matching pending ghost duplicates
     for (const d of this.deposits) {
       if (d.status === 'pending') {
         const otherTime = new Date(d.created_at).getTime();

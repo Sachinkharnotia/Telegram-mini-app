@@ -176,6 +176,18 @@ router.post('/tasks/save', (req, res) => {
   res.json({ success: true, task });
 });
 
+router.post('/tasks/delete', (req, res) => {
+  const taskId = parseInt(req.body.id || req.body.task_id, 10);
+  const success = dataStore.deleteTask(taskId);
+  res.json({ success });
+});
+
+router.delete('/tasks/:id', (req, res) => {
+  const taskId = parseInt(req.params.id, 10);
+  const success = dataStore.deleteTask(taskId);
+  res.json({ success });
+});
+
 router.get('/notifications', (req, res) => {
   const notifications = dataStore.getNotifications();
   res.json({ notifications });

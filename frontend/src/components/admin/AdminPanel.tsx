@@ -289,6 +289,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       })
       .catch(() => {});
 
+    fetch(`${API_BASE}/api/admin/tasks`, {
+      headers: { 'x-admin-pin': ADMIN_PIN }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.tasks && Array.isArray(data.tasks) && data.tasks.length > 0) {
+          setTasks(data.tasks);
+          localStorage.setItem('app_tasks', JSON.stringify(data.tasks));
+        }
+      })
+      .catch(() => {});
+
     let localDepositList: any[] = [];
     try {
       const storedDeps = localStorage.getItem('admin_deposits');
@@ -884,7 +896,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     setTimeout(() => setMessage(''), 3000);
   };
 
-  const handleCreateTask = (e: React.FormEvent) => {
+  const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
     const taskItem = {
@@ -902,6 +914,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     const updated = [taskItem, ...tasks];
     setTasks(updated);
     localStorage.setItem('app_tasks', JSON.stringify(updated));
+
+    try {
+      await fetch(`${API_BASE}/api/admin/tasks/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-pin': ADMIN_PIN },
+        body: JSON.stringify(taskItem)
+      });
+    } catch {}
+
     addActivityLog('Task Created', `Published task "${taskItem.title}" (${taskItem.reward_amount} USDT)`);
     setCreateTaskModal(false);
     setNewTaskTitle('');
@@ -911,11 +932,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     setTimeout(() => setMessage(''), 3000);
   };
 
-  const handleDeleteTask = (id: number) => {
+  const handleSaveTasks = async () => {
+    localStorage.setItem('app_tasks', JSON.stringify(tasks));
+    try {
+      for (const t of tasks) {
+        await fetch(`${API_BASE}/api/admin/tasks/save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-pin': ADMIN_PIN },
+          body: JSON.stringify(t)
+        }).catch(() => {});
+      }
+    } catch {}
+    addActivityLog('Tasks Updated', `Updated and deployed ${tasks.length} platform tasks`);
+    setMessage('All tasks and channel links saved & deployed successfully!');
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleDeleteTask = async (id: number) => {
     const taskToDelete = tasks.find(t => t.id === id);
     const updated = tasks.filter(t => t.id !== id);
     setTasks(updated);
     localStorage.setItem('app_tasks', JSON.stringify(updated));
+
+    try {
+      await fetch(`${API_BASE}/api/admin/tasks/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-pin': ADMIN_PIN },
+        body: JSON.stringify({ id })
+      });
+    } catch {}
+
     addActivityLog('Task Deleted', `Removed task "${taskToDelete?.title || id}"`);
     setMessage('Task removed');
     setTimeout(() => setMessage(''), 3000);
@@ -1298,17 +1344,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
 
       {activeTab === 'tasks' && (
         <div className="space-y-5 animate-fade-in">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold text-white font-serif-luxury">Tasks</h2>
-              <p className="text-xs text-[#87A7D0]">{tasks.length} tasks</p>
+              <h2 className="text-xl font-bold text-white font-serif-luxury">Reward Tasks & Channels</h2>
+              <p className="text-xs text-[#87A7D0]">Configure reward tasks, channel links, and instant payout amounts ({tasks.length} tasks)</p>
             </div>
-            <button
-              onClick={() => setCreateTaskModal(true)}
-              className="btn-gold-vault px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg"
-            >
-              <Plus size={14} /> New task
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSaveTasks}
+                className="btn-gold-vault px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg"
+              >
+                <Save size={14} /> Save & Deploy Tasks
+              </button>
+              <button
+                onClick={() => setCreateTaskModal(true)}
+                className="px-4 py-2 rounded-xl bg-sky-500/20 text-sky-300 border border-sky-400/40 text-xs font-bold flex items-center gap-1.5 shadow-lg hover:bg-sky-500/30"
+              >
+                <Plus size={14} /> New task
+              </button>
+            </div>
           </div>
 
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -1328,19 +1382,107 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
           <div className="space-y-3">
             {tasks.length === 0 ? (
               <div className="card-vault p-8 rounded-3xl bg-[#0E1B48]/60 border border-[#C18DB4]/30 text-center space-y-2">
-                <h4 className="text-sm font-bold text-white">No tasks yet</h4>
-                <p className="text-xs text-[#87A7D0]">Create your first task to get users earning.</p>
+                <h4 className="text-sm font-bold text-white">No tasks configured</h4>
+                <p className="text-xs text-[#87A7D0]">Create your first task to get users earning rewards.</p>
               </div>
             ) : (
-              tasks.map(t => (
-                <div key={t.id} className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 flex items-center justify-between gap-4">
-                  <div>
-                    <h4 className="text-xs font-bold text-white">{t.title}</h4>
-                    <span className="text-[10px] text-amber-300 font-bold">Reward: ${t.reward_amount} USDT | Category: {t.category || 'General'}</span>
+              tasks
+                .filter(t => taskCategory === 'All' || !t.category || t.category === taskCategory)
+                .map((t, idx) => (
+                <div key={t.id || idx} className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex-1 space-y-1">
+                      <label className="text-[10px] font-bold text-[#87A7D0] uppercase">Task Title</label>
+                      <input 
+                        type="text"
+                        value={t.title}
+                        onChange={e => {
+                          const updated = [...tasks];
+                          const realIdx = tasks.findIndex(item => item.id === t.id);
+                          if (realIdx !== -1) {
+                            updated[realIdx] = { ...updated[realIdx], title: e.target.value };
+                            setTasks(updated);
+                          }
+                        }}
+                        className="w-full bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl px-3 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-emerald-400"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-[#87A7D0] uppercase">Reward</label>
+                        <div className="flex items-center gap-1">
+                          <input 
+                            type="number"
+                            step="0.01"
+                            value={t.reward_amount}
+                            onChange={e => {
+                              const updated = [...tasks];
+                              const realIdx = tasks.findIndex(item => item.id === t.id);
+                              if (realIdx !== -1) {
+                                updated[realIdx] = { ...updated[realIdx], reward_amount: parseFloat(e.target.value) || 0 };
+                                setTasks(updated);
+                              }
+                            }}
+                            className="w-20 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl px-2 py-1.5 text-xs font-bold text-amber-300 focus:outline-none text-right"
+                          />
+                          <select
+                            value={t.reward_currency || 'USDT'}
+                            onChange={e => {
+                              const updated = [...tasks];
+                              const realIdx = tasks.findIndex(item => item.id === t.id);
+                              if (realIdx !== -1) {
+                                updated[realIdx] = { ...updated[realIdx], reward_currency: e.target.value };
+                                setTasks(updated);
+                              }
+                            }}
+                            className="bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl px-2 py-1.5 text-xs font-bold text-white focus:outline-none"
+                          >
+                            <option value="USDT">USDT</option>
+                            <option value="VX">VX</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <button 
+                        onClick={() => handleDeleteTask(t.id)} 
+                        className="p-2 text-rose-400 hover:text-rose-300 self-end mt-4"
+                        title="Delete Task"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <button onClick={() => handleDeleteTask(t.id)} className="p-2 text-rose-400 hover:text-rose-300">
-                    <Trash2 size={16} />
-                  </button>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-bold text-[#87A7D0] uppercase">Telegram Channel / Action Link</label>
+                      {t.action_url && (
+                        <a 
+                          href={t.action_url} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="text-[10px] text-sky-300 hover:underline flex items-center gap-1"
+                        >
+                          <ExternalLink size={10} /> Test Channel Link
+                        </a>
+                      )}
+                    </div>
+                    <input 
+                      type="text"
+                      placeholder="https://t.me/yourchannel or https://..."
+                      value={t.action_url || ''}
+                      onChange={e => {
+                        const updated = [...tasks];
+                        const realIdx = tasks.findIndex(item => item.id === t.id);
+                        if (realIdx !== -1) {
+                          updated[realIdx] = { ...updated[realIdx], action_url: e.target.value };
+                          setTasks(updated);
+                        }
+                      }}
+                      className="w-full bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl px-3 py-1.5 text-xs text-sky-200 font-mono focus:outline-none focus:border-emerald-400"
+                    />
+                  </div>
                 </div>
               ))
             )}
@@ -1664,7 +1806,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         <div className="space-y-5 animate-fade-in">
           <div>
             <h2 className="text-xl font-bold text-white font-serif-luxury">Referrals Network</h2>
-            <p className="text-xs text-[#87A7D0]">Live ledger of user invitations and signup bonus rewards ($0.50 / invite)</p>
+            <p className="text-xs text-[#87A7D0]">Live ledger of user invitations and signup bonus rewards (${(settings.referral?.reward ?? settings.referral_fixed_reward ?? 0.50).toFixed(2)} / invite)</p>
           </div>
 
           <div className="card-vault rounded-3xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 overflow-x-auto">

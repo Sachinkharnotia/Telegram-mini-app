@@ -219,7 +219,13 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-extrabold text-white font-serif-luxury tracking-wide">
-                ⛏️ {user?.first_name || 'Member'}
+                ⛏️ {(() => {
+                  const tg = (window as any).Telegram?.WebApp;
+                  const tgUser = tg?.initDataUnsafe?.user;
+                  return (user?.first_name && user.first_name !== 'Member') 
+                    ? user.first_name 
+                    : (user?.username || tgUser?.first_name || tgUser?.username || 'Member');
+                })()}
               </h1>
             </div>
             <div className="flex items-center gap-1.5 text-[11px] text-[#87A7D0]">
@@ -395,7 +401,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
         <div className="flex items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-extrabold text-white font-serif-luxury">Invite & Earn Multi-Tier Rewards</h3>
-            <p className="text-[10px] text-[#E2CAD8]">Get +$0.50 USDT instant bonus for each invited friend</p>
+            <p className="text-[10px] text-[#E2CAD8]">Earn instant USDT bonuses and tier commissions for every friend invited</p>
           </div>
           <button 
             onClick={() => onNavigate?.('referrals')}

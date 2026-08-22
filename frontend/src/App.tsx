@@ -82,28 +82,47 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const tg = (window as any).Telegram?.WebApp;
+    try {
+      tg?.ready?.();
+      tg?.expand?.();
+    } catch {}
+
     const tgUser = tg?.initDataUnsafe?.user;
     const initData = tg?.initData;
 
-    if (tgUser && tgUser.first_name) {
+    if (tgUser && (tgUser.first_name || tgUser.username)) {
       const currentUser = useAuthStore.getState().user;
-      if (currentUser && (currentUser.first_name === 'Member' || currentUser.first_name !== tgUser.first_name || currentUser.username !== tgUser.username)) {
+      const realFirstName = tgUser.first_name || tgUser.username || 'Member';
+      const realUsername = tgUser.username || currentUser?.username || `user_${tgUser.id}`;
+      const realLastName = tgUser.last_name || currentUser?.last_name;
+
+      if (!currentUser || currentUser.first_name === 'Member' || currentUser.first_name !== realFirstName || currentUser.username !== realUsername) {
         const updated = {
-          ...currentUser,
-          first_name: tgUser.first_name,
-          last_name: tgUser.last_name || currentUser.last_name,
-          username: tgUser.username || currentUser.username || `user_${tgUser.id}`,
-          telegram_id: tgUser.id || currentUser.telegram_id
+          ...(currentUser || {}),
+          id: currentUser?.id || tgUser.id,
+          telegram_id: tgUser.id || currentUser?.telegram_id || 10001,
+          first_name: realFirstName,
+          last_name: realLastName,
+          username: realUsername,
+          balance_usdt: currentUser?.balance_usdt || 0.00,
+          balance_vx: currentUser?.balance_vx || 0.00,
+          mining_active: (currentUser?.balance_vx || 0) >= 100
         };
-        useAuthStore.setState({ user: updated });
+        useAuthStore.setState({ user: updated as any });
         localStorage.setItem('user', JSON.stringify(updated));
 
-        // Sync real name to backend:
         try {
+          const payload = {
+            user_data: updated,
+            user: updated,
+            balance_usdt: updated.balance_usdt,
+            balance_vx: updated.balance_vx,
+            telegram_id: updated.telegram_id
+          };
           fetch('https://backend-ten-amber-99.vercel.app/api/auth/register-sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_data: updated })
+            body: JSON.stringify(payload)
           }).catch(() => {});
         } catch {}
       }
@@ -113,7 +132,7 @@ const App: React.FC = () => {
       const realUserData = {
         id: tgUser?.id || 10001,
         telegram_id: tgUser?.id || 10001,
-        first_name: tgUser?.first_name || 'Member',
+        first_name: tgUser?.first_name || tgUser?.username || 'Member',
         last_name: tgUser?.last_name,
         username: tgUser?.username || 'member_user',
         is_verified: true,
@@ -138,7 +157,7 @@ const App: React.FC = () => {
             if (data.token && data.user) {
               const fullUser = {
                 ...data.user,
-                first_name: tgUser?.first_name || data.user.first_name || 'Member',
+                first_name: tgUser?.first_name || (data.user.first_name && data.user.first_name !== 'Member' ? data.user.first_name : (tgUser?.username || 'Member')),
                 username: tgUser?.username || data.user.username || 'user',
                 balance_usdt: data.balance?.usdt_balance ?? data.user.balance_usdt ?? 0,
                 balance_vx: data.balance?.vx_balance ?? data.user.balance_vx ?? 0
@@ -159,7 +178,7 @@ const App: React.FC = () => {
                 if (data.token && data.user) {
                   const fullUser = {
                     ...data.user,
-                    first_name: tgUser?.first_name || data.user.first_name || 'Member',
+                    first_name: tgUser?.first_name || (data.user.first_name && data.user.first_name !== 'Member' ? data.user.first_name : (tgUser?.username || 'Member')),
                     username: tgUser?.username || data.user.username || 'user',
                     balance_usdt: data.balance?.usdt_balance ?? data.user.balance_usdt ?? 0,
                     balance_vx: data.balance?.vx_balance ?? data.user.balance_vx ?? 0

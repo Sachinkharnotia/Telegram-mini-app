@@ -184,13 +184,27 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
         </div>
       )}
 
-      {!activeSubView && (
+      {!activeSubView && (() => {
+        const tg = (window as any).Telegram?.WebApp;
+        const tgUser = tg?.initDataUnsafe?.user;
+        const displayName = (user?.first_name && user.first_name !== 'Member')
+          ? (user.last_name ? `${user.first_name} ${user.last_name}` : user.first_name)
+          : (user?.username
+              ? user.username
+              : (tgUser?.first_name
+                  ? (tgUser.last_name ? `${tgUser.first_name} ${tgUser.last_name}` : tgUser.first_name)
+                  : (tgUser?.username || 'Member')));
+
+        const displayInitial = (displayName && displayName !== 'Member' ? displayName.charAt(0).toUpperCase() : (tgUser?.first_name ? tgUser.first_name.charAt(0).toUpperCase() : (user?.first_name ? user.first_name.charAt(0).toUpperCase() : 'M')));
+        const displayId = user?.telegram_id || user?.id || tgUser?.id || '8140274501';
+
+        return (
         <div className="space-y-4">
           <div className="flex justify-between items-center bg-[#0E1B48]/60 p-3 rounded-2xl border border-[#C18DB4]/30">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#C18DB4] via-[#87A7D0] to-emerald-400 p-[2px] shadow-lg relative">
                 <div className="w-full h-full rounded-full bg-[#0E1B48] flex items-center justify-center text-white font-bold text-lg border border-[#C18DB4]/30">
-                  {user?.first_name ? user.first_name[0].toUpperCase() : 'M'}
+                  {displayInitial}
                 </div>
                 <div className="absolute -bottom-0.5 -right-0.5 bg-sky-500 text-white rounded-full p-0.5 shadow-md">
                   <CheckCircle2 size={14} className="fill-sky-500 text-white" />
@@ -200,13 +214,13 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
               <div>
                 <div className="flex items-center gap-1.5">
                   <h1 className="text-base font-extrabold text-white font-serif-luxury tracking-wide">
-                    {user?.first_name || 'Member'}
+                    {displayName}
                   </h1>
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-300 text-[10px] font-bold">
                     <CheckCircle2 size={10} /> {t.verified}
                   </span>
                 </div>
-                <p className="text-[11px] text-[#87A7D0]">ID: {user?.telegram_id || user?.id || '8140274501'}</p>
+                <p className="text-[11px] text-[#87A7D0]">ID: {displayId}</p>
               </div>
             </div>
 
@@ -344,7 +358,8 @@ export const Profile: React.FC<ProfileProps> = ({ onNavigate }) => {
             VextoralMining v2.4.0 (Production)
           </div>
         </div>
-      )}
+        );
+      })()}
 
     </div>
   );

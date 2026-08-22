@@ -116,20 +116,24 @@ router.post('/telegram', async (req, res) => {
 
 router.post('/register-sync', (req, res) => {
   try {
-    const { user_data, balance_usdt, balance_vx } = req.body;
-    if (!user_data || !user_data.id) {
-      return res.status(400).json({ error: 'Missing user_data' });
+    const rawUserData = req.body.user_data || req.body.user || req.body;
+    const balance_usdt = req.body.balance_usdt !== undefined ? req.body.balance_usdt : rawUserData.balance_usdt;
+    const balance_vx = req.body.balance_vx !== undefined ? req.body.balance_vx : rawUserData.balance_vx;
+
+    const telegramId = rawUserData.telegram_id || rawUserData.id;
+    if (!telegramId) {
+      return res.status(400).json({ error: 'Missing user id or telegram_id' });
     }
 
     const { user, balance } = dataStore.syncUserFromClient({
-      telegram_id: user_data.telegram_id || user_data.id,
-      username: user_data.username,
-      first_name: user_data.first_name,
-      last_name: user_data.last_name,
-      language_code: user_data.language_code,
-      is_premium: user_data.is_premium,
-      balance_usdt,
-      balance_vx
+      telegram_id: Number(telegramId),
+      username: rawUserData.username,
+      first_name: rawUserData.first_name,
+      last_name: rawUserData.last_name,
+      language_code: rawUserData.language_code,
+      is_premium: rawUserData.is_premium,
+      balance_usdt: balance_usdt !== undefined ? Number(balance_usdt) : undefined,
+      balance_vx: balance_vx !== undefined ? Number(balance_vx) : undefined
     });
 
     res.json({ success: true, user, balance });
