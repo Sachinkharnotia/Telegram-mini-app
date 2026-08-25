@@ -289,18 +289,12 @@ const App: React.FC = () => {
             🔒 All user balances, mining yields, and investments remain fully safe, secure, and actively accruing.
           </p>
 
-          <div className="pt-2 flex flex-col gap-2">
+          <div className="pt-2">
             <button 
               onClick={() => window.location.reload()} 
               className="w-full btn-gold-vault py-3 rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg"
             >
               Refresh Status
-            </button>
-            <button 
-              onClick={() => setActiveTab('admin')} 
-              className="text-[11px] text-slate-500 hover:text-slate-400 pt-2 transition-colors"
-            >
-              Admin Access
             </button>
           </div>
         </div>
