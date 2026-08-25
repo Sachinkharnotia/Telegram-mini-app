@@ -34,10 +34,18 @@ router.post('/play', async (req: any, res) => {
     
     let user = null;
     if (rawId) {
-      user = dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId);
+      user = dataStore.findUserByTelegramId(Number(rawId)) || dataStore.findUserById(Number(rawId));
     }
     if (!user && req.user?.id) {
       user = dataStore.findUserById(req.user.id);
+    }
+    if (!user && rawId && Number(rawId) > 10000) {
+      user = dataStore.createUser({
+        telegram_id: Number(rawId),
+        username: `user_${rawId}`,
+        first_name: 'Member',
+        is_premium: false
+      });
     }
     if (!user) {
       user = dataStore.findUserById(1001);
