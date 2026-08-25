@@ -42,26 +42,8 @@ const App: React.FC = () => {
     return isTelegramEnvironment() ? 'app' : 'website';
   });
 
-  const [maintenanceMode, setMaintenanceMode] = useState<boolean>(() => {
-    try {
-      const stored = localStorage.getItem('platform_settings');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return !!(parsed.general?.maintenance_mode || parsed.maintenance_mode);
-      }
-    } catch {}
-    return false;
-  });
-  const [maintenanceMessage, setMaintenanceMessage] = useState<string>(() => {
-    try {
-      const stored = localStorage.getItem('platform_settings');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return parsed.general?.maintenance_message || parsed.announcement_text || 'VextoralMining is currently undergoing scheduled maintenance. We will be back online shortly.';
-      }
-    } catch {}
-    return 'VextoralMining is currently undergoing scheduled maintenance. We will be back online shortly.';
-  });
+  const [maintenanceMode, setMaintenanceMode] = useState<boolean>(false);
+  const [maintenanceMessage, setMaintenanceMessage] = useState<string>('VextoralMining is currently undergoing scheduled maintenance. We will be back online shortly.');
 
   useEffect(() => {
     initTelegramApp();
@@ -71,7 +53,9 @@ const App: React.FC = () => {
         const stored = localStorage.getItem('platform_settings');
         if (stored) {
           const parsed = JSON.parse(stored);
-          setMaintenanceMode(!!(parsed.general?.maintenance_mode || parsed.maintenance_mode));
+          if (parsed.general?.maintenance_mode !== undefined || parsed.maintenance_mode !== undefined) {
+            setMaintenanceMode(!!(parsed.general?.maintenance_mode || parsed.maintenance_mode));
+          }
           if (parsed.general?.maintenance_message) setMaintenanceMessage(parsed.general.maintenance_message);
         }
       } catch {}
@@ -84,8 +68,17 @@ const App: React.FC = () => {
       .then(res => res.json())
       .then(data => {
         if (data.settings) {
-          setMaintenanceMode(!!data.settings.maintenance_mode);
+          const isMaint = !!data.settings.maintenance_mode;
+          setMaintenanceMode(isMaint);
           if (data.settings.announcement_text) setMaintenanceMessage(data.settings.announcement_text);
+
+          try {
+            const stored = localStorage.getItem('platform_settings');
+            const parsed = stored ? JSON.parse(stored) : {};
+            parsed.maintenance_mode = isMaint;
+            if (parsed.general) parsed.general.maintenance_mode = isMaint;
+            localStorage.setItem('platform_settings', JSON.stringify(parsed));
+          } catch {}
         }
       })
       .catch(() => {});
