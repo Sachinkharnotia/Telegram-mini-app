@@ -257,6 +257,8 @@ const App: React.FC = () => {
     }
   }, [token, user, setAuth]);
 
+  const isAdminUser = Boolean((user as any)?.is_admin || (user as any)?.isAdmin || (typeof window !== 'undefined' && sessionStorage.getItem('admin_authenticated') === 'true'));
+
   if (activeTab === 'admin') {
     return (
       <div className="min-h-screen bg-[#0E1B48] text-slate-100 p-4 sm:p-6 overflow-y-auto">
@@ -265,14 +267,18 @@ const App: React.FC = () => {
     );
   }
 
-  if (maintenanceMode) {
+  if (maintenanceMode && !isAdminUser) {
     return (
       <div className="min-h-screen bg-[#070D1E] flex flex-col items-center justify-center text-slate-100 p-6 space-y-6">
-        <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-400 via-[#C18DB4] to-[#87A7D0] p-[2px] shadow-[0_0_50px_rgba(251,191,36,0.3)] animate-pulse">
+        <button 
+          onClick={() => setActiveTab('admin')}
+          title="System Administration"
+          className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-400 via-[#C18DB4] to-[#87A7D0] p-[2px] shadow-[0_0_50px_rgba(251,191,36,0.3)] animate-pulse cursor-pointer active:scale-95 transition-transform"
+        >
           <div className="w-full h-full rounded-3xl bg-[#0E1B48] flex items-center justify-center border border-amber-400/40">
             <span className="text-3xl">⚙️</span>
           </div>
-        </div>
+        </button>
 
         <div className="card-vault p-6 rounded-3xl max-w-sm w-full text-center space-y-4 border border-amber-500/40 shadow-2xl">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-bold uppercase tracking-wider border border-amber-500/30">
