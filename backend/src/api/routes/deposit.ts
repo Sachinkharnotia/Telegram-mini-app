@@ -20,7 +20,8 @@ router.post('/create', async (req: any, res) => {
     const rawId = req.body.user_id || req.body.telegram_id || req.user?.id || 1001;
     const user = dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId);
     const userId = user ? user.id : (rawId || 1001);
-    const { amount, network, wallet_address, id, order_id } = req.body;
+    const { amount, network, wallet_address, id, order_id, tx_hash, transaction_hash, tx_id } = req.body;
+    const resolvedTxHash = (tx_hash || transaction_hash || tx_id || '').trim();
     
     const numAmount = parseFloat(amount);
     const settings = dataStore.getSettings();
@@ -31,7 +32,7 @@ router.post('/create', async (req: any, res) => {
 
     const netKey = network === 'TON' ? 'TON' : 'BEP20';
 
-    const deposit = dataStore.createDeposit(userId, numAmount, netKey, wallet_address, id, order_id);
+    const deposit = dataStore.createDeposit(userId, numAmount, netKey, wallet_address, id, order_id, resolvedTxHash);
     await dataStore.saveToDiskAsync();
     const activeWallet = netKey === 'TON' ? settings.ton_wallet : settings.bep20_wallet;
 

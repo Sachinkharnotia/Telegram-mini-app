@@ -13,6 +13,7 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [lastOrderId, setLastOrderId] = useState<string>('');
+  const [txHash, setTxHash] = useState<string>('');
   const [minDeposit, setMinDeposit] = useState(10);
 
   const loadWallets = () => {
@@ -82,6 +83,7 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     setLastOrderId(orderId);
     const userId = user?.id || user?.telegram_id || 10001;
     const userName = user?.first_name || user?.username || 'Member';
+    const cleanTxHash = txHash.trim();
 
     try {
       const raw = localStorage.getItem('admin_deposits') || '[]';
@@ -94,6 +96,7 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         amount: numAmt,
         currency: 'USDT',
         network,
+        tx_hash: cleanTxHash,
         wallet_address: activeWallet,
         status: 'pending',
         created_at: new Date().toISOString()
@@ -108,6 +111,7 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         title: `USDT Deposit Order (${network})`,
         amount: numAmt.toFixed(2),
         currency: 'USDT',
+        tx_hash: cleanTxHash,
         status: 'pending',
         created_at: new Date().toISOString()
       });
@@ -122,14 +126,28 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       await fetch(`${API_URL}/api/deposit/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: depositNumericId, order_id: orderId, amount: numAmt, network, user_id: userId })
+        body: JSON.stringify({
+          id: depositNumericId,
+          order_id: orderId,
+          amount: numAmt,
+          network,
+          user_id: userId,
+          tx_hash: cleanTxHash
+        })
       });
     } catch {
       try {
         await fetch('/api/deposit/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: depositNumericId, order_id: orderId, amount: numAmt, network, user_id: userId })
+          body: JSON.stringify({
+            id: depositNumericId,
+            order_id: orderId,
+            amount: numAmt,
+            network,
+            user_id: userId,
+            tx_hash: cleanTxHash
+          })
         });
       } catch {}
     }
@@ -255,6 +273,22 @@ export const Deposit: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                 <>Send exact <strong>USDT amount</strong> to the wallet above via <strong>BNB Smart Chain (BEP-20)</strong>. Balance updates automatically upon confirmation.</>
               )}
             </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-white mb-2">
+              3. Transaction Hash / TxID (Proof of Payment)
+            </label>
+            <input
+              type="text"
+              placeholder={`Paste ${network === 'TON' ? 'TON transaction hash' : 'BSC BscScan TxID (0x...)'}`}
+              value={txHash}
+              onChange={e => setTxHash(e.target.value)}
+              className="w-full px-4 py-3 bg-[#0E1B48] border border-[#C18DB4]/40 rounded-2xl text-white font-mono text-xs focus:outline-none"
+            />
+            <span className="text-[10px] text-[#87A7D0] mt-1 block">
+              After transferring from Binance, TrustWallet, or Tonkeeper, paste the TxID/Hash here for instant admin verification.
+            </span>
           </div>
 
           <button

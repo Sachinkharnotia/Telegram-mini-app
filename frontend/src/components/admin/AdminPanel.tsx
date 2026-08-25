@@ -1656,41 +1656,82 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
             ) : (
               deposits
                 .filter(d => subFilter === 'All' || d.status?.toLowerCase() === subFilter.toLowerCase() || (subFilter === 'Pending' && (!d.status || d.status === 'pending')))
-                .map(d => (
-                  <div key={d.id} className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-bold text-white">${d.amount} USDT</h4>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#87A7D0]/20 text-[#87A7D0] border border-[#87A7D0]/30">{d.network}</span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                          d.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
-                          d.status === 'rejected' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
-                          'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                        }`}>
-                          {d.status || 'Pending'}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-[#87A7D0] mt-1">Order #{d.id} · {new Date(d.created_at || Date.now()).toLocaleString()}</p>
-                    </div>
+                .map(d => {
+                  const isPending = !d.status || d.status.toLowerCase() === 'pending';
+                  const isConfirmed = d.status?.toLowerCase() === 'confirmed';
+                  const isRejected = d.status?.toLowerCase() === 'rejected';
+                  const explorerUrl = d.tx_hash ? (d.network === 'TON' ? `https://tonscan.org/tx/${d.tx_hash}` : `https://bscscan.com/tx/${d.tx_hash}`) : null;
 
-                    {(!d.status || d.status === 'pending') && (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleApproveDeposit(d.id)}
-                          className="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold hover:bg-emerald-500/30"
-                        >
-                          Approve & Credit
-                        </button>
-                        <button
-                          onClick={() => handleRejectDeposit(d.id)}
-                          className="px-3.5 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-bold hover:bg-rose-500/30"
-                        >
-                          Reject
-                        </button>
+                  return (
+                    <div key={d.id} className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-sm font-bold text-white font-mono">${d.amount} USDT</h4>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#87A7D0]/20 text-[#87A7D0] border border-[#87A7D0]/30">{d.network}</span>
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                            isConfirmed ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
+                            isRejected ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
+                            'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse'
+                          }`}>
+                            {d.status || 'Pending'}
+                          </span>
+                          <span className="text-[10px] text-slate-400">Order #{d.id}</span>
+                          {d.user_id && <span className="text-[10px] text-cyan-300 font-mono">User #{d.user_id}</span>}
+                        </div>
+
+                        {d.tx_hash ? (
+                          <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                            <span className="text-[10px] font-bold text-amber-300">TxID / Hash:</span>
+                            <span className="text-[11px] font-mono text-white bg-[#070D1E] px-2.5 py-1 rounded-lg border border-[#C18DB4]/30 select-all max-w-xs sm:max-w-sm truncate">
+                              {d.tx_hash}
+                            </span>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(d.tx_hash);
+                                setMessage('Tx Hash copied!');
+                                setTimeout(() => setMessage(''), 2000);
+                              }}
+                              className="text-[10px] text-[#E2CAD8] hover:text-white px-2 py-1 bg-[#0E1B48] rounded border border-[#C18DB4]/30"
+                            >
+                              Copy
+                            </button>
+                            {explorerUrl && (
+                              <a
+                                href={explorerUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[10px] font-bold text-emerald-400 hover:text-emerald-300 px-2.5 py-1 bg-emerald-500/10 rounded-lg border border-emerald-500/30 flex items-center gap-1 hover:bg-emerald-500/20 transition-all"
+                              >
+                                <span>Verify on {d.network === 'TON' ? 'TonScan' : 'BscScan'} ↗</span>
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-[10px] text-slate-400 italic">No TxID submitted with order</p>
+                        )}
+
+                        <p className="text-[10px] text-[#87A7D0]">{new Date(d.created_at || Date.now()).toLocaleString()}</p>
                       </div>
-                    )}
-                  </div>
-                ))
+
+                      {isPending && (
+                        <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0">
+                          <button
+                            onClick={() => handleApproveDeposit(d.id)}
+                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg text-xs font-bold hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5"
+                          >
+                            <span>✓ Approve & Credit</span>
+                          </button>
+                          <button
+                            onClick={() => handleRejectDeposit(d.id)}
+                            className="px-3 py-2 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-bold hover:bg-rose-500/30 active:scale-95 transition-all"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
             )}
           </div>
         </div>

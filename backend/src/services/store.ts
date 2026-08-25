@@ -686,7 +686,7 @@ export class DataStoreService {
     return { success: true, sectorIndex: idx, sector };
   }
 
-  public createDeposit(userId: number, amount: number, network: 'BEP20' | 'TON', walletAddress?: string, customId?: number | string, orderId?: string): Deposit {
+  public createDeposit(userId: number, amount: number, network: 'BEP20' | 'TON', walletAddress?: string, customId?: number | string, orderId?: string, txHash?: string): Deposit {
     const numericId = typeof customId === 'number' ? customId : (customId ? parseInt(String(customId).replace(/\D/g, ''), 10) || Date.now() : Date.now());
     const now = Date.now();
 
@@ -697,6 +697,10 @@ export class DataStoreService {
     );
 
     if (existing) {
+      if (txHash && !existing.tx_hash) {
+        existing.tx_hash = txHash;
+        this.saveToDisk();
+      }
       return existing;
     }
 
@@ -706,6 +710,7 @@ export class DataStoreService {
       user_id: userId,
       amount,
       network,
+      tx_hash: txHash || '',
       status: 'pending',
       created_at: new Date(),
       updated_at: new Date()
