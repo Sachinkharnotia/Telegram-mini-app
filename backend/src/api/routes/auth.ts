@@ -113,7 +113,8 @@ router.post('/telegram', async (req, res) => {
   }
 });
 
-router.post('/register-sync', (req, res) => {
+router.post('/register-sync', async (req, res) => {
+  await dataStore.syncWithPostgres();
   try {
     const rawUserData = req.body.user_data || req.body.user || req.body;
     const balance_usdt = req.body.balance_usdt !== undefined ? req.body.balance_usdt : rawUserData.balance_usdt;
@@ -139,6 +140,8 @@ router.post('/register-sync', (req, res) => {
       balance_usdt: balance_usdt !== undefined ? Number(balance_usdt) : undefined,
       balance_vx: balance_vx !== undefined ? Number(balance_vx) : undefined
     });
+
+    await dataStore.saveToDiskAsync();
 
     if (user && !user.is_active) {
       return res.status(403).json({ error: `Account suspended. Reason: ${user.ban_reason || 'Banned by admin'}` });
