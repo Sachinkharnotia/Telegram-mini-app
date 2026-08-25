@@ -57,7 +57,6 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
           }
           if (parsed.wheel_sectors && Array.isArray(parsed.wheel_sectors) && parsed.wheel_sectors.length > 0) {
             setSectors(parsed.wheel_sectors);
-            return;
           }
         }
       } catch {}

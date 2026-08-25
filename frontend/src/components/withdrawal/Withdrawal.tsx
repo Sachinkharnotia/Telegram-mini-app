@@ -15,6 +15,7 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [minWithdrawal, setMinWithdrawal] = useState(3.00);
   const [maxWithdrawal, setMaxWithdrawal] = useState(10000);
   const [withdrawalFee, setWithdrawalFee] = useState(0.00);
+  const [dailyYieldRate, setDailyYieldRate] = useState(0.015);
 
   useEffect(() => {
     const loadSettings = () => {
@@ -31,6 +32,10 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
           if (parsed.withdrawal_fee !== undefined || parsed.payment?.withdrawal_fee !== undefined) {
             setWithdrawalFee(Number(parsed.withdrawal_fee ?? parsed.payment?.withdrawal_fee));
           }
+          if (parsed.daily_yield_rate !== undefined || parsed.mining?.daily_yield_rate !== undefined) {
+            const rawRate = Number(parsed.daily_yield_rate ?? parsed.mining?.daily_yield_rate);
+            setDailyYieldRate(rawRate < 1 ? rawRate : rawRate / 100);
+          }
         }
       } catch {}
     };
@@ -44,6 +49,10 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
           if (data.settings.min_withdrawal !== undefined) setMinWithdrawal(Number(data.settings.min_withdrawal));
           if (data.settings.max_withdrawal !== undefined) setMaxWithdrawal(Number(data.settings.max_withdrawal));
           if (data.settings.withdrawal_fee !== undefined) setWithdrawalFee(Number(data.settings.withdrawal_fee));
+          if (data.settings.daily_yield_rate !== undefined) {
+            const rawRate = Number(data.settings.daily_yield_rate);
+            setDailyYieldRate(rawRate < 1 ? rawRate : rawRate / 100);
+          }
         }
       })
       .catch(() => {});
@@ -56,7 +65,7 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const numAmount = parseFloat(amount) || 0;
   const netAmount = Math.max(0, numAmount - withdrawalFee);
 
-  const dailyLoss = numAmount * 0.015;
+  const dailyLoss = numAmount * dailyYieldRate;
   const timeframeMultiplier = lossTimeframe === '1 day' ? 1 : lossTimeframe === 'Week' ? 7 : lossTimeframe === 'Month' ? 30 : 365;
   const totalPotentialLoss = dailyLoss * timeframeMultiplier;
 
