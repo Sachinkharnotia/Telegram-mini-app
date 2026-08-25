@@ -767,19 +767,41 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   const handleSaveSettingsSection = async (section: string) => {
     setSavingSection(section);
 
-    const t1 = parseFloat(String(settings.referral?.level1_percent ?? settings.referral_level1_percent ?? 10));
-    const t2 = parseFloat(String(settings.referral?.level2_percent ?? settings.referral_level2_percent ?? 5));
-    const t3 = parseFloat(String(settings.referral?.level3_percent ?? settings.referral_level3_percent ?? 2));
-    const rewardBonus = parseFloat(String(settings.referral?.reward ?? settings.referral_fixed_reward ?? 0.50));
+    const t1 = parseFloat(String(settings.referral?.level1_percent ?? settings.referral_level1_percent ?? settings.referral_commission_tier1 ?? 10));
+    const t2 = parseFloat(String(settings.referral?.level2_percent ?? settings.referral_level2_percent ?? settings.referral_commission_tier2 ?? 5));
+    const t3 = parseFloat(String(settings.referral?.level3_percent ?? settings.referral_level3_percent ?? settings.referral_commission_tier3 ?? 2));
+    const rewardBonus = parseFloat(String(settings.referral?.reward ?? settings.referral_fixed_reward ?? settings.referral_signup_bonus_usdt ?? 0.50));
+
+    const rawYield = parseFloat(String(settings.mining?.daily_yield_rate ?? settings.daily_yield_rate ?? 1.5));
+    const normalizedYield = rawYield > 0.5 ? rawYield / 100 : rawYield;
 
     const updatedSettings = {
       ...settings,
       bep20_wallet: settings.payment?.bep20_wallet || settings.bep20_wallet || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
       ton_wallet: settings.payment?.ton_wallet || settings.ton_wallet || 'EQBvW8Z5huBkMJY78A29P0nLw84920kLzW190kLs920pL',
-      min_deposit: parseFloat(String(settings.payment?.min_deposit || settings.min_deposit || 10)),
-      min_withdrawal: parseFloat(String(settings.payment?.min_withdrawal || settings.min_withdrawal || 3)),
-      max_withdrawal: parseFloat(String(settings.payment?.max_withdrawal || settings.max_withdrawal || 10000)),
-      withdrawal_fee: parseFloat(String(settings.payment?.withdrawal_fee || settings.withdrawal_fee || 0)),
+      min_deposit: parseFloat(String(settings.payment?.min_deposit ?? settings.min_deposit ?? 10)),
+      min_withdrawal: parseFloat(String(settings.payment?.min_withdrawal ?? settings.min_withdrawal ?? 3)),
+      max_withdrawal: parseFloat(String(settings.payment?.max_withdrawal ?? settings.max_withdrawal ?? 10000)),
+      withdrawal_fee: parseFloat(String(settings.payment?.withdrawal_fee ?? settings.withdrawal_fee ?? 0)),
+      auto_withdrawal: !!(settings.payment?.auto_withdrawal || settings.auto_withdrawal),
+      mining: {
+        ...settings.mining,
+        vx_price_usdt: parseFloat(String(settings.mining?.vx_price_usdt ?? settings.vx_price_usdt ?? 0.10)),
+        min_vx_purchase: parseFloat(String(settings.mining?.min_vx_purchase ?? settings.min_vx_purchase ?? 100)),
+        min_vx_mining: parseFloat(String(settings.mining?.min_vx_mining ?? settings.min_vx_mining ?? 100)),
+        daily_yield_rate: normalizedYield,
+        mining_enabled: settings.mining?.mining_enabled !== false
+      },
+      payment: {
+        ...settings.payment,
+        bep20_wallet: settings.payment?.bep20_wallet || settings.bep20_wallet || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+        ton_wallet: settings.payment?.ton_wallet || settings.ton_wallet || 'EQBvW8Z5huBkMJY78A29P0nLw84920kLzW190kLs920pL',
+        min_deposit: parseFloat(String(settings.payment?.min_deposit ?? settings.min_deposit ?? 10)),
+        min_withdrawal: parseFloat(String(settings.payment?.min_withdrawal ?? settings.min_withdrawal ?? 3)),
+        max_withdrawal: parseFloat(String(settings.payment?.max_withdrawal ?? settings.max_withdrawal ?? 10000)),
+        withdrawal_fee: parseFloat(String(settings.payment?.withdrawal_fee ?? settings.withdrawal_fee ?? 0)),
+        auto_withdrawal: !!(settings.payment?.auto_withdrawal || settings.auto_withdrawal)
+      },
       referral: {
         ...settings.referral,
         level1_percent: t1,
@@ -794,11 +816,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       referral_signup_bonus_usdt: rewardBonus,
       referral_commission_tier1: t1,
       referral_commission_tier2: t2,
+      referral_commission_tier3: t3,
       referral_fixed_reward: rewardBonus,
-      daily_spins_limit: parseInt(String(settings.daily_spins_limit || 3), 10),
-      daily_giftbox_limit: parseInt(String(settings.daily_giftbox_limit || 1), 10),
+      daily_free_spins: parseInt(String(settings.daily_free_spins ?? 1), 10),
+      daily_spins_limit: parseInt(String(settings.daily_spins_limit ?? 3), 10),
+      daily_giftbox_limit: parseInt(String(settings.daily_giftbox_limit ?? 1), 10),
+      spin_cost_usdt: parseFloat(String(settings.spin_cost_usdt ?? 1)),
       wheel_sectors: settings.wheel_sectors || defaultSettings.wheel_sectors,
       gift_rewards: settings.gift_rewards || defaultSettings.gift_rewards,
+      branding: {
+        ...settings.branding,
+        app_name: settings.branding?.app_name || settings.app_name || 'VextoralMining',
+        support_telegram: settings.branding?.support_telegram || settings.support_username || 'VaultSupportAdmin',
+        support_email: settings.branding?.support_email || 'businessvextoral@gmail.com',
+        tagline: settings.branding?.tagline || 'Complete tasks & earn daily USDT yield.',
+        logo_url: settings.branding?.logo_url || '',
+        banner_url: settings.branding?.banner_url || ''
+      },
+      general: {
+        ...settings.general,
+        maintenance_mode: !!(settings.general?.maintenance_mode || settings.maintenance_mode),
+        maintenance_message: settings.general?.maintenance_message || 'VextoralMining is under scheduled maintenance. Please check back soon.'
+      }
     };
 
     setSettings(updatedSettings);
@@ -808,26 +847,33 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
 
     try {
       const backendPayload = {
-        vx_price_usdt: parseFloat(String(settings.mining?.vx_price_usdt || settings.vx_price_usdt || 0.10)),
-        min_vx_purchase: parseFloat(String(settings.mining?.min_vx_purchase || settings.min_vx_purchase || 100)),
-        min_vx_mining: parseFloat(String(settings.mining?.min_vx_mining || settings.min_vx_mining || 100)),
-        daily_yield_rate: (parseFloat(String(settings.mining?.daily_yield_rate || settings.daily_yield_rate || 1.5))) / 100,
-        mining_enabled: true,
+        vx_price_usdt: updatedSettings.mining.vx_price_usdt,
+        min_vx_purchase: updatedSettings.mining.min_vx_purchase,
+        min_vx_mining: updatedSettings.mining.min_vx_mining,
+        daily_yield_rate: updatedSettings.mining.daily_yield_rate,
+        mining_enabled: updatedSettings.mining.mining_enabled,
         bep20_wallet: updatedSettings.bep20_wallet,
         ton_wallet: updatedSettings.ton_wallet,
         min_deposit: updatedSettings.min_deposit,
         min_withdrawal: updatedSettings.min_withdrawal,
         max_withdrawal: updatedSettings.max_withdrawal,
         withdrawal_fee: updatedSettings.withdrawal_fee,
+        auto_withdrawal: updatedSettings.auto_withdrawal,
         referral_commission_tier1: t1,
         referral_commission_tier2: t2,
         referral_commission_tier3: t3,
         referral_fixed_reward: rewardBonus,
-        referral_enabled: settings.referral?.enabled !== false,
+        referral_enabled: updatedSettings.referral.enabled,
+        daily_free_spins: updatedSettings.daily_free_spins,
         daily_spins_limit: updatedSettings.daily_spins_limit,
         daily_giftbox_limit: updatedSettings.daily_giftbox_limit,
-        app_name: settings.branding?.app_name || 'VextoralMining',
-        support_username: settings.branding?.support_telegram || 'VaultSupportAdmin'
+        spin_cost_usdt: updatedSettings.spin_cost_usdt,
+        wheel_sectors: updatedSettings.wheel_sectors,
+        gift_rewards: updatedSettings.gift_rewards,
+        app_name: updatedSettings.branding.app_name,
+        support_username: updatedSettings.branding.support_telegram,
+        announcement_text: updatedSettings.branding.tagline,
+        maintenance_mode: updatedSettings.general.maintenance_mode
       };
 
       await fetch(`${API_BASE}/api/admin/settings`, {

@@ -225,7 +225,10 @@ export class DataStoreService {
     return { ...this.settings };
   }
 
-  public async updateSettings(newSettings: Partial<AppSettings>): Promise<AppSettings> {
+  public async updateSettings(newSettings: Partial<AppSettings> & { wheel_sectors?: any[]; gift_rewards?: string[] }): Promise<AppSettings> {
+    if (newSettings.wheel_sectors && Array.isArray(newSettings.wheel_sectors)) {
+      this.spinSectors = newSettings.wheel_sectors;
+    }
     this.settings = { ...this.settings, ...newSettings };
     await this.saveToDiskAsync();
     return this.getSettings();
