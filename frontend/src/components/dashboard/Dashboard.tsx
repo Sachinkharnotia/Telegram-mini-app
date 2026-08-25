@@ -128,8 +128,24 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
       }, 600);
 
       const API_URL = 'https://backend-ten-amber-99.vercel.app';
-      fetch(`${API_URL}/api/mining/claim-yield`, { method: 'POST' }).catch(() => {
-        fetch('/api/mining/claim-yield', { method: 'POST' }).catch(() => {});
+      const tg = (window as any).Telegram?.WebApp;
+      const tgUser = tg?.initDataUnsafe?.user;
+      const payload = {
+        user_id: user?.id || user?.telegram_id || tgUser?.id || 10001,
+        telegram_id: user?.telegram_id || user?.id || tgUser?.id || 10001,
+        claimed_amount: claimAmount
+      };
+
+      fetch(`${API_URL}/api/mining/claim-yield`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => {
+        fetch('/api/mining/claim-yield', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).catch(() => {});
       });
     }
   };
@@ -154,19 +170,27 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
       setBuyVxMsg('');
     }, 1200);
 
+    const API_URL = 'https://backend-ten-amber-99.vercel.app';
+    const tg = (window as any).Telegram?.WebApp;
+    const tgUser = tg?.initDataUnsafe?.user;
+    const payload = {
+      user_id: user?.id || user?.telegram_id || tgUser?.id || 10001,
+      telegram_id: user?.telegram_id || user?.id || tgUser?.id || 10001,
+      vx_amount: vxAmt
+    };
+
     try {
-      const API_URL = 'https://backend-ten-amber-99.vercel.app';
       await fetch(`${API_URL}/api/mining/buy-vx`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vx_amount: vxAmt })
+        body: JSON.stringify(payload)
       });
     } catch {
       try {
         await fetch('/api/mining/buy-vx', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ vx_amount: vxAmt })
+          body: JSON.stringify(payload)
         });
       } catch {}
     }

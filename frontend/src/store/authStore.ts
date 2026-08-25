@@ -164,12 +164,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
       const data = await res.json();
       if (data.user || data.balance) {
-        const rawServerUsdt = Number(data.balance?.usdt_balance ?? data.user?.balance_usdt ?? 0);
-        const rawServerVx = Number(data.balance?.vx_balance ?? data.user?.balance_vx ?? 0);
-        const clientUsdt = Number(currentUser.balance_usdt || 0);
-        const clientVx = Number(currentUser.balance_vx || 0);
-        const finalUsdt = Math.max(rawServerUsdt, clientUsdt);
-        const finalVx = Math.max(rawServerVx, clientVx);
+        const serverUsdt = Number(data.balance?.usdt_balance ?? data.user?.balance_usdt ?? currentUser.balance_usdt ?? 0);
+        const serverVx = Number(data.balance?.vx_balance ?? data.user?.balance_vx ?? currentUser.balance_vx ?? 0);
 
         const realFirstName = tgUser?.first_name 
           || (currentUser.first_name && currentUser.first_name !== 'Member' ? currentUser.first_name : (data.user?.first_name && data.user?.first_name !== 'Member' ? data.user.first_name : (tgUser?.first_name || 'Member')));
@@ -183,8 +179,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           first_name: realFirstName,
           username: realUsername,
           last_name: realLastName,
-          balance_usdt: finalUsdt,
-          balance_vx: finalVx,
+          balance_usdt: serverUsdt,
+          balance_vx: serverVx,
           referral_count: data.user?.referral_count ?? currentUser.referral_count,
           referral_earnings: data.user?.referral_earnings ?? currentUser.referral_earnings
         };

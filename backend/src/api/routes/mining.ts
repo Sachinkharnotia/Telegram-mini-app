@@ -4,7 +4,18 @@ import { dataStore } from '../../services/store';
 const router = Router();
 
 const getMiningStatus = (req: any, res: any) => {
-  const userId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : 1001);
+  const rawId = req.body?.user_id || req.body?.telegram_id || req.query?.user_id || req.query?.telegram_id || req.user?.id;
+  let user = null;
+  if (rawId) {
+    user = dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId);
+  }
+  if (!user && req.user?.id) {
+    user = dataStore.findUserById(req.user.id);
+  }
+  if (!user) {
+    user = dataStore.findUserById(1001);
+  }
+  const userId = user ? user.id : 1001;
   const bal = dataStore.getUserBalance(userId);
   const settings = dataStore.getSettings();
 
@@ -33,7 +44,18 @@ router.get('/', getMiningStatus);
 
 router.post('/buy-vx', (req: any, res) => {
   try {
-    const userId = req.body.user_id || req.user?.id || 1001;
+    const rawId = req.body?.user_id || req.body?.telegram_id || req.query?.user_id || req.query?.telegram_id || req.user?.id;
+    let user = null;
+    if (rawId) {
+      user = dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId);
+    }
+    if (!user && req.user?.id) {
+      user = dataStore.findUserById(req.user.id);
+    }
+    if (!user) {
+      user = dataStore.findUserById(1001);
+    }
+    const userId = user ? user.id : 1001;
     const { vx_amount, amount } = req.body;
     const targetAmount = vx_amount || amount;
 
@@ -62,7 +84,18 @@ router.post('/buy-vx', (req: any, res) => {
 });
 
 const handleClaimYield = (req: any, res: any) => {
-  const userId = req.body.user_id || req.user?.id || 1001;
+  const rawId = req.body?.user_id || req.body?.telegram_id || req.query?.user_id || req.query?.telegram_id || req.user?.id;
+  let user = null;
+  if (rawId) {
+    user = dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId);
+  }
+  if (!user && req.user?.id) {
+    user = dataStore.findUserById(req.user.id);
+  }
+  if (!user) {
+    user = dataStore.findUserById(1001);
+  }
+  const userId = user ? user.id : 1001;
   const result = dataStore.claimYield(userId);
   if (!result.success) {
     return res.status(400).json({ error: 'No unclaimed yield available to claim' });

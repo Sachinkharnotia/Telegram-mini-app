@@ -268,11 +268,12 @@ export class DataStoreService {
 
     const bal = this.getUserBalance(user.id);
     if (userData.balance_usdt !== undefined) {
-      bal.usdt_balance = Math.max(bal.usdt_balance, userData.balance_usdt);
+      bal.usdt_balance = Number(userData.balance_usdt);
     }
     if (userData.balance_vx !== undefined) {
-      bal.vx_balance = Math.max(bal.vx_balance, userData.balance_vx);
+      bal.vx_balance = Number(userData.balance_vx);
     }
+    bal.updated_at = new Date();
     this.saveToDisk();
     return { user, balance: bal };
   }
