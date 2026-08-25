@@ -271,9 +271,18 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
                 })()}
               </h1>
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-[#87A7D0]">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>VX Mining Active</span>
+            <div className="flex items-center gap-1.5 text-[11px]">
+              {isEligibleToMine ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="text-emerald-400 font-bold">VX Mining Active</span>
+                </>
+              ) : (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-amber-400" />
+                  <span className="text-[#87A7D0]">Buy 100+ VX to Mine</span>
+                </>
+              )}
             </div>
           </div>
         </div>
