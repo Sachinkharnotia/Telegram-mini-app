@@ -772,21 +772,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     fetchData();
   };
 
-  const handleApproveWithdrawal = (withdrawalId: number) => {
+  const handleApproveWithdrawal = async (withdrawalId: number) => {
+    const txHash = '0x' + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('');
     const updated = withdrawals.map(w => {
       if (w.id === withdrawalId) {
-        return { ...w, status: 'Paid', tx_hash: '0x' + Math.random().toString(16).substr(2, 40) };
+        return { ...w, status: 'Paid', tx_hash: txHash };
       }
       return w;
     });
     setWithdrawals(updated);
     localStorage.setItem('admin_withdrawals', JSON.stringify(updated));
     addActivityLog('Withdrawal Paid', `Marked withdrawal #${withdrawalId} as Paid`);
-    setMessage(`Withdrawal #${withdrawalId} processed and paid!`);
+    setMessage(`Withdrawal #${withdrawalId} confirmed and marked Paid!`);
     setTimeout(() => setMessage(''), 3500);
+
+    try {
+      await fetch(`${API_BASE}/api/admin/withdrawals/update-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': ADMIN_PIN
+        },
+        body: JSON.stringify({
+          withdrawal_id: withdrawalId,
+          status: 'confirmed',
+          tx_hash: txHash
+        })
+      });
+      fetchData();
+    } catch {}
   };
 
-  const handleRejectWithdrawal = (withdrawalId: number) => {
+  const handleRejectWithdrawal = async (withdrawalId: number) => {
     const updated = withdrawals.map(w => {
       if (w.id === withdrawalId) {
         return { ...w, status: 'Rejected' };
@@ -798,6 +815,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     addActivityLog('Withdrawal Rejected', `Rejected payout request #${withdrawalId}`);
     setMessage(`Withdrawal #${withdrawalId} rejected`);
     setTimeout(() => setMessage(''), 3500);
+
+    try {
+      await fetch(`${API_BASE}/api/admin/withdrawals/update-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': ADMIN_PIN
+        },
+        body: JSON.stringify({
+          withdrawal_id: withdrawalId,
+          status: 'rejected',
+          reason: 'Rejected by admin'
+        })
+      });
+      fetchData();
+    } catch {}
   };
 
   const handleSaveSettingsSection = async (section: string) => {
@@ -1156,8 +1189,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   });
 
   const filteredWithdrawals = withdrawals.filter(w => {
+    const s = (w.status || '').toLowerCase();
     if (wdFilter === 'All') return true;
-    return (w.status?.toLowerCase() || '') === wdFilter.toLowerCase();
+    if (wdFilter === 'Pending') return s === 'pending';
+    if (wdFilter === 'Paid') return s === 'paid' || s === 'confirmed' || s === 'completed';
+    if (wdFilter === 'Rejected') return s === 'rejected' || s === 'cancelled';
+    return true;
   });
 
   return (
@@ -1687,40 +1724,69 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                 <p className="text-xs text-[#87A7D0]">No payout orders found in this filter.</p>
               </div>
             ) : (
-              filteredWithdrawals.map(w => (
-                  <div key={w.id} className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
+              filteredWithdrawals.map(w => {
+                const st = (w.status || '').toLowerCase();
+                const isPending = st === 'pending';
+                const isPaid = st === 'paid' || st === 'confirmed' || st === 'completed';
+                const isRejected = st === 'rejected' || st === 'cancelled';
+
+                return (
+                  <div key={w.id} className="card-vault p-4 rounded-2xl bg-[#0E1B48]/70 border border-[#C18DB4]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+                    <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <h4 className="text-xs font-bold text-white">${w.amount} USDT ({w.network})</h4>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                          w.status === 'Paid' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
-                          w.status === 'Rejected' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
-                          'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                        <h4 className="text-sm font-bold text-white font-mono">${w.amount} USDT ({w.network})</h4>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                          isPaid ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
+                          isRejected ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
+                          'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse'
                         }`}>
-                          {w.status}
+                          {isPaid ? 'Paid' : isRejected ? 'Rejected' : 'Pending'}
                         </span>
+                        <span className="text-[10px] text-slate-400">#{w.id}</span>
                       </div>
-                      <p className="text-[10px] text-[#87A7D0] font-mono truncate max-w-xs">{w.wallet_address}</p>
+
+                      <div className="flex items-center gap-2">
+                        <p className="text-[11px] text-[#87A7D0] font-mono select-all bg-[#070D1E] px-2.5 py-1 rounded-lg border border-[#C18DB4]/20 max-w-sm truncate">
+                          {w.wallet_address}
+                        </p>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(w.wallet_address);
+                            setMessage('Wallet address copied!');
+                            setTimeout(() => setMessage(''), 2000);
+                          }}
+                          className="text-[10px] text-[#E2CAD8] hover:text-white px-2 py-1 bg-[#0E1B48] rounded border border-[#C18DB4]/30"
+                        >
+                          Copy
+                        </button>
+                      </div>
+
+                      {w.tx_hash && (
+                        <p className="text-[10px] text-emerald-400 font-mono truncate max-w-sm">
+                          Tx: {w.tx_hash}
+                        </p>
+                      )}
                     </div>
 
-                    {w.status === 'Pending' && (
-                      <div className="flex items-center gap-2">
+                    {isPending && (
+                      <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0">
                         <button
                           onClick={() => handleApproveWithdrawal(w.id)}
-                          className="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold hover:bg-emerald-500/30"
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg text-xs font-bold hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5"
                         >
-                          Mark Paid
+                          <span>✓ Mark Paid</span>
                         </button>
                         <button
                           onClick={() => handleRejectWithdrawal(w.id)}
-                          className="px-3.5 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-bold hover:bg-rose-500/30"
+                          className="px-3 py-2 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-bold hover:bg-rose-500/30 active:scale-95 transition-all"
                         >
                           Reject
                         </button>
                       </div>
                     )}
                   </div>
-                ))
+                );
+              })
             )}
           </div>
         </div>
