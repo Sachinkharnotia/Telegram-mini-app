@@ -74,7 +74,8 @@ router.get('/users', async (req, res) => {
   res.json({ users: userList });
 });
 
-router.post('/users/update-balance', (req, res) => {
+router.post('/users/update-balance', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const { user_id, amount, currency, action } = req.body;
   const numUserId = parseInt(user_id, 10);
   const numAmount = parseFloat(amount);
@@ -83,27 +84,28 @@ router.post('/users/update-balance', (req, res) => {
     return res.status(400).json({ error: 'Invalid user or amount' });
   }
 
-  const user = dataStore.findUserById(numUserId);
+  const user = dataStore.findUserById(numUserId) || dataStore.findUserByTelegramId(numUserId);
   if (!user) return res.status(404).json({ error: 'User not found' });
+  const effectiveUserId = user.id;
 
   if (currency === 'VX') {
     if (action === 'add') {
-      dataStore.creditBalance(numUserId, numAmount, 'vx_balance');
+      dataStore.creditBalance(effectiveUserId, numAmount, 'vx_balance');
     } else {
-      const bal = dataStore.getUserBalance(numUserId);
+      const bal = dataStore.getUserBalance(effectiveUserId);
       bal.vx_balance = Math.max(0, bal.vx_balance - numAmount);
     }
   } else {
     if (action === 'add') {
-      dataStore.creditBalance(numUserId, numAmount, 'usdt_balance');
+      dataStore.creditBalance(effectiveUserId, numAmount, 'usdt_balance');
     } else {
-      dataStore.deductUSDTBalance(numUserId, numAmount);
+      dataStore.deductUSDTBalance(effectiveUserId, numAmount);
     }
   }
 
   dataStore.addTransaction({
     id: Date.now(),
-    user_id: numUserId,
+    user_id: effectiveUserId,
     type: 'admin_adjustment',
     amount: numAmount,
     currency: currency === 'VX' ? 'VX' : 'USDT',
@@ -112,7 +114,8 @@ router.post('/users/update-balance', (req, res) => {
     created_at: new Date()
   });
 
-  res.json({ success: true, balance: dataStore.getUserBalance(numUserId) });
+  await dataStore.saveToDiskAsync();
+  res.json({ success: true, balance: dataStore.getUserBalance(effectiveUserId) });
 });
 
 router.post('/users/update-status', async (req, res) => {
@@ -122,73 +125,91 @@ router.post('/users/update-status', async (req, res) => {
   res.json({ success: true, user });
 });
 
-router.get('/required-communities', (req, res) => {
+router.get('/required-communities', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const communities = dataStore.getAllRequiredCommunities();
   res.json({ communities });
 });
 
-router.post('/required-communities', (req, res) => {
+router.post('/required-communities', async (req, res) => {
   const { communities } = req.body;
   if (Array.isArray(communities)) {
     dataStore.setRequiredCommunities(communities);
+    await dataStore.saveToDiskAsync();
   }
   res.json({ success: true, communities: dataStore.getAllRequiredCommunities() });
 });
 
-router.get('/deposits', (req, res) => {
+router.get('/deposits', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const deposits = dataStore.getDeposits();
   res.json({ deposits });
 });
 
-router.post('/deposits/confirm', (req, res) => {
+router.post('/deposits/confirm', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const { deposit_id, tx_hash } = req.body;
   const dep = dataStore.confirmDeposit(parseInt(deposit_id, 10), tx_hash);
   if (!dep) return res.status(400).json({ error: 'Deposit not found or already processed' });
+  await dataStore.saveToDiskAsync();
   res.json({ success: true, deposit: dep });
 });
 
-router.post('/deposits/reject', (req, res) => {
+router.post('/deposits/reject', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const { deposit_id, reason } = req.body;
   const dep = dataStore.rejectDeposit(parseInt(deposit_id, 10), reason);
   if (!dep) return res.status(400).json({ error: 'Deposit not found' });
+  await dataStore.saveToDiskAsync();
   res.json({ success: true, deposit: dep });
 });
 
-router.get('/withdrawals', (req, res) => {
+router.get('/withdrawals', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const withdrawals = dataStore.getWithdrawals();
   res.json({ withdrawals });
 });
 
-router.post('/withdrawals/update-status', (req, res) => {
+router.post('/withdrawals/update-status', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const { withdrawal_id, status, tx_hash, reason } = req.body;
   const wd = dataStore.updateWithdrawalStatus(parseInt(withdrawal_id, 10), status, tx_hash, reason);
   if (!wd) return res.status(400).json({ error: 'Withdrawal not found' });
+  await dataStore.saveToDiskAsync();
   res.json({ success: true, withdrawal: wd });
 });
 
-router.get('/tasks', (req, res) => {
+router.get('/tasks', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const tasks = dataStore.getAllTasks();
   res.json({ tasks });
 });
 
-router.post('/tasks/save', (req, res) => {
+router.post('/tasks/save', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const task = dataStore.saveTask(req.body);
+  await dataStore.saveToDiskAsync();
   res.json({ success: true, task });
 });
 
-router.post('/tasks/delete', (req, res) => {
+router.post('/tasks/delete', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const taskId = parseInt(req.body.id || req.body.task_id, 10);
   const success = dataStore.deleteTask(taskId);
+  await dataStore.saveToDiskAsync();
   res.json({ success });
 });
 
-router.delete('/tasks/:id', (req, res) => {
+router.delete('/tasks/:id', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const taskId = parseInt(req.params.id, 10);
   const success = dataStore.deleteTask(taskId);
+  await dataStore.saveToDiskAsync();
   res.json({ success });
 });
 
-router.get('/notifications', (req, res) => {
+router.get('/notifications', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const notifications = dataStore.getNotifications();
   res.json({ notifications });
 });
