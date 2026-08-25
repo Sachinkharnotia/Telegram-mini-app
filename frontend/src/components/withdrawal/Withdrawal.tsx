@@ -16,6 +16,7 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [maxWithdrawal, setMaxWithdrawal] = useState(10000);
   const [withdrawalFee, setWithdrawalFee] = useState(0.00);
   const [dailyYieldRate, setDailyYieldRate] = useState(0.015);
+  const [totalDeposited, setTotalDeposited] = useState(0);
 
   useEffect(() => {
     const loadSettings = () => {
@@ -41,10 +42,14 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     };
     loadSettings();
 
+    const targetId = user?.telegram_id || user?.id || 10001;
     const API_URL = 'https://backend-ten-amber-99.vercel.app';
-    fetch(`${API_URL}/api/user/profile`)
+    fetch(`${API_URL}/api/user/profile?user_id=${targetId}`)
       .then(res => res.json())
       .then(data => {
+        if (data.balance) {
+          setTotalDeposited(Number(data.balance.total_invested || 0));
+        }
         if (data.settings) {
           if (data.settings.min_withdrawal !== undefined) setMinWithdrawal(Number(data.settings.min_withdrawal));
           if (data.settings.max_withdrawal !== undefined) setMaxWithdrawal(Number(data.settings.max_withdrawal));
@@ -59,7 +64,7 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
     window.addEventListener('storage', loadSettings);
     return () => window.removeEventListener('storage', loadSettings);
-  }, []);
+  }, [user]);
 
   const userBalance = Number(user?.balance_usdt || 0);
   const numAmount = parseFloat(amount) || 0;
@@ -72,6 +77,10 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const isExceeding = numAmount > userBalance;
 
   const handleWithdrawalRequest = async () => {
+    if (totalDeposited < 5.00) {
+      setErrorMsg('First withdrawal requires a minimum deposit of $5.00 USDT. Please complete a deposit of at least $5.00 USDT to activate payouts.');
+      return;
+    }
     if (numAmount < minWithdrawal) {
       setErrorMsg(`Minimum withdrawal amount is $${minWithdrawal.toFixed(2)} USDT`);
       return;
@@ -92,52 +101,50 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     setLoading(true);
     setErrorMsg('');
 
-    updateBalance(-numAmount, 0, { type: 'withdrawal', title: `USDT Payout Request (${network})` });
-
-    try {
-      const raw = localStorage.getItem('admin_withdrawals') || '[]';
-      const wds = JSON.parse(raw);
-      wds.unshift({
-        id: Date.now(),
-        user_id: user?.id || 10001,
-        amount: numAmount,
-        currency: 'USDT',
-        network,
-        wallet_address: walletAddress.trim(),
-        status: 'pending',
-        created_at: new Date().toISOString()
-      });
-      localStorage.setItem('admin_withdrawals', JSON.stringify(wds));
-    } catch {}
-
-    setSubmitted(true);
-    setLoading(false);
-
     try {
       const API_URL = 'https://backend-ten-amber-99.vercel.app';
-      await fetch(`${API_URL}/api/withdrawal/request`, {
+      const targetId = user?.telegram_id || user?.id || 10001;
+      let res = await fetch(`${API_URL}/api/withdrawal/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: numAmount,
           network,
           wallet_address: walletAddress.trim(),
-          user_id: user?.id || 10001
+          user_id: targetId
         })
       });
-    } catch {
+
+      let data = await res.json();
+      if (!res.ok || data.error) {
+        setErrorMsg(data.error || 'Withdrawal request failed');
+        setLoading(false);
+        return;
+      }
+
+      updateBalance(-numAmount, 0, { type: 'withdrawal', title: `USDT Payout Request (${network})` });
+
       try {
-        await fetch('/api/withdrawal/request', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: numAmount,
-            network,
-            wallet_address: walletAddress.trim(),
-            user_id: user?.id || 10001
-          })
+        const raw = localStorage.getItem('admin_withdrawals') || '[]';
+        const wds = JSON.parse(raw);
+        wds.unshift({
+          id: data.withdrawal_id || Date.now(),
+          user_id: targetId,
+          amount: numAmount,
+          currency: 'USDT',
+          network,
+          wallet_address: walletAddress.trim(),
+          status: 'pending',
+          created_at: new Date().toISOString()
         });
+        localStorage.setItem('admin_withdrawals', JSON.stringify(wds));
       } catch {}
+
+      setSubmitted(true);
+      setLoading(false);
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Network error submitting withdrawal');
+      setLoading(false);
     }
   };
 
@@ -166,6 +173,18 @@ export const Withdrawal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2">
           <AlertCircle size={16} className="shrink-0 text-rose-300" />
           <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {totalDeposited < 5.00 && (
+        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-2.5">
+          <AlertCircle size={18} className="shrink-0 text-amber-400 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-bold text-amber-300">First Withdrawal Deposit Required</p>
+            <p className="text-[11px] text-amber-200/90 leading-relaxed">
+              To activate payouts and secure your account, a minimum first-time deposit of <strong>$5.00 USDT</strong> is required. (Your total deposited: <strong>${totalDeposited.toFixed(2)} USDT</strong>).
+            </p>
+          </div>
         </div>
       )}
 

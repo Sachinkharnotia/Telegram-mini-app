@@ -27,6 +27,17 @@ const handleWithdrawalRequest = async (req: any, res: any) => {
       return res.status(400).json({ error: 'Valid wallet address is required' });
     }
 
+    const userDeposits = dataStore.getDeposits(userId).filter((d: any) => d.status === 'confirmed');
+    const totalDeposited = userDeposits.reduce((sum: number, d: any) => sum + (Number(d.amount) || 0), 0);
+    const balance = dataStore.getUserBalance(userId);
+    const totalInvested = Math.max(totalDeposited, balance.total_invested || 0);
+
+    if (totalInvested < 5.00) {
+      return res.status(400).json({
+        error: 'First withdrawal requires a minimum deposit of $5.00 USDT. Please make a deposit of at least $5.00 USDT to activate payouts.'
+      });
+    }
+
     const selectedNetwork = network === 'TON' ? 'TON' : 'BEP20';
 
     const withdrawal = dataStore.createWithdrawal(userId, numAmount, selectedNetwork, targetAddress);

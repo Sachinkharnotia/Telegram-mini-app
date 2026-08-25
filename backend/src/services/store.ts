@@ -637,11 +637,28 @@ export class DataStoreService {
     return this.userTasks.filter(ut => ut.user_id === userId).map(ut => ut.task_id);
   }
 
+  public getUserDailySpins(userId: number): number {
+    const today = new Date().toISOString().slice(0, 10);
+    return this.transactions.filter(t => 
+      t.user_id === userId && 
+      t.type === 'spin_reward' && 
+      new Date(t.created_at).toISOString().slice(0, 10) === today
+    ).length;
+  }
+
   public getSpinSectors(): SpinSector[] {
     return [...this.spinSectors];
   }
 
   public spinWheel(userId: number): { success: boolean; sectorIndex: number; sector: SpinSector } {
+    const dailyLimit = this.settings.daily_spins_limit !== undefined 
+      ? Number(this.settings.daily_spins_limit) 
+      : (this.settings.daily_free_spins !== undefined ? Number(this.settings.daily_free_spins) : 1);
+    const spinsUsedToday = this.getUserDailySpins(userId);
+    if (spinsUsedToday >= dailyLimit) {
+      throw new Error(`Daily spin limit of ${dailyLimit} reached. Please come back tomorrow!`);
+    }
+
     const idx = Math.floor(Math.random() * this.spinSectors.length);
     const sector = this.spinSectors[idx];
 

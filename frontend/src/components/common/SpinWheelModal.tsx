@@ -61,26 +61,41 @@ export const SpinWheelModal: React.FC<SpinWheelModalProps> = ({ isOpen, onClose,
         }
       } catch {}
 
+      let currentUser: any = null;
+      try {
+        const stored = localStorage.getItem('user');
+        if (stored) currentUser = JSON.parse(stored);
+      } catch {}
+      const tg = (window as any).Telegram?.WebApp;
+      const tgUser = tg?.initDataUnsafe?.user;
+      const targetId = currentUser?.telegram_id || currentUser?.id || tgUser?.id || 10001;
+
       const API_URL = 'https://backend-ten-amber-99.vercel.app';
-      fetch(`${API_URL}/api/spin/sectors`)
+      fetch(`${API_URL}/api/spin/sectors?user_id=${targetId}`)
         .then(res => res.json())
         .then(data => {
           if (data.sectors && Array.isArray(data.sectors) && data.sectors.length > 0) {
             setSectors(data.sectors);
           }
-          if (data.daily_spins_limit) {
+          if (data.daily_spins_limit !== undefined) {
             setDailyLimit(Number(data.daily_spins_limit));
+          }
+          if (data.spins_used_today !== undefined) {
+            setSpinsUsedToday(Number(data.spins_used_today));
           }
         })
         .catch(() => {
-          fetch('/api/spin/sectors')
+          fetch(`/api/spin/sectors?user_id=${targetId}`)
             .then(res => res.json())
             .then(data => {
               if (data.sectors && Array.isArray(data.sectors) && data.sectors.length > 0) {
                 setSectors(data.sectors);
               }
-              if (data.daily_spins_limit) {
+              if (data.daily_spins_limit !== undefined) {
                 setDailyLimit(Number(data.daily_spins_limit));
+              }
+              if (data.spins_used_today !== undefined) {
+                setSpinsUsedToday(Number(data.spins_used_today));
               }
             })
             .catch(() => {});

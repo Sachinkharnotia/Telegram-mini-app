@@ -42,8 +42,53 @@ const App: React.FC = () => {
     return isTelegramEnvironment() ? 'app' : 'website';
   });
 
+  const [maintenanceMode, setMaintenanceMode] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem('platform_settings');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return !!(parsed.general?.maintenance_mode || parsed.maintenance_mode);
+      }
+    } catch {}
+    return false;
+  });
+  const [maintenanceMessage, setMaintenanceMessage] = useState<string>(() => {
+    try {
+      const stored = localStorage.getItem('platform_settings');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return parsed.general?.maintenance_message || parsed.announcement_text || 'VextoralMining is currently undergoing scheduled maintenance. We will be back online shortly.';
+      }
+    } catch {}
+    return 'VextoralMining is currently undergoing scheduled maintenance. We will be back online shortly.';
+  });
+
   useEffect(() => {
     initTelegramApp();
+
+    const checkMaintenance = () => {
+      try {
+        const stored = localStorage.getItem('platform_settings');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setMaintenanceMode(!!(parsed.general?.maintenance_mode || parsed.maintenance_mode));
+          if (parsed.general?.maintenance_message) setMaintenanceMessage(parsed.general.maintenance_message);
+        }
+      } catch {}
+    };
+
+    window.addEventListener('storage', checkMaintenance);
+
+    const API_URL = 'https://backend-ten-amber-99.vercel.app';
+    fetch(`${API_URL}/api/user/profile?user_id=10001`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.settings) {
+          setMaintenanceMode(!!data.settings.maintenance_mode);
+          if (data.settings.announcement_text) setMaintenanceMessage(data.settings.announcement_text);
+        }
+      })
+      .catch(() => {});
 
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
@@ -216,6 +261,49 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen bg-[#0E1B48] text-slate-100 p-4 sm:p-6 overflow-y-auto">
         <AdminPanel onBack={() => { setActiveTab('home'); setViewMode('app'); }} />
+      </div>
+    );
+  }
+
+  if (maintenanceMode) {
+    return (
+      <div className="min-h-screen bg-[#070D1E] flex flex-col items-center justify-center text-slate-100 p-6 space-y-6">
+        <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-400 via-[#C18DB4] to-[#87A7D0] p-[2px] shadow-[0_0_50px_rgba(251,191,36,0.3)] animate-pulse">
+          <div className="w-full h-full rounded-3xl bg-[#0E1B48] flex items-center justify-center border border-amber-400/40">
+            <span className="text-3xl">⚙️</span>
+          </div>
+        </div>
+
+        <div className="card-vault p-6 rounded-3xl max-w-sm w-full text-center space-y-4 border border-amber-500/40 shadow-2xl">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-bold uppercase tracking-wider border border-amber-500/30">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+            Scheduled Maintenance
+          </div>
+
+          <h2 className="text-xl font-extrabold text-white font-serif-luxury">System Upgrade in Progress</h2>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            {maintenanceMessage}
+          </p>
+
+          <p className="text-[11px] text-[#87A7D0] bg-[#070D1E]/60 p-3 rounded-2xl border border-[#C18DB4]/20">
+            🔒 All user balances, mining yields, and investments remain fully safe, secure, and actively accruing.
+          </p>
+
+          <div className="pt-2 flex flex-col gap-2">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="w-full btn-gold-vault py-3 rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg"
+            >
+              Refresh Status
+            </button>
+            <button 
+              onClick={() => setActiveTab('admin')} 
+              className="text-[11px] text-slate-500 hover:text-slate-400 pt-2 transition-colors"
+            >
+              Admin Access
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

@@ -5,12 +5,21 @@ const router = Router();
 
 const getSpinInfo = async (req: any, res: any) => {
   await dataStore.syncWithPostgres();
+  const rawId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : undefined) || (req.query.telegram_id ? parseInt(req.query.telegram_id as string, 10) : undefined);
+  const user = rawId ? (dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId)) : null;
+  const userId = user ? user.id : 1001;
   const sectors = dataStore.getSpinSectors();
   const settings = dataStore.getSettings();
+  const dailyLimit = settings.daily_spins_limit !== undefined ? Number(settings.daily_spins_limit) : (settings.daily_free_spins !== undefined ? Number(settings.daily_free_spins) : 1);
+  const spinsUsedToday = dataStore.getUserDailySpins(userId);
+
   res.json({
     sectors,
     spin_cost_usdt: settings.spin_cost_usdt,
-    daily_free_spins: settings.daily_free_spins
+    daily_free_spins: settings.daily_free_spins,
+    daily_spins_limit: dailyLimit,
+    spins_used_today: spinsUsedToday,
+    spins_remaining: Math.max(0, dailyLimit - spinsUsedToday)
   });
 };
 
