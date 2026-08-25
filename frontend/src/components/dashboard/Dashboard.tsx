@@ -57,7 +57,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
           const parsed = JSON.parse(stored);
           const p = parsed.mining?.vx_price_usdt || parsed.vx_price_usdt || 0.10;
           const y = parsed.mining?.daily_yield_rate || parsed.daily_yield_rate || 1.5;
-          const minVx = parsed.mining?.min_mining_power || 100;
+          const minVx = parsed.mining?.min_mining_power || parsed.min_vx_mining || 100;
           const numY = Number(y) < 1 ? Number(y) : Number(y) / 100;
           setEngineSettings({
             vxPriceUsdt: Number(p),
@@ -68,6 +68,25 @@ export const Dashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }
       } catch {}
     };
     loadSettings();
+
+    const API_URL = 'https://backend-ten-amber-99.vercel.app';
+    fetch(`${API_URL}/api/user/profile?user_id=10001`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.settings) {
+          const p = data.settings.vx_price_usdt ?? 0.10;
+          const y = data.settings.daily_yield_rate ?? 0.015;
+          const minVx = data.settings.min_vx_mining ?? 100;
+          const numY = Number(y) < 1 ? Number(y) : Number(y) / 100;
+          setEngineSettings({
+            vxPriceUsdt: Number(p),
+            dailyYieldRate: numY,
+            minVxMining: Number(minVx)
+          });
+        }
+      })
+      .catch(() => {});
+
     window.addEventListener('storage', loadSettings);
     return () => window.removeEventListener('storage', loadSettings);
   }, []);

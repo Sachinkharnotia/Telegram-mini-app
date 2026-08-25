@@ -246,10 +246,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
           const t3 = s.referral_commission_tier3 < 1 ? Math.round((s.referral_commission_tier3 ?? 0.02) * 100) : Number(s.referral_commission_tier3 ?? 2);
           const rw = Number(s.referral_fixed_reward ?? s.referral_signup_bonus_usdt ?? 0.50);
 
+          const rawYield = Number(s.daily_yield_rate ?? 0.015);
+          const yieldDisplay = rawYield <= 0.5 ? Number((rawYield * 100).toFixed(2)) : rawYield;
+
           setSettings((prev: any) => {
             const merged = {
               ...prev,
               ...s,
+              mining: {
+                ...(prev.mining || {}),
+                vx_price_usdt: Number(s.vx_price_usdt ?? prev.mining?.vx_price_usdt ?? 0.10),
+                min_vx_purchase: Number(s.min_vx_purchase ?? prev.mining?.min_vx_purchase ?? 100),
+                min_vx_mining: Number(s.min_vx_mining ?? prev.mining?.min_vx_mining ?? 100),
+                daily_yield_rate: yieldDisplay,
+                mining_enabled: s.mining_enabled !== false
+              },
+              payment: {
+                ...(prev.payment || {}),
+                bep20_wallet: s.bep20_wallet || prev.payment?.bep20_wallet || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+                ton_wallet: s.ton_wallet || prev.payment?.ton_wallet || 'EQBvW8Z5huBkMJY78A29P0nLw84920kLzW190kLs920pL',
+                min_deposit: Number(s.min_deposit ?? prev.payment?.min_deposit ?? 10),
+                min_withdrawal: Number(s.min_withdrawal ?? prev.payment?.min_withdrawal ?? 3),
+                max_withdrawal: Number(s.max_withdrawal ?? prev.payment?.max_withdrawal ?? 10000),
+                withdrawal_fee: Number(s.withdrawal_fee ?? prev.payment?.withdrawal_fee ?? 0),
+                auto_withdrawal: !!(s.auto_withdrawal ?? prev.payment?.auto_withdrawal)
+              },
               referral: {
                 ...(prev.referral || {}),
                 level1_percent: t1,
@@ -258,11 +279,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                 reward: rw,
                 enabled: s.referral_enabled !== false
               },
+              branding: {
+                ...(prev.branding || {}),
+                app_name: s.app_name || prev.branding?.app_name || 'VextoralMining',
+                support_telegram: s.support_username || prev.branding?.support_telegram || 'VaultSupportAdmin',
+                tagline: s.announcement_text || prev.branding?.tagline || 'Complete tasks & earn daily USDT yield.'
+              },
+              general: {
+                ...(prev.general || {}),
+                maintenance_mode: !!(s.maintenance_mode ?? prev.general?.maintenance_mode),
+                maintenance_message: s.announcement_text || prev.general?.maintenance_message || 'VextoralMining is under scheduled maintenance. Please check back soon.'
+              },
               referral_level1_percent: t1,
               referral_level2_percent: t2,
               referral_level3_percent: t3,
               referral_signup_bonus_usdt: rw,
-              referral_fixed_reward: rw
+              referral_fixed_reward: rw,
+              daily_free_spins: Number(s.daily_free_spins ?? prev.daily_free_spins ?? 1),
+              daily_spins_limit: Number(s.daily_spins_limit ?? prev.daily_spins_limit ?? 1),
+              daily_giftbox_limit: Number(s.daily_giftbox_limit ?? prev.daily_giftbox_limit ?? 1),
+              spin_cost_usdt: Number(s.spin_cost_usdt ?? prev.spin_cost_usdt ?? 1)
             };
             localStorage.setItem('platform_settings', JSON.stringify(merged));
             return merged;
