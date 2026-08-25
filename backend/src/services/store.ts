@@ -226,6 +226,7 @@ export class DataStoreService {
   }
 
   public async updateSettings(newSettings: Partial<AppSettings> & { wheel_sectors?: any[]; gift_rewards?: string[] }): Promise<AppSettings> {
+    await this.syncWithPostgres();
     if (newSettings.wheel_sectors && Array.isArray(newSettings.wheel_sectors)) {
       this.spinSectors = newSettings.wheel_sectors;
     }

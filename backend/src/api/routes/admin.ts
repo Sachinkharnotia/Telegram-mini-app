@@ -41,6 +41,7 @@ router.get('/settings', async (req, res) => {
 });
 
 router.post('/settings', async (req, res) => {
+  await dataStore.syncWithPostgres();
   const updated = await dataStore.updateSettings(req.body);
   res.json({ success: true, settings: updated });
 });
