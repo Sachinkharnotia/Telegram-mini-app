@@ -593,6 +593,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
   }, [settings]);
 
   const handleApproveDeposit = async (depositId: number) => {
+    const dep = deposits.find(d => d.id === depositId || d.order_id === depositId);
     try {
       await fetch(`${API_BASE}/api/admin/deposits/confirm`, {
         method: 'POST',
@@ -600,11 +601,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
           'Content-Type': 'application/json',
           'x-admin-pin': ADMIN_PIN
         },
-        body: JSON.stringify({ deposit_id: depositId, tx_hash: 'ADMIN_MANUAL_CREDIT' })
+        body: JSON.stringify({
+          deposit_id: depositId,
+          tx_hash: dep?.tx_hash || 'ADMIN_MANUAL_CREDIT'
+        })
       });
     } catch {}
 
-    const dep = deposits.find(d => d.id === depositId || d.order_id === depositId);
     let updated = deposits.map(d => {
       if (d.id === depositId || d.order_id === depositId) {
         return { ...d, status: 'confirmed', confirmed_at: new Date().toISOString() };
