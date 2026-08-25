@@ -40,7 +40,7 @@ export class DataStoreService {
     referral_fixed_reward: 0.50,
     referral_enabled: true,
     daily_free_spins: 1,
-    daily_spins_limit: 3,
+    daily_spins_limit: 1,
     daily_giftbox_limit: 1,
     spin_cost_usdt: 1,
     mandatory_join_enabled: true,

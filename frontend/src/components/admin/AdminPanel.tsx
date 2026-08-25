@@ -48,7 +48,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       maintenance_mode: false,
       maintenance_message: 'VextoralMining is under maintenance. Please check back soon.'
     },
-    daily_spins_limit: 3,
+    daily_spins_limit: 1,
     daily_giftbox_limit: 1,
     gift_rewards: [
       '0.50 USDT',
