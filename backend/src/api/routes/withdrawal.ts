@@ -6,7 +6,9 @@ const router = Router();
 const handleWithdrawalRequest = async (req: any, res: any) => {
   await dataStore.syncWithPostgres();
   try {
-    const userId = req.body.user_id || req.user?.id || 1001;
+    const rawId = req.body.user_id || req.body.telegram_id || req.user?.id || 1001;
+    const user = dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId);
+    const userId = user ? user.id : (rawId || 1001);
     const { amount, network, wallet_address, destination_address } = req.body;
     const targetAddress = wallet_address || destination_address;
 
@@ -28,6 +30,7 @@ const handleWithdrawalRequest = async (req: any, res: any) => {
     const selectedNetwork = network === 'TON' ? 'TON' : 'BEP20';
 
     const withdrawal = dataStore.createWithdrawal(userId, numAmount, selectedNetwork, targetAddress);
+    await dataStore.saveToDiskAsync();
     res.json({
       success: true,
       withdrawalId: withdrawal.id.toString(),
@@ -48,28 +51,18 @@ const handleWithdrawalRequest = async (req: any, res: any) => {
 router.post('/request', handleWithdrawalRequest);
 router.post('/create', handleWithdrawalRequest);
 
-router.get('/my-withdrawals', (req: any, res) => {
-  const userId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : 1001);
+const getWithdrawalList = async (req: any, res: any) => {
+  await dataStore.syncWithPostgres();
+  const rawId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : undefined) || (req.query.telegram_id ? parseInt(req.query.telegram_id as string, 10) : undefined);
+  const user = rawId ? (dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId)) : null;
+  const userId = user ? user.id : rawId;
   const withdrawals = dataStore.getWithdrawals(userId);
   res.json({ withdrawals });
-});
+};
 
-router.get('/history', (req: any, res) => {
-  const userId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : 1001);
-  const withdrawals = dataStore.getWithdrawals(userId);
-  res.json({ withdrawals });
-});
-
-router.get('/list', (req: any, res) => {
-  const userId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : undefined);
-  const withdrawals = dataStore.getWithdrawals(userId);
-  res.json({ withdrawals });
-});
-
-router.get('/', (req: any, res) => {
-  const userId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : undefined);
-  const withdrawals = dataStore.getWithdrawals(userId);
-  res.json({ withdrawals });
-});
+router.get('/my-withdrawals', getWithdrawalList);
+router.get('/history', getWithdrawalList);
+router.get('/list', getWithdrawalList);
+router.get('/', getWithdrawalList);
 
 export default router;

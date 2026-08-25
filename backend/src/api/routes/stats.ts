@@ -3,9 +3,12 @@ import { dataStore } from '../../services/store';
 
 const router = Router();
 
-router.get('/dashboard', (req: any, res) => {
+router.get('/dashboard', async (req: any, res) => {
   try {
-    const userId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : 1001);
+    await dataStore.syncWithPostgres();
+    const rawId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : undefined) || (req.query.telegram_id ? parseInt(req.query.telegram_id as string, 10) : undefined) || 1001;
+    const user = rawId ? (dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId)) : null;
+    const userId = user ? user.id : rawId;
     const balance = dataStore.getUserBalance(userId);
     const deposits = dataStore.getDeposits(userId);
     const activeDeposits = deposits.filter(d => d.status === 'confirmed').length;
@@ -33,8 +36,9 @@ router.get('/dashboard', (req: any, res) => {
   }
 });
 
-router.get('/overview', (req, res) => {
+router.get('/overview', async (req, res) => {
   try {
+    await dataStore.syncWithPostgres();
     const adminStats = dataStore.getAdminStats();
     res.json({
       success: true,

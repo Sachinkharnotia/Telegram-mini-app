@@ -3,8 +3,11 @@ import { dataStore } from '../../services/store';
 
 const router = Router();
 
-const getTasksList = (req: any, res: any) => {
-  const userId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : 1001);
+const getTasksList = async (req: any, res: any) => {
+  await dataStore.syncWithPostgres();
+  const rawId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : undefined) || (req.query.telegram_id ? parseInt(req.query.telegram_id as string, 10) : undefined);
+  const user = rawId ? (dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId)) : null;
+  const userId = user ? user.id : (rawId || 1001);
   const tasks = dataStore.getTasks();
   const completedIds = dataStore.getUserTaskIds(userId);
 
@@ -21,9 +24,12 @@ router.get('/user', getTasksList);
 router.get('/list', getTasksList);
 router.get('/available', getTasksList);
 
-const handleClaimTask = (req: any, res: any) => {
+const handleClaimTask = async (req: any, res: any) => {
+  await dataStore.syncWithPostgres();
   try {
-    const userId = req.body.user_id || req.user?.id || 1001;
+    const rawId = req.body.user_id || req.body.telegram_id || req.user?.id || 1001;
+    const user = dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId);
+    const userId = user ? user.id : (rawId || 1001);
     const taskIdRaw = req.params.taskId || req.body.task_id || req.body.taskId;
     const taskId = parseInt(taskIdRaw, 10);
 
@@ -31,6 +37,7 @@ const handleClaimTask = (req: any, res: any) => {
     if (!result.success) {
       return res.status(400).json({ error: result.message });
     }
+    await dataStore.saveToDiskAsync();
 
     res.json({
       success: true,

@@ -3,7 +3,8 @@ import { dataStore } from '../../services/store';
 
 const router = Router();
 
-const getSpinInfo = (req: any, res: any) => {
+const getSpinInfo = async (req: any, res: any) => {
+  await dataStore.syncWithPostgres();
   const sectors = dataStore.getSpinSectors();
   const settings = dataStore.getSettings();
   res.json({
@@ -17,7 +18,8 @@ router.get('/sectors', getSpinInfo);
 router.get('/status', getSpinInfo);
 router.get('/', getSpinInfo);
 
-router.post('/play', (req: any, res) => {
+router.post('/play', async (req: any, res) => {
+  await dataStore.syncWithPostgres();
   try {
     const rawId = req.body?.user_id || req.body?.telegram_id || req.user?.id || (req.query?.user_id ? parseInt(req.query.user_id as string, 10) : undefined) || (req.query?.telegram_id ? parseInt(req.query.telegram_id as string, 10) : undefined);
     
@@ -34,6 +36,7 @@ router.post('/play', (req: any, res) => {
     const effectiveUserId = user ? user.id : 1001;
 
     const result = dataStore.spinWheel(effectiveUserId);
+    await dataStore.saveToDiskAsync();
     const bal = dataStore.getUserBalance(effectiveUserId);
 
     res.json({

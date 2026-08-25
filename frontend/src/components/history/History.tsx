@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowDownLeft, ArrowUpRight, ShoppingCart, RefreshCw, Pickaxe, Award } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 
 export const History: React.FC = () => {
+  const { user } = useAuthStore();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [user]);
 
   const fetchHistory = () => {
     setLoading(true);
+    const targetId = user?.telegram_id || user?.id || 10001;
     let localTxs: any[] = [];
     try {
       const stored = localStorage.getItem('app_transactions');
@@ -61,7 +64,7 @@ export const History: React.FC = () => {
     } catch {}
 
     const API_URL = 'https://backend-ten-amber-99.vercel.app';
-    fetch(`${API_URL}/api/transactions/history`)
+    fetch(`${API_URL}/api/transactions/history?user_id=${targetId}`)
       .then(res => res.json())
       .then(data => {
         const apiTxs = data.transactions && Array.isArray(data.transactions) ? data.transactions : [];

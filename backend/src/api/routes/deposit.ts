@@ -17,7 +17,9 @@ router.get('/wallets', async (req, res) => {
 router.post('/create', async (req: any, res) => {
   await dataStore.syncWithPostgres();
   try {
-    const userId = req.body.user_id || req.user?.id || 1001;
+    const rawId = req.body.user_id || req.body.telegram_id || req.user?.id || 1001;
+    const user = dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId);
+    const userId = user ? user.id : (rawId || 1001);
     const { amount, network, wallet_address, id, order_id } = req.body;
     
     const numAmount = parseFloat(amount);
@@ -30,6 +32,7 @@ router.post('/create', async (req: any, res) => {
     const netKey = network === 'TON' ? 'TON' : 'BEP20';
 
     const deposit = dataStore.createDeposit(userId, numAmount, netKey, wallet_address, id, order_id);
+    await dataStore.saveToDiskAsync();
     const activeWallet = netKey === 'TON' ? settings.ton_wallet : settings.bep20_wallet;
 
     res.json({
@@ -96,8 +99,11 @@ router.post('/verify-tx', async (req: any, res) => {
   }
 });
 
-router.get('/history', (req: any, res) => {
-  const userId = req.query.user_id ? parseInt(req.query.user_id as string, 10) : req.user?.id;
+router.get('/history', async (req: any, res) => {
+  await dataStore.syncWithPostgres();
+  const rawId = req.query.user_id ? parseInt(req.query.user_id as string, 10) : (req.query.telegram_id ? parseInt(req.query.telegram_id as string, 10) : req.user?.id);
+  const user = rawId ? (dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId)) : null;
+  const userId = user ? user.id : rawId;
   const deposits = dataStore.getDeposits(userId);
   res.json({ deposits });
 });
