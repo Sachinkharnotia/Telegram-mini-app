@@ -42,7 +42,31 @@ router.get('/settings', async (req, res) => {
 
 router.post('/settings', async (req, res) => {
   await dataStore.syncWithPostgres();
-  const updated = await dataStore.updateSettings(req.body);
+  const body = req.body || {};
+
+  if (body.referral) {
+    if (body.referral.reward !== undefined && !isNaN(Number(body.referral.reward))) {
+      body.referral_fixed_reward = Number(body.referral.reward);
+    }
+    if (body.referral.level1_percent !== undefined && !isNaN(Number(body.referral.level1_percent))) {
+      body.referral_commission_tier1 = Number(body.referral.level1_percent);
+    }
+    if (body.referral.level2_percent !== undefined && !isNaN(Number(body.referral.level2_percent))) {
+      body.referral_commission_tier2 = Number(body.referral.level2_percent);
+    }
+    if (body.referral.level3_percent !== undefined && !isNaN(Number(body.referral.level3_percent))) {
+      body.referral_commission_tier3 = Number(body.referral.level3_percent);
+    }
+    if (body.referral.enabled !== undefined) {
+      body.referral_enabled = !!body.referral.enabled;
+    }
+  }
+
+  if (body.referral_signup_bonus_usdt !== undefined && body.referral_fixed_reward === undefined) {
+    body.referral_fixed_reward = Number(body.referral_signup_bonus_usdt);
+  }
+
+  const updated = await dataStore.updateSettings(body);
   res.json({ success: true, settings: updated });
 });
 

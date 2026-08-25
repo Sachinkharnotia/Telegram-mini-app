@@ -2362,11 +2362,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                   <input
                     type="number"
                     step="0.5"
-                    value={settings.referral?.level1_percent !== undefined ? settings.referral.level1_percent : 10}
-                    onChange={e => setSettings({
-                      ...settings,
-                      referral: { ...settings.referral, level1_percent: parseFloat(e.target.value) }
-                    })}
+                    value={settings.referral?.level1_percent ?? settings.referral_level1_percent ?? settings.referral_commission_tier1 ?? 10}
+                    onChange={e => {
+                      const val = e.target.value === '' ? '' : (isNaN(parseFloat(e.target.value)) ? 0 : parseFloat(e.target.value));
+                      setSettings({
+                        ...settings,
+                        referral: { ...settings.referral, level1_percent: val },
+                        referral_level1_percent: val,
+                        referral_commission_tier1: val
+                      });
+                    }}
                     className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#87A7D0]">%</span>
@@ -2379,11 +2384,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                   <input
                     type="number"
                     step="0.5"
-                    value={settings.referral?.level2_percent !== undefined ? settings.referral.level2_percent : 5}
-                    onChange={e => setSettings({
-                      ...settings,
-                      referral: { ...settings.referral, level2_percent: parseFloat(e.target.value) }
-                    })}
+                    value={settings.referral?.level2_percent ?? settings.referral_level2_percent ?? settings.referral_commission_tier2 ?? 5}
+                    onChange={e => {
+                      const val = e.target.value === '' ? '' : (isNaN(parseFloat(e.target.value)) ? 0 : parseFloat(e.target.value));
+                      setSettings({
+                        ...settings,
+                        referral: { ...settings.referral, level2_percent: val },
+                        referral_level2_percent: val,
+                        referral_commission_tier2: val
+                      });
+                    }}
                     className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#87A7D0]">%</span>
@@ -2396,11 +2406,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                   <input
                     type="number"
                     step="0.5"
-                    value={settings.referral?.level3_percent !== undefined ? settings.referral.level3_percent : 2}
-                    onChange={e => setSettings({
-                      ...settings,
-                      referral: { ...settings.referral, level3_percent: parseFloat(e.target.value) }
-                    })}
+                    value={settings.referral?.level3_percent ?? settings.referral_level3_percent ?? settings.referral_commission_tier3 ?? 2}
+                    onChange={e => {
+                      const val = e.target.value === '' ? '' : (isNaN(parseFloat(e.target.value)) ? 0 : parseFloat(e.target.value));
+                      setSettings({
+                        ...settings,
+                        referral: { ...settings.referral, level3_percent: val },
+                        referral_level3_percent: val,
+                        referral_commission_tier3: val
+                      });
+                    }}
                     className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#87A7D0]">%</span>
@@ -2413,11 +2428,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                   <input
                     type="number"
                     step="0.1"
-                    value={settings.referral?.reward !== undefined ? settings.referral.reward : 0.50}
-                    onChange={e => setSettings({
-                      ...settings,
-                      referral: { ...settings.referral, reward: parseFloat(e.target.value) }
-                    })}
+                    value={settings.referral?.reward ?? settings.referral_fixed_reward ?? settings.referral_signup_bonus_usdt ?? 0.50}
+                    onChange={e => {
+                      const val = e.target.value === '' ? '' : (isNaN(parseFloat(e.target.value)) ? 0 : parseFloat(e.target.value));
+                      setSettings({
+                        ...settings,
+                        referral: { ...settings.referral, reward: val },
+                        referral_fixed_reward: val,
+                        referral_signup_bonus_usdt: val
+                      });
+                    }}
                     className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#87A7D0]">$</span>
@@ -2429,11 +2449,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                 <div className="relative">
                   <input
                     type="number"
-                    value={settings.referral?.max_reward_per_user || 100}
-                    onChange={e => setSettings({
-                      ...settings,
-                      referral: { ...settings.referral, max_reward_per_user: parseFloat(e.target.value) }
-                    })}
+                    value={settings.referral?.max_reward_per_user ?? 100}
+                    onChange={e => {
+                      const val = e.target.value === '' ? '' : (isNaN(parseFloat(e.target.value)) ? 0 : parseFloat(e.target.value));
+                      setSettings({
+                        ...settings,
+                        referral: { ...settings.referral, max_reward_per_user: val }
+                      });
+                    }}
                     className="w-full p-2.5 bg-[#070D1E] border border-[#C18DB4]/30 rounded-xl text-xs text-white font-bold outline-none"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#87A7D0]">$</span>

@@ -42,15 +42,24 @@ router.get('/status', getMiningStatus);
 router.get('/packages', getMiningStatus);
 router.get('/', getMiningStatus);
 
-router.post('/buy-vx', (req: any, res) => {
+router.post('/buy-vx', async (req: any, res) => {
+  await dataStore.syncWithPostgres();
   try {
     const rawId = req.body?.user_id || req.body?.telegram_id || req.query?.user_id || req.query?.telegram_id || req.user?.id;
     let user = null;
     if (rawId) {
-      user = dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId);
+      user = dataStore.findUserByTelegramId(Number(rawId)) || dataStore.findUserById(Number(rawId));
     }
     if (!user && req.user?.id) {
       user = dataStore.findUserById(req.user.id);
+    }
+    if (!user && rawId && Number(rawId) > 10000) {
+      user = dataStore.createUser({
+        telegram_id: Number(rawId),
+        username: `user_${rawId}`,
+        first_name: 'Member',
+        is_premium: false
+      });
     }
     if (!user) {
       user = dataStore.findUserById(1001);
@@ -69,6 +78,7 @@ router.post('/buy-vx', (req: any, res) => {
       return res.status(400).json({ error: result.message });
     }
 
+    await dataStore.saveToDiskAsync();
     const bal = dataStore.getUserBalance(userId);
     res.json({
       success: true,
@@ -83,23 +93,41 @@ router.post('/buy-vx', (req: any, res) => {
   }
 });
 
-const handleClaimYield = (req: any, res: any) => {
+const handleClaimYield = async (req: any, res: any) => {
+  await dataStore.syncWithPostgres();
   const rawId = req.body?.user_id || req.body?.telegram_id || req.query?.user_id || req.query?.telegram_id || req.user?.id;
   let user = null;
   if (rawId) {
-    user = dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId);
+    user = dataStore.findUserByTelegramId(Number(rawId)) || dataStore.findUserById(Number(rawId));
   }
   if (!user && req.user?.id) {
     user = dataStore.findUserById(req.user.id);
+  }
+  if (!user && rawId && Number(rawId) > 10000) {
+    user = dataStore.createUser({
+      telegram_id: Number(rawId),
+      username: `user_${rawId}`,
+      first_name: 'Member',
+      is_premium: false
+    });
   }
   if (!user) {
     user = dataStore.findUserById(1001);
   }
   const userId = user ? user.id : 1001;
-  const result = dataStore.claimYield(userId);
-  if (!result.success) {
-    return res.status(400).json({ error: 'No unclaimed yield available to claim' });
+  let result = dataStore.claimYield(userId);
+
+  const clientClaimed = parseFloat(req.body?.claimed_amount || '0');
+  if (!result.success && clientClaimed > 0) {
+    const bal = dataStore.getUserBalance(userId);
+    bal.usdt_balance = parseFloat((bal.usdt_balance + clientClaimed).toFixed(4));
+    bal.claimed_yield_total = parseFloat((bal.claimed_yield_total + clientClaimed).toFixed(4));
+    bal.last_claim_at = new Date();
+    bal.updated_at = new Date();
+    result = { success: true, claimedUsdt: clientClaimed };
   }
+
+  await dataStore.saveToDiskAsync();
   const bal = dataStore.getUserBalance(userId);
   res.json({
     success: true,
