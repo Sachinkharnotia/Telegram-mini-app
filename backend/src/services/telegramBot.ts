@@ -49,16 +49,31 @@ export class TelegramBotService {
       const fromUser = update.message.from;
       const firstName = fromUser?.first_name || 'Member';
 
+      if (fromUser) {
+        const existing = dataStore.findUserByTelegramId(fromUser.id);
+        if (existing && !existing.is_active) {
+          try {
+            await this.bot.sendMessage(chatId, `⛔ <b>Access Denied</b>\n\nYour account has been suspended by the administration.\nReason: ${existing.ban_reason || 'Violation of platform policies'}`, {
+              parse_mode: 'HTML'
+            });
+          } catch {}
+          return;
+        }
+      }
+
       if (text.startsWith('/start')) {
         const parts = text.split(' ');
         const startParam = parts.length > 1 ? parts[1].trim() : '';
         
         let referrerId: number | undefined = undefined;
-        if (startParam && startParam.startsWith('ref_')) {
-          const rawId = parseInt(startParam.replace('ref_', ''), 10);
-          if (!isNaN(rawId)) {
-            const refUser = dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId);
-            referrerId = refUser ? refUser.id : rawId;
+        if (startParam) {
+          const numMatch = startParam.match(/\d+/);
+          if (numMatch) {
+            const rawId = parseInt(numMatch[0], 10);
+            if (!isNaN(rawId)) {
+              const refUser = dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId);
+              referrerId = refUser ? refUser.id : rawId;
+            }
           }
         }
 

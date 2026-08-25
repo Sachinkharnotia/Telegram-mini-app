@@ -41,7 +41,7 @@ router.get('/settings', async (req, res) => {
 });
 
 router.post('/settings', async (req, res) => {
-  const updated = dataStore.updateSettings(req.body);
+  const updated = await dataStore.updateSettings(req.body);
   res.json({ success: true, settings: updated });
 });
 
@@ -115,9 +115,9 @@ router.post('/users/update-balance', (req, res) => {
   res.json({ success: true, balance: dataStore.getUserBalance(numUserId) });
 });
 
-router.post('/users/update-status', (req, res) => {
+router.post('/users/update-status', async (req, res) => {
   const { user_id, is_active, ban_reason } = req.body;
-  const user = dataStore.updateUserStatus(parseInt(user_id, 10), !!is_active, ban_reason);
+  const user = await dataStore.updateUserStatus(parseInt(user_id, 10), !!is_active, ban_reason);
   if (!user) return res.status(404).json({ error: 'User not found' });
   res.json({ success: true, user });
 });

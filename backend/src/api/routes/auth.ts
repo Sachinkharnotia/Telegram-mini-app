@@ -44,16 +44,15 @@ router.post('/telegram', async (req, res) => {
     let is_new = false;
     
     let referrerId: number | undefined = undefined;
-    if (startParam && startParam.startsWith('ref_')) {
-      const refRaw = parseInt(startParam.replace('ref_', ''), 10);
-      if (!isNaN(refRaw)) {
-        const refUser = dataStore.findUserByTelegramId(refRaw) || dataStore.findUserById(refRaw);
-        referrerId = refUser ? refUser.id : refRaw;
+    if (startParam) {
+      const numMatch = String(startParam).match(/\d+/);
+      if (numMatch) {
+        const refRaw = parseInt(numMatch[0], 10);
+        if (!isNaN(refRaw)) {
+          const refUser = dataStore.findUserByTelegramId(refRaw) || dataStore.findUserById(refRaw);
+          referrerId = refUser ? refUser.id : refRaw;
+        }
       }
-    } else if (startParam && !isNaN(parseInt(startParam, 10))) {
-      const refRaw = parseInt(startParam, 10);
-      const refUser = dataStore.findUserByTelegramId(refRaw) || dataStore.findUserById(refRaw);
-      referrerId = refUser ? refUser.id : refRaw;
     }
 
     if (!user) {
@@ -78,7 +77,7 @@ router.post('/telegram', async (req, res) => {
       dataStore.saveToDisk();
     }
 
-    if (!user.is_active) {
+    if (user && !user.is_active) {
       return res.status(403).json({ error: `Account suspended. Reason: ${user.ban_reason || 'Banned by admin'}` });
     }
     
@@ -125,6 +124,11 @@ router.post('/register-sync', (req, res) => {
       return res.status(400).json({ error: 'Missing user id or telegram_id' });
     }
 
+    const existingUser = dataStore.findUserByTelegramId(Number(telegramId)) || dataStore.findUserById(Number(telegramId));
+    if (existingUser && !existingUser.is_active) {
+      return res.status(403).json({ error: `Account suspended. Reason: ${existingUser.ban_reason || 'Banned by admin'}` });
+    }
+
     const { user, balance } = dataStore.syncUserFromClient({
       telegram_id: Number(telegramId),
       username: rawUserData.username,
@@ -135,6 +139,10 @@ router.post('/register-sync', (req, res) => {
       balance_usdt: balance_usdt !== undefined ? Number(balance_usdt) : undefined,
       balance_vx: balance_vx !== undefined ? Number(balance_vx) : undefined
     });
+
+    if (user && !user.is_active) {
+      return res.status(403).json({ error: `Account suspended. Reason: ${user.ban_reason || 'Banned by admin'}` });
+    }
 
     res.json({ success: true, user, balance });
   } catch (e: any) {

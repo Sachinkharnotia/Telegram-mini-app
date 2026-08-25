@@ -234,6 +234,43 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
       if (storedAdmins) setAdmins(JSON.parse(storedAdmins));
     } catch {}
 
+    fetch(`${API_BASE}/api/admin/settings`, {
+      headers: { 'x-admin-pin': ADMIN_PIN }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.settings) {
+          const s = data.settings;
+          const t1 = s.referral_commission_tier1 < 1 ? Math.round(s.referral_commission_tier1 * 100) : Number(s.referral_commission_tier1 ?? 10);
+          const t2 = s.referral_commission_tier2 < 1 ? Math.round(s.referral_commission_tier2 * 100) : Number(s.referral_commission_tier2 ?? 5);
+          const t3 = s.referral_commission_tier3 < 1 ? Math.round((s.referral_commission_tier3 ?? 0.02) * 100) : Number(s.referral_commission_tier3 ?? 2);
+          const rw = Number(s.referral_fixed_reward ?? s.referral_signup_bonus_usdt ?? 0.50);
+
+          setSettings((prev: any) => {
+            const merged = {
+              ...prev,
+              ...s,
+              referral: {
+                ...(prev.referral || {}),
+                level1_percent: t1,
+                level2_percent: t2,
+                level3_percent: t3,
+                reward: rw,
+                enabled: s.referral_enabled !== false
+              },
+              referral_level1_percent: t1,
+              referral_level2_percent: t2,
+              referral_level3_percent: t3,
+              referral_signup_bonus_usdt: rw,
+              referral_fixed_reward: rw
+            };
+            localStorage.setItem('platform_settings', JSON.stringify(merged));
+            return merged;
+          });
+        }
+      })
+      .catch(() => {});
+
     fetch(`${API_BASE}/api/admin/users`, {
       headers: { 'x-admin-pin': ADMIN_PIN }
     })
@@ -517,43 +554,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
 
     localStorage.setItem('platform_settings', JSON.stringify(syncObj));
     window.dispatchEvent(new Event('storage'));
-
-    const timer = setTimeout(async () => {
-      try {
-        const backendPayload = {
-          vx_price_usdt: parseFloat(String(settings.mining?.vx_price_usdt || settings.vx_price_usdt || 0.10)),
-          min_vx_purchase: parseFloat(String(settings.mining?.min_vx_purchase || settings.min_vx_purchase || 100)),
-          min_vx_mining: parseFloat(String(settings.mining?.min_vx_mining || settings.min_vx_mining || 100)),
-          daily_yield_rate: (parseFloat(String(settings.mining?.daily_yield_rate || settings.daily_yield_rate || 1.5))) / 100,
-          mining_enabled: true,
-          bep20_wallet: syncObj.bep20_wallet,
-          ton_wallet: syncObj.ton_wallet,
-          min_deposit: syncObj.min_deposit,
-          min_withdrawal: syncObj.min_withdrawal,
-          max_withdrawal: syncObj.max_withdrawal,
-          withdrawal_fee: syncObj.withdrawal_fee,
-          referral_commission_tier1: t1,
-          referral_commission_tier2: t2,
-          referral_fixed_reward: rewardBonus,
-          referral_enabled: settings.referral?.enabled !== false,
-          daily_spins_limit: syncObj.daily_spins_limit,
-          daily_giftbox_limit: syncObj.daily_giftbox_limit,
-          app_name: settings.branding?.app_name || 'VextoralMining',
-          support_username: settings.branding?.support_telegram || 'VaultSupportAdmin'
-        };
-
-        await fetch(`${API_BASE}/api/admin/settings`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-admin-pin': ADMIN_PIN
-          },
-          body: JSON.stringify(backendPayload)
-        });
-      } catch {}
-    }, 600);
-
-    return () => clearTimeout(timer);
   }, [settings]);
 
   const handleApproveDeposit = async (depositId: number) => {
@@ -967,15 +967,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
     setTimeout(() => setMessage(''), 3000);
   };
 
-  const handleToggleUserBan = (u: any) => {
+  const handleToggleUserBan = async (u: any) => {
     const nextStatus = !u.is_active;
-    const updatedUsers = users.map(item => item.id === u.id ? { 
+    const updatedUsers = users.map(item => (item.id === u.id || item.telegram_id === u.telegram_id) ? { 
       ...item, 
       is_active: nextStatus,
       status: nextStatus ? 'Active' : 'Blocked'
     } : item);
     setUsers(updatedUsers);
     localStorage.setItem('admin_users', JSON.stringify(updatedUsers));
+
+    try {
+      await fetch(`${API_BASE}/api/admin/users/update-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-pin': ADMIN_PIN
+        },
+        body: JSON.stringify({
+          user_id: u.telegram_id || u.id,
+          is_active: nextStatus,
+          ban_reason: nextStatus ? '' : 'Blocked by administrator'
+        })
+      });
+    } catch {}
+
     addActivityLog('User Status Updated', `User @${u.username || u.telegram_id} set to ${nextStatus ? 'ACTIVE' : 'BLOCKED'}`);
     setMessage(`User @${u.username || u.telegram_id} is now ${nextStatus ? 'ACTIVE' : 'BLOCKED'}`);
     setTimeout(() => setMessage(''), 3000);

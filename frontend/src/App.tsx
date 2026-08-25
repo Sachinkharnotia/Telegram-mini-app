@@ -11,12 +11,11 @@ import { Profile } from './components/profile/Profile';
 import { Tasks } from './components/tasks/Tasks';
 import { AdminPanel } from './components/admin/AdminPanel';
 import { Landing } from './components/website/Landing';
-import { MandatoryJoin } from './components/common/MandatoryJoin';
 import { Home, TrendingUp, FileText, Users, User } from 'lucide-react';
 import { isTelegramEnvironment, getStartParam, initTelegramApp } from './utils/telegram';
 
 const App: React.FC = () => {
-  const { user, token, setAuth, isLoading, error } = useAuthStore();
+  const { user, token, setAuth, isLoading, error, setError } = useAuthStore();
   const { t } = useI18nStore();
 
   const [activeTab, setActiveTab] = useState<string>(() => {
@@ -41,9 +40,6 @@ const App: React.FC = () => {
       if (window.location.search.includes('admin=true') || window.location.hash === '#admin') return 'app';
     }
     return isTelegramEnvironment() ? 'app' : 'website';
-  });
-  const [mandatoryVerified, setMandatoryVerified] = useState<boolean>(() => {
-    return localStorage.getItem('mandatory_joined') === 'true';
   });
 
   useEffect(() => {
@@ -152,8 +148,13 @@ const App: React.FC = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ initData, startParam })
         })
-          .then(res => res.json())
-          .then(data => {
+          .then(async res => {
+            const data = await res.json();
+            if (res.status === 403 || (data.user && data.user.is_active === false)) {
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              throw new Error(data.error || 'Your account has been suspended by the administrator.');
+            }
             if (data.token && data.user) {
               const fullUser = {
                 ...data.user,
@@ -167,14 +168,23 @@ const App: React.FC = () => {
               setAuth(`tg-${realUserData.id}`, realUserData);
             }
           })
-          .catch(() => {
+          .catch(err => {
+            if (err?.message?.includes('suspended') || err?.message?.includes('banned')) {
+              setError(err.message);
+              return;
+            }
             fetch('/api/auth/telegram', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ initData, startParam })
             })
-              .then(res => res.json())
-              .then(data => {
+              .then(async res => {
+                const data = await res.json();
+                if (res.status === 403 || (data.user && data.user.is_active === false)) {
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('user');
+                  throw new Error(data.error || 'Your account has been suspended by the administrator.');
+                }
                 if (data.token && data.user) {
                   const fullUser = {
                     ...data.user,
@@ -188,7 +198,13 @@ const App: React.FC = () => {
                   setAuth(`tg-${realUserData.id}`, realUserData);
                 }
               })
-              .catch(() => setAuth(`tg-${realUserData.id}`, realUserData));
+              .catch(err2 => {
+                if (err2?.message?.includes('suspended') || err2?.message?.includes('banned')) {
+                  setError(err2.message);
+                } else {
+                  setAuth(`tg-${realUserData.id}`, realUserData);
+                }
+              });
           });
       } else {
         setAuth(`tg-${realUserData.id}`, realUserData);
@@ -202,10 +218,6 @@ const App: React.FC = () => {
         <AdminPanel onBack={() => { setActiveTab('home'); setViewMode('app'); }} />
       </div>
     );
-  }
-
-  if (viewMode === 'app' && !mandatoryVerified) {
-    return <MandatoryJoin onVerified={() => setMandatoryVerified(true)} />;
   }
 
   if (isLoading) {

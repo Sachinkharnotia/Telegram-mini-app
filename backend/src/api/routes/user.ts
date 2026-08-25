@@ -25,6 +25,9 @@ const getUserProfile = async (req: any, res: any) => {
     user = dataStore.findUserById(1001);
   }
   if (!user) return res.status(404).json({ error: 'User not found' });
+  if (!user.is_active) {
+    return res.status(403).json({ error: `Account suspended. Reason: ${user.ban_reason || 'Banned by admin'}` });
+  }
   const balance = dataStore.getUserBalance(user.id);
   const refStats = dataStore.getReferralStats(user.id);
   const settings = dataStore.getSettings();
@@ -48,6 +51,9 @@ router.get('/balance', async (req: any, res: any) => {
   await dataStore.syncWithPostgres();
   const rawId = req.user?.id || (req.query.user_id ? parseInt(req.query.user_id as string, 10) : undefined) || (req.query.telegram_id ? parseInt(req.query.telegram_id as string, 10) : 1001);
   const user = dataStore.findUserByTelegramId(rawId) || dataStore.findUserById(rawId) || dataStore.findUserById(1001);
+  if (user && !user.is_active) {
+    return res.status(403).json({ error: `Account suspended. Reason: ${user.ban_reason || 'Banned by admin'}` });
+  }
   const effectiveUserId = user ? user.id : 1001;
   const balance = dataStore.getUserBalance(effectiveUserId);
   res.json({

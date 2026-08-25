@@ -125,7 +125,7 @@ export class DataStoreService {
     }
   }
 
-  public saveToDisk() {
+  public async saveToDiskAsync() {
     const data = {
       users: Array.from(this.users.entries()),
       balances: Array.from(this.balances.entries()),
@@ -152,12 +152,18 @@ export class DataStoreService {
     }
 
     try {
-      pool.query(`
+      await pool.query(`
         INSERT INTO app_state (key, value, updated_at) 
         VALUES ('main_store', $1, NOW())
         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
-      `, [JSON.stringify(data)]).catch((err: any) => console.warn('PG background save warn:', err.message));
-    } catch {}
+      `, [JSON.stringify(data)]);
+    } catch (err: any) {
+      console.warn('PG background save warn:', err.message);
+    }
+  }
+
+  public saveToDisk() {
+    this.saveToDiskAsync().catch(() => {});
   }
 
   private seedDefaultData() {
@@ -219,9 +225,9 @@ export class DataStoreService {
     return { ...this.settings };
   }
 
-  public updateSettings(newSettings: Partial<AppSettings>): AppSettings {
+  public async updateSettings(newSettings: Partial<AppSettings>): Promise<AppSettings> {
     this.settings = { ...this.settings, ...newSettings };
-    this.saveToDisk();
+    await this.saveToDiskAsync();
     return this.getSettings();
   }
 
@@ -874,8 +880,8 @@ export class DataStoreService {
     return user;
   }
 
-  public updateUserStatus(userId: number, isActive: boolean, banReason?: string): User | null {
-    const user = this.findUserById(userId);
+  public async updateUserStatus(userId: number, isActive: boolean, banReason?: string): Promise<User | null> {
+    const user = this.findUserById(userId) || this.findUserByTelegramId(userId);
     if (!user) return null;
     user.is_active = isActive;
     if (!isActive) {
@@ -885,7 +891,7 @@ export class DataStoreService {
       user.banned_at = undefined;
       user.ban_reason = undefined;
     }
-    this.saveToDisk();
+    await this.saveToDiskAsync();
     return user;
   }
 
