@@ -63,30 +63,26 @@ export const Referral: React.FC = () => {
       .then(res => res.json())
       .then(data => {
         setRefStats(data);
-        if (data.tier1_commission_rate !== undefined || data.fixed_reward !== undefined) {
-          setCommSettings(prev => ({
-            ...prev,
-            tier1: data.tier1_commission_rate !== undefined ? normalizePercent(data.tier1_commission_rate, prev.tier1) : prev.tier1,
-            tier2: data.tier2_commission_rate !== undefined ? normalizePercent(data.tier2_commission_rate, prev.tier2) : prev.tier2,
-            tier3: data.tier3_commission_rate !== undefined ? normalizePercent(data.tier3_commission_rate, prev.tier3) : prev.tier3,
-            bonus: data.fixed_reward !== undefined ? Number(data.fixed_reward) : prev.bonus
-          }));
-        }
+        setCommSettings(prev => ({
+          ...prev,
+          tier1: data.tier1_commission_rate !== undefined ? normalizePercent(data.tier1_commission_rate, prev.tier1) : prev.tier1,
+          tier2: data.tier2_commission_rate !== undefined ? normalizePercent(data.tier2_commission_rate, prev.tier2) : prev.tier2,
+          tier3: data.tier3_commission_rate !== undefined ? normalizePercent(data.tier3_commission_rate, prev.tier3) : prev.tier3,
+          bonus: data.fixed_reward !== undefined ? Number(data.fixed_reward) : prev.bonus
+        }));
       })
       .catch(() => {
         fetch(`/api/referral/stats?user_id=${targetId}`)
           .then(res => res.json())
           .then(data => {
             setRefStats(data);
-            if (data.tier1_commission_rate !== undefined || data.fixed_reward !== undefined) {
-              setCommSettings(prev => ({
-                ...prev,
-                tier1: data.tier1_commission_rate !== undefined ? normalizePercent(data.tier1_commission_rate, prev.tier1) : prev.tier1,
-                tier2: data.tier2_commission_rate !== undefined ? normalizePercent(data.tier2_commission_rate, prev.tier2) : prev.tier2,
-                tier3: data.tier3_commission_rate !== undefined ? normalizePercent(data.tier3_commission_rate, prev.tier3) : prev.tier3,
-                bonus: data.fixed_reward !== undefined ? Number(data.fixed_reward) : prev.bonus
-              }));
-            }
+            setCommSettings(prev => ({
+              ...prev,
+              tier1: data.tier1_commission_rate !== undefined ? normalizePercent(data.tier1_commission_rate, prev.tier1) : prev.tier1,
+              tier2: data.tier2_commission_rate !== undefined ? normalizePercent(data.tier2_commission_rate, prev.tier2) : prev.tier2,
+              tier3: data.tier3_commission_rate !== undefined ? normalizePercent(data.tier3_commission_rate, prev.tier3) : prev.tier3,
+              bonus: data.fixed_reward !== undefined ? Number(data.fixed_reward) : prev.bonus
+            }));
           })
           .catch(() => {});
       });

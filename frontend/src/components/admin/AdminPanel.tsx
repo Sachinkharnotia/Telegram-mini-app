@@ -821,6 +821,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
         withdrawal_fee: updatedSettings.withdrawal_fee,
         referral_commission_tier1: t1,
         referral_commission_tier2: t2,
+        referral_commission_tier3: t3,
         referral_fixed_reward: rewardBonus,
         referral_enabled: settings.referral?.enabled !== false,
         daily_spins_limit: updatedSettings.daily_spins_limit,
