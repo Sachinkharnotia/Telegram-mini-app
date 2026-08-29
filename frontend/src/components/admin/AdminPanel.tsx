@@ -2792,17 +2792,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBack }) => {
                 <h3 className="text-sm font-bold text-white font-serif-luxury">⚙️ General & Maintenance Mode</h3>
                 <p className="text-[11px] text-[#87A7D0]">Toggle platform accessibility and service outage announcements</p>
               </div>
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-amber-400">
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-amber-400 bg-[#070D1E] px-3 py-1.5 rounded-xl border border-amber-500/30">
                 <input
                   type="checkbox"
-                  checked={settings.general?.maintenance_mode || false}
+                  checked={!!(settings.general?.maintenance_mode || settings.maintenance_mode)}
                   onChange={e => setSettings({
                     ...settings,
+                    maintenance_mode: e.target.checked,
                     general: { ...settings.general, maintenance_mode: e.target.checked }
                   })}
-                  className="rounded text-amber-500 w-4 h-4"
+                  className="rounded text-amber-500 w-4 h-4 cursor-pointer"
                 />
-                <span>Maintenance Mode</span>
+                <span className={settings.general?.maintenance_mode || settings.maintenance_mode ? 'text-amber-300 font-extrabold' : 'text-slate-400'}>
+                  {settings.general?.maintenance_mode || settings.maintenance_mode ? '🔴 Maintenance Active (ON)' : '🟢 Maintenance Inactive (OFF)'}
+                </span>
               </label>
             </div>
 
